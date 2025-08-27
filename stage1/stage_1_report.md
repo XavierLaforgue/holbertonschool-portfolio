@@ -47,7 +47,18 @@ experience/environment.
 - Individual professional site. Online comprehensive CV with detailed information:
   html version of articles, plots, numerical data, calculations for
   chosen parameters, contact request, leave comment on ressource, etc.
-- 
+- Personal finance planner / budget tracker: track expenses by
+  categories and items, import data from receipts (supermarket, etc)
+  analyse/visualize spendings.
+- Collaborative study/work hub.
+- Skill-sharing marketplace: a platform where users can offer and book
+  lessons, collaborations, tutorials, peer-learning sessions (e.g.,
+  music, coding, cooking, drawing, mathematics, science). Including
+  scheduling, reviews, and messaging. Basically meeting up and working
+  on something productive/educative.
+- Language exchange platform.
+- Habit Tracker with Social Features:
+  Users set daily/weekly habits, track progress, and join public or private groups for accountability. Includes streaks, leaderboards, and motivational badges.
 ## Selected MVP Concept
 ### Summary of chosen MVP:
 ### Reasons for selection:
