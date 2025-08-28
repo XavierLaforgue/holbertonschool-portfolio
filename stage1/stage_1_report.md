@@ -79,7 +79,7 @@ following is the list of ideas I came up with:
 #### Weaknesses:
 #### Reasons for rejection:
 ## Selected MVP Concept
-![I choose ...](https://www.google.com/imgres?q=I%20choose%20&imgurl=https%3A%2F%2Fimg01.ztat.net%2Farticle%2Fspp-media-p1%2Fe3497972890d4f288fd68f23917b92d9%2F362d14099bdc47a1b193bb0bf69ed493.jpg%3Fimwidth%3D762&imgrefurl=https%3A%2F%2Fwww.zalando.fr%2Fhenry-tiger-t-shirt-imprime-royal-blue-h3a26g1o8-k11.html&docid=aZE1SSBFoHTd6M&tbnid=hFjj7l6DpKSckM&vet=12ahUKEwjCnau10a2PAxVxKvsDHegRPfMQM3oECCoQAA..i&w=800&h=1152&hcb=2&ved=2ahUKEwjCnau10a2PAxVxKvsDHegRPfMQM3oECCoQAA)
+![I choose ...](https://img01.ztat.net/article/spp-media-p1/e3497972890d4f288fd68f23917b92d9/362d14099bdc47a1b193bb0bf69ed493.jpg?imwidth=762)
 ### Summary of chosen MVP
 #### Rationale
 #### Potential impact
