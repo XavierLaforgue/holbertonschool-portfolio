@@ -28,39 +28,61 @@ the local Holberton School Software Engineer: [Sacha Schoumiloff](https://github
 Not strictly applicable given that I work alone.
 However, daily standups with the other "teams" to share progress,
 request help, advice, and feedback will emulate the collaborative
-experience/environment. 
+experience/environment.
+As means of communication with my tutor, Slack and in-person
+discussions are expected on a regular basis.
 ## Ideas explored
-- Reading tracker, posting reviews.
-- Health tracker: menstruation, blood pressure, etc.
-- Anime-inspired recipe-sharing site, with time tracker integrated when
- preparing a recipe and nutritional information tracker.
-- Gym tracker.
-- Anime inspired personal improvement web app: gamify personal
+The first brainstorming method I took on was *brainwriting*, the
+following is the list of ideas I came up with:
+- **Anime inspired personal improvement web app**: gamify personal
   projects (medals, exp points), plot measurable progress, anime character delivering
   motivational phrases extracted from animes.
-- Hub for boardgame players to find game partners in the city: create
+- **Reading tracker/personal book-centered blog**: create user, create
+  blogpost per reading session.
+- **Health tracker**: weight, sleep time, blood pressure, meditation
+  session, habit formation.
+- **Anime-inspired recipe-sharing site**: create users, create recipes,
+  create time tracker per cooking step when
+ preparing a recipe, create nutritional information of ingredients,
+ meal planning, track meals and their nutritional content.
+- **Gym tracker**: create users, create exercises, track and store
+  exercice instances.
+- **Hub for boardgame players to find game partners in the city**: create
   profiles with availability datetimes, create events, notify users
   that are available at that time, blacklist users.
-- Home inventory web app. Create inventory of products in different
+- **Home inventory web app**: create inventory of products in different
   cathegories (fresh food, long-lasting food, cleanning supplies,
   laundry, office supplies, etc). Keep track of exhausted inventories.
-- Individual professional site. Online comprehensive CV with detailed information:
-  html version of articles, plots, numerical data, calculations for
-  chosen parameters, contact request, leave comment on ressource, etc.
-- Personal finance planner / budget tracker: track expenses by
-  categories and items, import data from receipts (supermarket, etc)
+- **Individual professional site**: online comprehensive CV with
+  detailed information, i.e., web page version of articles, plots, numerical data, calculations for
+  chosen parameters; the site allows contact requests and to leave comments on ressources.
+- **Personal finance planner / budget tracker**: track expenses by
+  categories and items, import data from receipts (supermarket)
   analyse/visualize spendings.
-- Collaborative study/work hub.
-- Skill-sharing marketplace: a platform where users can offer and book
+- **Collaborative study/work hub**: create users, create subject or (short-)project,
+  make explicit what kind of collaboration you are looking for, match
+  availabilities and interests of user profiles.
+- **Skill-sharing marketplace**: a platform where users can offer and book
   lessons, collaborations, tutorials, peer-learning sessions (e.g.,
   music, coding, cooking, drawing, mathematics, science). Including
   scheduling, reviews, and messaging. Basically meeting up and working
   on something productive/educative.
-- Language exchange platform.
-- Habit Tracker with Social Features:
-  Users set daily/weekly habits, track progress, and join public or private groups for accountability. Includes streaks, leaderboards, and motivational badges.
+- **Language exchange platform**: create user profile and share what
+  languages the user wants to learn and which they are willing to offer.
+- **Habit tracker with social features**: users set daily/weekly
+  habits, track progress, and join public or private groups for
+  accountability. Includes streaks, leaderboards, and motivational
+  badges.
+## Short-listed ideas:
+### Anime inspired personal improvement web app
+#### Strengths:
+#### Weaknesses:
+#### Reasons for rejection:
 ## Selected MVP Concept
-### Summary of chosen MVP:
+![I choose ...](https://www.google.com/imgres?q=I%20choose%20&imgurl=https%3A%2F%2Fimg01.ztat.net%2Farticle%2Fspp-media-p1%2Fe3497972890d4f288fd68f23917b92d9%2F362d14099bdc47a1b193bb0bf69ed493.jpg%3Fimwidth%3D762&imgrefurl=https%3A%2F%2Fwww.zalando.fr%2Fhenry-tiger-t-shirt-imprime-royal-blue-h3a26g1o8-k11.html&docid=aZE1SSBFoHTd6M&tbnid=hFjj7l6DpKSckM&vet=12ahUKEwjCnau10a2PAxVxKvsDHegRPfMQM3oECCoQAA..i&w=800&h=1152&hcb=2&ved=2ahUKEwjCnau10a2PAxVxKvsDHegRPfMQM3oECCoQAA)
+### Summary of chosen MVP
+#### Rationale
+#### Potential impact
 ### Reasons for selection:
 #### Feasibility:
 #### Innovation:
