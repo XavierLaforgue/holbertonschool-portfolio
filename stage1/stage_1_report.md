@@ -34,34 +34,36 @@ discussions are expected on a regular basis.
 ## Ideas explored
 The first brainstorming method I took on was *brainwriting*, the
 following is the list of ideas I came up with:
+- **Anime-inspired recipe-sharing site**: create users, create recipes,
+  create time tracker per cooking step when
+ preparing a recipe, create nutritional information of ingredients,
+ meal planning, track meals and their nutritional content. Integrated
+ shopping list.
 - **Anime inspired personal improvement web app**: gamify personal
   projects (medals, exp points), plot measurable progress, anime character delivering
   motivational phrases extracted from animes.
+- **Individual professional site**: online comprehensive CV with
+  detailed information, i.e., web page version of articles, plots, numerical data, calculations for
+  chosen parameters; the site allows contact requests and to leave
+  comments on ressources.
+- **Hub for boardgame players to find game partners in the city**: create
+  profiles with availability datetimes, create events, notify users
+  that are available at that time, blacklist users.
+- **Collaborative study/work hub**: create users, create subject or (short-)project,
+  make explicit what kind of collaboration you are looking for, match
+  availabilities and interests of user profiles.
 - **Reading tracker/personal book-centered blog**: create user, create
   blogpost per reading session.
 - **Health tracker**: weight, sleep time, blood pressure, meditation
   session, habit formation.
-- **Anime-inspired recipe-sharing site**: create users, create recipes,
-  create time tracker per cooking step when
- preparing a recipe, create nutritional information of ingredients,
- meal planning, track meals and their nutritional content.
 - **Gym tracker**: create users, create exercises, track and store
   exercice instances.
-- **Hub for boardgame players to find game partners in the city**: create
-  profiles with availability datetimes, create events, notify users
-  that are available at that time, blacklist users.
 - **Home inventory web app**: create inventory of products in different
   cathegories (fresh food, long-lasting food, cleanning supplies,
   laundry, office supplies, etc). Keep track of exhausted inventories.
-- **Individual professional site**: online comprehensive CV with
-  detailed information, i.e., web page version of articles, plots, numerical data, calculations for
-  chosen parameters; the site allows contact requests and to leave comments on ressources.
 - **Personal finance planner / budget tracker**: track expenses by
   categories and items, import data from receipts (supermarket)
   analyse/visualize spendings.
-- **Collaborative study/work hub**: create users, create subject or (short-)project,
-  make explicit what kind of collaboration you are looking for, match
-  availabilities and interests of user profiles.
 - **Skill-sharing marketplace**: a platform where users can offer and book
   lessons, collaborations, tutorials, peer-learning sessions (e.g.,
   music, coding, cooking, drawing, mathematics, science). Including
@@ -74,19 +76,67 @@ following is the list of ideas I came up with:
   accountability. Includes streaks, leaderboards, and motivational
   badges.
 ## Short-listed ideas:
+Some ideas appealed to me more than others, I'll proceed to evaluate
+their strengths, weaknesses, and reasons for rejection.
+### Anime-inspired recipe-sharing site:
+#### Strengths:
+- Excite the curiousity of cooking enthusiasts
+- Exotic nature of the recipes
+- Novelty of the website concept
+- Useful for meal planning
+- Well-established fanbase (anime fans)
+#### Weaknesses:
+- The exotic nature of the meals limits its public
+- Some ingredients may be difficult to find
+- Recipes may be difficult to follow
+- Depends on user-generated content
+#### Solves:
+Meal planning and boredom related to meal prepping.
 ### Anime inspired personal improvement web app
 #### Strengths:
+- Potentially high impact
+- Strong demand for motivational/tracking apps
+- Anime spin differentiates from others
 #### Weaknesses:
+- Typically a mobile app
+- A lot of work/planning to prepare the projects
+- Conceptually difficult as it needs to give users enough freedom to
+  customize their projects or it becomes useless
+- Unclear what may work as reward once objectives are achieved
+- Technically complicated to implement
+#### Solves:
+Organization and tracking of personal goals for motivational purposes.
 #### Reasons for rejection:
+Too many unknowns regarding the sort of projects that should be
+included and how to generalize the project creation so users can
+freely design their own. 
+### Individual professional site
+#### Strengths:
+- Highlights professionalism
+- Personalized presentation of professional experiences and portfolio
+  of realized projects
+#### Weaknesses:
+- No much different than LinkedIn and without social features
+#### Reasons for rejection:
+- Boring
 ## Selected MVP Concept
-![I choose ...](https://img01.ztat.net/article/spp-media-p1/e3497972890d4f288fd68f23917b92d9/362d14099bdc47a1b193bb0bf69ed493.jpg?imwidth=762)
+I chose the **Anime-inspired recipe-sharing site**.
 ### Summary of chosen MVP
+A website where users can create an account and search for or share anime-inspired
+recipes.
+Each recipe will dispose of step-by-step instructions, with or without
+images for each step and a timer when one is necessary.
+The quantities will be adapted according to the desired number of
+portions and the nutritional information will be optionally available.
+A meal planner and the possibility to export the corresponding shopping
+list may be implemented.
 #### Rationale
+Anime has currently a large fanbase, a fanbase in adulthood, facing
+adult challenges such as preparing meals that are healthy and tasty
+while also avoiding boredom/repetition.
+This website could help tackle this issue by offering interesting and
+community approved recipes.
 #### Potential impact
-### Reasons for selection:
-#### Feasibility:
-#### Innovation:
-#### Alignment with goals:
-### Potential challenges and opportunities:
-#### Challenges:
-#### Opportunities:
+A community of curious anime fans wanting to experiment and create new
+recipes inspired by their favorite shows may emerge.
+Anime fans might be coherced to cook at home more often.
