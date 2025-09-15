@@ -102,7 +102,7 @@ Stakeholders are individuals or groups of individuals whose interests
 may be affected by the execution of a project. 
 Identifying and managing stakeholders increases the project’s chances of success.
 
-stakeholRecognized stakeholders:
+Recognized stakeholders:
 
 * Anime fans and home cooks (external stakeholders)
 * Content creators (external stakeholders)
