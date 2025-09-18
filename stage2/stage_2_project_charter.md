@@ -1,4 +1,4 @@
-# PROJECT CHARTER: anime-inspired recipe-sharing website
+# Stage 2: Project Charter - anime-inspired recipe-sharing website
 
 ## Project duration:
 Start: August 18, 2025 - End: November 7, 2025
