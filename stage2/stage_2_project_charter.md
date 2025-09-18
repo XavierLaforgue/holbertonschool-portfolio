@@ -228,9 +228,8 @@ This section outlines the project schedule, listing key stages, milestones, and 
 	* Construct the user interface components.
 		* *Milestone* (week 9): Existent user interface for basic site
 		  content and operations.
-	* Test all functionalities as a user, improve responsiveness and
-	UX.
-		* *Devilverable* (week 10): Completed website.
+	* Test all functionalities as a user, improve responsiveness and UX.
+		* *Deliverable* (week 10): Completed website.
 
 * **Weeks 11 - 12**: Project closure
 	* Prepare final presentation.
