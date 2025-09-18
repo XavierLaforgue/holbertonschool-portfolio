@@ -1,4 +1,4 @@
-# Stage 1 - Team Formation and Idea Development
+# Stage 1: Team Formation and Idea Development
 This report is meant for providing an overview on the team formation
 process, list the ideas explored and give a summary of the chosen
 Minimal Viable Product concept.
