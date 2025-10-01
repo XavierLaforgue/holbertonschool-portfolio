@@ -34,11 +34,12 @@ MVP, categorized by priority using the MoSCoW method:
 - *As **a home cook**, I want to <u>create a meal plan from selected recipes</u> so that <u>I can organize my weekly cooking</u>.*
 - *As **a home cook**, I want to <u>export a shopping list based on my meal plan</u> so that <u>I can shop efficiently</u>.*
 - *As **any user**, I want to <u>send direct messages to other users</u> so that <u>I can discuss recipes privately</u>.*
-- *As **any user**, I want to <u>participate in forums or group chats</u> so that <u>I can engage in community discussions</u>.
-- As **any user**, I want to <u>have access to a dedicated mobile app</u> so that <u>I can use the platform offline</u>.
+- *As **any user**, I want to <u>participate in forums or group chats</u> so that <u>I can engage in community discussions</u>.*
+- *As **any user**, I want to <u>have access to a dedicated mobile app</u> so that <u>I can use the platform offline</u>.*
 
 ### Mockups
 
 
 
 ## Task 1
+
