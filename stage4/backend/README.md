@@ -30,3 +30,8 @@ Activate environment
 ```
 source .venv/bin/activate
 ```
+
+To schedule token clean up: (syntax of crontab: `<minute(0-59)> <hour(0-23)> <day(1-31)/*(everyday)> <month(1-12)/*(everymonth)> <weekday(0-7)/(everyweekday)> command_to_run`)
+```
+( crontab -l ; echo "0 2 * * 1 /home/xavier/holbertonschool-portfolio/stage4/backend/.venv/bin/python /home/xavier/holbertonschool-portfolio/stage4/backend/manage.py cleanup_blacklisted_tokens" ) | crontab -
+```
