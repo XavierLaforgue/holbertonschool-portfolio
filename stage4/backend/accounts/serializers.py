@@ -57,7 +57,9 @@ class UserReadSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = CustomUser
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name',
+                  'password']
+
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
