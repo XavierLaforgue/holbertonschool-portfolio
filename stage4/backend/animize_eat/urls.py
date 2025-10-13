@@ -19,22 +19,10 @@ from django.urls import path, include
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
-from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 
 
-# schema_view = get_schema_view(
-#     openapi.Info(
-#         title="Animize-eat API",
-#         default_version='v1',
-#         description="API documentation",
-#     ),
-#     public=False,
-#     permission_classes=(permissions.IsAdminUser,),
-# # (permissions.AllowAny,),
-# )
-
-@login_required(login_url='/api-auth/login/')
+@login_required(login_url='/api/auth/login/')
 def swagger_redirect(request):
     schema_view = get_schema_view(
         openapi.Info(
@@ -51,12 +39,12 @@ def swagger_redirect(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('swagger/',
+    path('api/swagger/',
          swagger_redirect,  # schema_view.with_ui('swagger', cache_timeout=0),
          name='schema-swagger-ui'),
-    path('api-auth/', include('rest_framework.urls')),
-    path('accounts/', include('accounts.urls')),
-    # path('api/', include('accounts.urls')),
+    path('api/auth/', include('rest_framework.urls')),
+    path('api/accounts/', include('accounts.urls')),
+    path('api/tokens/', include('tokens.urls')),
     # path('redoc/',
     #      schema_view.with_ui('redoc', cache_timeout=0),
     #      name='schema-redoc'),
