@@ -1,12 +1,13 @@
-from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework import generics, response
 from .models import Profile, CustomUser
 from .serializers import ProfileSerializer
-from django.contrib.auth.models import User
 from .serializers import UserCreateSerializer, UserReadSerializer
 from django.utils.crypto import get_random_string
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.permissions import (
+    IsAuthenticated, AllowAny, BasePermission
+)
 
 
 # Create your views here.
@@ -17,8 +18,18 @@ def index(request):
                         'registered accounts')
 
 
+class IsUnauthenticated(BasePermission):
+    def has_permission(self, request, view):
+        return not request.user or request.user.is_anonymous
+
+
 class UserListCreateView(generics.ListCreateAPIView):
     queryset = CustomUser.objects.all()
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsUnauthenticated()]
+        return [AllowAny()]
 
     @swagger_auto_schema(tags=['Users'])
     def get(self, request, *args, **kwargs):
@@ -34,9 +45,23 @@ class UserListCreateView(generics.ListCreateAPIView):
         return UserReadSerializer
 
 
+class IsSelf(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return False
+        # Only access is_staff and id for authenticated users
+        return obj.id == getattr(user, 'id', None)
+
+
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserReadSerializer
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsAuthenticated(), IsSelf()]
 
     @swagger_auto_schema(tags=['User ID'])
     def get(self, request, *args, **kwargs):
