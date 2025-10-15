@@ -1,26 +1,24 @@
 from django.http import HttpResponse
-from rest_framework import generics, response
+from rest_framework import generics, response, status
 from .models import Profile, CustomUser
 from .serializers import ProfileSerializer
 from .serializers import UserCreateSerializer, UserReadSerializer
 from django.utils.crypto import get_random_string
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.permissions import (
-    IsAuthenticated, AllowAny, BasePermission
+    IsAuthenticated, IsAdminUser, AllowAny, BasePermission
 )
 
 
 # Create your views here.
-
-
 def index(request):
     return HttpResponse('Hello accounts world. Here I should manage '
                         'registered accounts')
 
 
-class IsUnauthenticated(BasePermission):
+class IsNotTokenAuthentication(BasePermission):
     def has_permission(self, request, view):
-        return not request.user or request.user.is_anonymous
+        return not request.auth
 
 
 class UserListCreateView(generics.ListCreateAPIView):
@@ -28,14 +26,22 @@ class UserListCreateView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.request.method == 'POST':
-            return [IsUnauthenticated()]
-        return [AllowAny()]
+            return [IsNotTokenAuthentication()]
+        return [IsAdminUser()]
 
-    @swagger_auto_schema(tags=['Users'])
+    @swagger_auto_schema(
+        tags=['User accounts'],
+        operation_summary='List signed-up users'
+    )
     def get(self, request, *args, **kwargs):
+        # return response.Response({'detail': 'GET not allowed.'},
+        #                          status=status.HTTP_405_METHOD_NOT_ALLOWED)
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['Users'])
+    @swagger_auto_schema(
+        tags=['User accounts'],
+        operation_summary='Sign-up'
+    )
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -54,28 +60,34 @@ class IsSelf(BasePermission):
         return obj.id == getattr(user, 'id', None)
 
 
+class IsSelfOrAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return (
+            IsSelf().has_object_permission(request, view, obj)
+            or getattr(request.user, 'is_staff', False)
+        )
+
+
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserReadSerializer
+    permission_classes = [IsSelfOrAdmin]
 
-    def get_permissions(self):
-        if self.request.method == 'GET':
-            return [AllowAny()]
-        return [IsAuthenticated(), IsSelf()]
-
-    @swagger_auto_schema(tags=['User ID'])
+    @swagger_auto_schema(tags=['Account details'])
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['User ID'])
+    @swagger_auto_schema(tags=['Account details'])
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['User ID'])
+    @swagger_auto_schema(tags=['Account details'])
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['User ID'])
+    @swagger_auto_schema(
+        tags=['User accounts'],
+        operation_summary='Delete account')
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
 
@@ -103,35 +115,44 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
             status=204)
 
 
-class ProfileListCreateView(generics.ListCreateAPIView):
+class ProfileListCreateView(generics.ListAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
+    permission_classes = [AllowAny]
 
-    @swagger_auto_schema(tags=['Profiles'])
+    @swagger_auto_schema(
+        tags=['Profiles'],
+        operation_summary='Get list of profiles')
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['Profiles'])
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
 
-
-class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+class ProfileDetailView(generics.RetrieveUpdateAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
 
-    @swagger_auto_schema(tags=['Profile ID'])
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsSelfOrAdmin()]
+
+    @swagger_auto_schema(
+        tags=['Profile details'],
+        operation_summary=''
+    )
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['Profile ID'])
+    @swagger_auto_schema(
+        tags=['Profile details'],
+        operation_summary=''
+    )
     def put(self, request, *args, **kwargs):
         return super().put(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['Profile ID'])
+    @swagger_auto_schema(
+        tags=['Profile details'],
+        operation_summary=''
+    )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
-
-    @swagger_auto_schema(tags=['Profile ID'])
-    def delete(self, request, *args, **kwargs):
-        return super().delete(request, *args, **kwargs)
