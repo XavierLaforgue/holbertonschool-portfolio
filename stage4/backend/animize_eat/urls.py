@@ -30,7 +30,7 @@ def swagger_redirect(request):
             default_version='v1',
             description="API documentation",
         ),
-        public=False,
+        public=True,
         permission_classes=(permissions.IsAdminUser,),
         # (permissions.AllowAny,),
     )

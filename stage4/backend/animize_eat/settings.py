@@ -136,9 +136,19 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': True,
     # Access token valid for 5 minutes
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     # Refresh token valid for 1 day
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
 }
 
 # Internationalization
