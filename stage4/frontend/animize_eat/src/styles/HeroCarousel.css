@@ -2,7 +2,7 @@
   width: 100%;
   max-width: 100%;
   overflow: hidden;
-  padding: 2rem 0;
+  padding: var(--spacing-3xl) 0;
   background: transparent;
   position: relative;
   box-sizing: border-box;
@@ -11,23 +11,14 @@
 .recipe-carousel__slider {
   display: flex;
   flex-direction: row;
-  gap: 3rem;
+  gap: var(--spacing-5xl);
   width: max-content;
   animation: slideFeed 30s linear infinite;
 }
 
-@keyframes slideFeed {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
 @media (max-width: 768px) {
   .recipe-carousel__slider {
-    padding-top: 1rem;
-    gap: 1rem;
+    padding-top: var(--spacing-lg);
+    gap: var(--spacing-lg);
   }
 }

@@ -1,22 +1,24 @@
-// import { useState } from 'react'
-import './App.css'
-import Header from './Header'
-import HeroCarousel from './HeroCarousel'
-import SiteManual from './SiteManual'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import SignupPage from './pages/SignupPage';
+// import LoginForm from './components/LoginForm';
+// import AboutPage from './components/AboutPage';
+import Header from './components/Header'
 import Footer from './Footer'
 
-function App() {
-  // const [count, setCount] = useState(0)
 
+function App() {
   return (
-    <>
-      <Header />
-      <main className="main-content">
-        <HeroCarousel />
-        <SiteManual />
-      </main>
-      <Footer />
-    </>
+    <BrowserRouter>
+      <Header/>
+        <Routes>
+          <Route path='/' element={<HomePage/>} />
+          <Route path='/signup' element={<SignupPage/>} />
+          {/* <Route path='/login' element={<LoginForm/>} />
+          <Route path='/about' element={<AboutPage/>} /> */}
+      </Routes>
+      <Footer/>
+    </BrowserRouter>
   )
 }
 

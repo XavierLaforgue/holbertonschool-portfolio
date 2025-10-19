@@ -1,5 +1,5 @@
 import React from 'react';
-import './HeroCarousel.css';
+import '../styles/HeroCarousel.css';
 import RecipeCard from './RecipeCard';
 
 // Dummy data for demonstration

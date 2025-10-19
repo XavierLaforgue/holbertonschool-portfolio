@@ -1,5 +1,5 @@
 import React from 'react';
-import './SiteManual.css';
+import '../styles/SiteManual.css';
 
 const SiteManual: React.FC = () => {
   return (
@@ -11,17 +11,17 @@ const SiteManual: React.FC = () => {
         </p>
 
         <div className="site-manual__modes">
-          {/* Experience Mode */}
+          {/* Explorer Mode */}
           <div className="site-manual__mode site-manual__mode--experience">
             <div className="site-manual__mode-header">
-              <h3 className="site-manual__mode-title">Experience Mode</h3>
+              <h3 className="site-manual__mode-title">Explorer Mode</h3>
               <span className="site-manual__mode-badge">Discover & Cook</span>
             </div>
             <div className="site-manual__mode-content">
               <div className="site-manual__step">
                 <span className="site-manual__step-number">1</span>
                 <div className="site-manual__step-content">
-                  <h4>Think of Your Favorite Anime</h4>
+                  <h4>Think of an anime that makes you vibe</h4>
                   <p>Got a show that makes you hungry? Let's bring those flavors to life</p>
                 </div>
               </div>
