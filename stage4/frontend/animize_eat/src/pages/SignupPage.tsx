@@ -3,6 +3,7 @@ import { API_BASE_URL } from '../config';
 import PopUpModal from '../components/PopUpModal';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SignupPage.css';
+import parseDjangoError from '../parseDjangoError';
 
 
 const SignupForm: React.FC = () => {
@@ -10,6 +11,7 @@ const SignupForm: React.FC = () => {
 		{ username: '', email: '', password: '' }
 	);
 	const [error, setError] = useState('');
+	const [errorMessage, setErrorMessage] = useState('');
 	const [success, setSuccess] = useState('');
 	const [showErrorModal, setShowErrorModal] = useState(false);
 	const navigate = useNavigate();
@@ -29,17 +31,42 @@ const SignupForm: React.FC = () => {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(form),
-		});
-		if (res.ok) {
-			setSuccess('Sign-up successful!');
-			navigate('/profile/update',	{ state: { success: success } });
-		} else {
-			const data = await res.json();
-			setError(data.error || 'Sign-up failed');
-			setShowErrorModal(true);
-		}
-		} catch {
-			setError('Network error');
+			});
+			if (res.ok) {
+				setSuccess('Sign-up successful!');
+				try {
+					const res2 = await fetch(`${API_BASE_URL}/tokens/`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(
+							{username: form.username, password: form.password}
+						),
+						credentials: 'include',
+					})
+					if (res2.ok) {
+						navigate('/profile/update',
+							{ state: { success: success } }
+						);
+					} else {
+						const message2 = await parseDjangoError(res2);
+						setError('Login failed');
+						setErrorMessage(message2);
+						setShowErrorModal(true);
+					}
+				} catch (err) {
+					setError('Network error while trying to log-in');
+					setErrorMessage(err instanceof Error ? err.message : String(err));
+					setShowErrorModal(true);
+				}
+			} else {
+				const message = await parseDjangoError(res);
+				setError('Sign-up failed');
+				setErrorMessage(message);
+				setShowErrorModal(true);
+			}
+		} catch (err) {
+			setError('Network error while trying to sign-up');
+			setErrorMessage(err instanceof Error ? err.message : String(err));
 			setShowErrorModal(true);
 		}
 	};
@@ -49,7 +76,16 @@ const SignupForm: React.FC = () => {
 		  <PopUpModal
 		  	isOpen={showErrorModal}
 			onClose={() => setShowErrorModal(false)}>
-			  <div>{error}</div>
+		    <div>
+		      {error}
+			  <br/>
+			  {errorMessage.split('\n').map((line, idx) => (
+			    <React.Fragment key={idx}>
+				  {line}
+				  <br/>
+				</React.Fragment>
+			  ))}
+			</div>
 		  </PopUpModal>
 		  <div className="signup-page">
 		    <div className="signup-form">

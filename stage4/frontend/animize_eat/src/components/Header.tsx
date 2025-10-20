@@ -2,13 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Header.css';
 import logo from '../assets/logo.png';
+import { useAuth } from '../context/useAuth'; 
 
 
 const Header: React.FC = () => {
+  const { user } = useAuth();
+
   const navItems = [
     { key: 'login', label: 'Login', linkto: '/login' },
     { key: 'signup', label: 'Sign-up', linkto: '/signup' },
-    { key: 'about', label: 'About', linkto: '/about' }
+    { key: 'about', label: 'About', linkto: '/about' },
   ];
 
   return (
@@ -19,6 +22,29 @@ const Header: React.FC = () => {
       </Link>
       <nav className="header__nav">
         <ul>
+          {/* Show login and sign-up if not logged in */}
+          {/* {!user && (
+            <>
+              <li key="login">
+                <Link to="/login" title="Login" id="header__nav__first">Login</Link>
+              </li>
+              <li key="signup">
+                <Link to="/signup" title="Sign-up">Sign-up</Link>
+              </li>
+            </>
+          )} */}
+          {/* Show username and avatar if logged in */}
+          {/* {user && (
+            <li key="user" id="header__nav__first">
+              <button className="header__user-btn">
+                {user.avatarUrl && (
+                  <img src={user.avatarUrl} alt="avatar" className="header__avatar" />
+                )}
+                <span>{user.username}</span>
+              </button>
+            </li>
+          )} */}
+          {/* Always show About */}
           {navItems.map((item, idx) => {
             const isFirst = idx === 0;
             const isLast = idx === navItems.length - 1;
