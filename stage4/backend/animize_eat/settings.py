@@ -49,9 +49,11 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt.token_blacklist',
     'tokens',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -62,6 +64,16 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'animize_eat.urls'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+CORS_ALLOW_CREDENTIALS = True  # to send cookies in cross-origin requests
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]
 
 TEMPLATES = [
     {

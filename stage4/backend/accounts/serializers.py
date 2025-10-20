@@ -11,8 +11,15 @@ class UserCreateSerializer(serializers.ModelSerializer):
     )
     email = serializers.EmailField(
         required=True,
-        validators=[UniqueValidator(queryset=CustomUser.objects.all())]
+        # validators=[UniqueValidator(queryset=CustomUser.objects.all())]
     )
+
+    def validate_email(self, value):
+        if CustomUser.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "A user with this email already exists."
+            )
+        return value
 
     def validate_password(self, value):
         if not re.search(r'[A-Z]', value):
