@@ -7,12 +7,9 @@ import { useAuth } from '../context/useAuth';
 
 const Header: React.FC = () => {
   const { user } = useAuth();
-
-  const navItems = [
-    { key: 'login', label: 'Login', linkto: '/login' },
-    { key: 'signup', label: 'Sign-up', linkto: '/signup' },
-    { key: 'about', label: 'About', linkto: '/about' },
-  ];
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const handleMenuToggle = () => setMenuOpen((open) => !open);
+  const handleMenuClose = () => setMenuOpen(false);
 
   return (
     <header className={`header`}>
@@ -22,46 +19,69 @@ const Header: React.FC = () => {
       </Link>
       <nav className="header__nav">
         <ul>
-          {/* Show login and sign-up if not logged in */}
-          {/* {!user && (
+          {/* Show login, sign-up, and about if not logged in */}
+          {!user && (
             <>
-              <li key="login">
-                <Link to="/login" title="Login" id="header__nav__first">Login</Link>
+              <li key="login" id="header__nav__first">
+                <Link 
+                  to="/login"
+                  title="Login"
+                >Login</Link>
               </li>
               <li key="signup">
-                <Link to="/signup" title="Sign-up">Sign-up</Link>
+                <Link 
+                  to="/signup"
+                  title="Sign-up"
+                >Sign-up</Link>
+              </li>
+              <li key="about" id='header__nav__last'>
+                <Link 
+                  to="/about"
+                  title="About"
+                >About</Link>
               </li>
             </>
-          )} */}
-          {/* Show username and avatar if logged in */}
-          {/* {user && (
-            <li key="user" id="header__nav__first">
-              <button className="header__user-btn">
-                {user.avatarUrl && (
-                  <img src={user.avatarUrl} alt="avatar" className="header__avatar" />
-                )}
-                <span>{user.username}</span>
-              </button>
-            </li>
-          )} */}
-          {/* Always show About */}
-          {navItems.map((item, idx) => {
-            const isFirst = idx === 0;
-            const isLast = idx === navItems.length - 1;
-            let linkId = '';
-            if (isFirst) linkId = 'header__nav__first';
-            else if (isLast) linkId = 'header__nav__last';
-            return (
-              <li key={item.key}>
+          )}
+          {/* Show username and avatar with dropdown if logged in */}
+          {user && (
+            <>
+              <li key="recipes" id="header__nav__first">
                 <Link 
-                  to={item.linkto}
-                  title={item.label}
-                  id={linkId}>
-                   {item.label}
-                </Link>
+                  to="/Recipes"
+                  title="Recipes"
+                >Recipes</Link>
               </li>
-            );
-          })}
+              <li key="user" id="header__nav__last">
+                <button
+                  className="header__user-btn"
+                  aria-haspopup="true"
+                  aria-expanded={menuOpen}
+                  onClick={handleMenuToggle}
+                  onBlur={handleMenuClose}
+                  type="button"
+                >
+                  {user.avatarUrl && (
+                    <img 
+                      src={user.avatarUrl} alt="avatar"
+                      className="header__avatar" />
+                  )}
+                  <span className="header__user-name">{user.username}</span>
+                  {/* <svg className="header__user-caret" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> */} {/* build the inverted triangle */}
+                  <span className="header__user-caret">▼</span> {/* use unicode character for the inverted triangle */}
+                </button>
+                {menuOpen && (
+                  <ul className="header__user-menu">
+                    <li><Link to="/account" onClick={handleMenuClose}>Account</Link></li>
+                    <li><Link to="/profile" onClick={handleMenuClose}>Profile</Link></li>
+                    <li><Link to="/liked" onClick={handleMenuClose}>Liked recipes</Link></li>
+                    <li><Link to="/saved" onClick={handleMenuClose}>Saved recipes</Link></li>
+                    <li><Link to="/about" onClick={handleMenuClose}>About Animize Eat</Link></li>
+                    <li><button className="header__user-logout" onClick={() => { /* TODO: implement logout */ handleMenuClose(); }}>Log out</button></li>
+                  </ul>
+                )}
+              </li>
+            </>
+          )}
         </ul>
       </nav>
     </header>

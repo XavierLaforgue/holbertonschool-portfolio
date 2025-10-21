@@ -2,10 +2,24 @@
   width: 100%;
   max-width: 100%;
   overflow: hidden;
-  padding: var(--spacing-3xl) 0;
-  background: transparent;
+  padding: var(--spacing-5xl) 0 var(--spacing-3xl) 0;
+  background: var(--color-bg-dark);
   position: relative;
   box-sizing: border-box;
+}
+
+/* Heading styles for the carousel */
+.recipe-carousel h1 {
+  font-size: var(--font-size-6xl);
+  font-family: var(--font-heading);
+  color: var(--color-text-light);
+  text-align: center;
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  text-shadow: var(--text-shadow-title);
+  margin: 0 0 var(--spacing-5xl) 0;
+  padding: 0 var(--spacing-3xl);
+  animation: titleBounce var(--duration-normal) ease-out;
 }
 
 .recipe-carousel__slider {
@@ -17,8 +31,30 @@
 }
 
 @media (max-width: 768px) {
+  .recipe-carousel {
+    padding: var(--spacing-4xl) 0 var(--spacing-2xl) 0;
+  }
+
+  .recipe-carousel h1 {
+    font-size: var(--font-size-5xl);
+    margin-bottom: var(--spacing-4xl);
+    text-shadow: var(--text-shadow-sm);
+  }
+
   .recipe-carousel__slider {
     padding-top: var(--spacing-lg);
     gap: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .recipe-carousel {
+    padding: var(--spacing-3xl) 0 var(--spacing-xl) 0;
+  }
+
+  .recipe-carousel h1 {
+    font-size: var(--font-size-4xl);
+    margin-bottom: var(--spacing-3xl);
+    padding: 0 var(--spacing-2xl);
   }
 }

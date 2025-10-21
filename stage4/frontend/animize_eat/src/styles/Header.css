@@ -1,3 +1,81 @@
+/* User avatar/name button */
+.header__user-btn {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: var(--radius-2xl);
+  font-family: var(--font-body);
+  font-size: var(--font-size-md);
+  color: var(--color-text-medium);
+  font-weight: var(--font-weight-bold);
+  transition: background var(--transition-normal);
+  position: relative;
+}
+
+.header__user-btn:focus {
+  outline: 2px solid var(--color-primary-red);
+  background: var(--gradient-red-primary);
+  color: var(--color-text-white);
+}
+
+.header__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 0.5em;
+  border: 2px solid var(--color-primary-red);
+  box-shadow: var(--shadow-logo-glow);
+}
+
+/* Dropdown menu for user options */
+.header__user-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border-radius: 6px;
+  min-width: 180px;
+  z-index: 100;
+  padding: 0.5em 0;
+  margin: 0;
+  list-style: none;
+  animation: fadeIn 0.2s ease;
+}
+
+.header__user-menu li {
+  width: 100%;
+}
+
+.header__user-menu a,
+.header__user-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.5em 1em;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--color-text-medium);
+  font-size: var(--font-size-md);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background var(--transition-normal), color var(--transition-normal);
+}
+
+.header__user-menu a:hover,
+.header__user-menu button:hover {
+  background: var(--gradient-red-primary);
+  color: var(--color-text-white);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .header {
   display: flex;
   justify-content: space-between;
