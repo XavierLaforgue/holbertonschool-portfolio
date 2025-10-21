@@ -7,6 +7,7 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework import status
 from django.conf import settings
+import jwt
 
 
 access_lifetime = settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME']
@@ -44,8 +45,12 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                     # cross-site requests (it requires https)
                 max_age=max_age_refresh  # (in seconds)
             )
-            response.data.pop('access')
-            response.data.pop('refresh')
+            user_id = jwt.decode(access_token,
+                                 settings.SECRET_KEY,
+                                 algorithms=["HS256"]).get('user_id')
+            response.data['id'] = user_id
+            response.data.pop('access', None)
+            response.data.pop('refresh', None)
         return response
 
 
