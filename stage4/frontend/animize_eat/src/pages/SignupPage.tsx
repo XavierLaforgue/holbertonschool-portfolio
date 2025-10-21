@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { API_BASE_URL } from '../config';
 import PopUpModal from '../components/PopUpModal';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SignupPage.css';
 import parseDjangoError from '../parseDjangoError';
+import { AuthContext } from '../context/AuthContext';
 
 
 const SignupForm: React.FC = () => {
+	const auth = useContext(AuthContext);
+	if (!auth) {
+    	throw new Error('SignupForm must be used within an AuthProvider');
+  	}
+  	const { login } = auth;
 	const [form, setForm] = useState(
 		{ username: '', email: '', password: '' }
 	);
@@ -44,6 +50,8 @@ const SignupForm: React.FC = () => {
 						credentials: 'include',
 					})
 					if (res2.ok) {
+						const payload = await res2.json();
+						login({ id: payload.id, username: form.username });
 						navigate('/profile/update',
 							{ state: { success: success } }
 						);
