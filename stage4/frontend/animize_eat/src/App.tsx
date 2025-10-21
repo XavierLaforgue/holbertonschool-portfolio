@@ -6,6 +6,7 @@ import SignupPage from './pages/SignupPage';
 import Header from './components/Header'
 import Footer from './Footer'
 import AuthProvider from './context/AuthContext';
+import UpdateProfilePage from './pages/UpdateProfilePage';
 
 
 function App() {
@@ -16,8 +17,10 @@ function App() {
           <Routes>
             <Route path='/' element={<HomePage/>} />
             <Route path='/signup' element={<SignupPage/>} />
-            {/* <Route path='/login' element={<LoginForm/>} />
-            <Route path='/about' element={<AboutPage/>} /> */}
+            <Route path='/profile/update' element={<UpdateProfilePage/>} />
+            {/* <Route path='/recipes' element={<RecipesPage/>} /> */}
+            {/* <Route path='/login' element={<LoginForm/>} />*/}
+            <Route path='/about' element={<HomePage/>} />
         </Routes>
         <Footer/>
       </BrowserRouter>
