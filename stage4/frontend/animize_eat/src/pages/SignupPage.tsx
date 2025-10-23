@@ -1,25 +1,19 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { API_BASE_URL } from '../config';
 import PopUpModal from '../components/PopUpModal';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../styles/SignupPage.css';
 import parseDjangoError from '../parseDjangoError';
-import AuthContext from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 
-const SignupForm: React.FC = () => {
-	const auth = useContext(AuthContext);
-	if (!auth) {
-    	throw new Error('SignupForm must be used within an AuthProvider');
-  	}
-  	const { login } = auth;
-	const [form, setForm] = useState(
-		{ username: '', email: '', password: '' }
-	);
+const SignupPage: React.FC = () => {
+	const { login } = useAuth();
+	const [form, setForm] = useState({ username: '', email: '', password: '' });
 	const [error, setError] = useState('');
 	const [errorMessage, setErrorMessage] = useState('');
-	const [success, setSuccess] = useState('');
 	const [showErrorModal, setShowErrorModal] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 	const navigate = useNavigate();
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,79 +23,107 @@ const SignupForm: React.FC = () => {
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault(); // prevents the browser from reloading the page (which is its default behavior)
+		e.preventDefault();
 		setError('');
-		setSuccess('');
+		setErrorMessage('');
+		setIsLoading(true);
+
 		try {
-			const res = await fetch(`${API_BASE_URL}/accounts/users/`, {
+			// Step 1: Create user account
+			console.log('[SignupPage] Step 1: Creating user account...');
+			const createUserRes = await fetch(`${API_BASE_URL}/accounts/users/`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(form),
 			});
-			if (res.ok) {
-				setSuccess('Sign-up successful!');
-				const payload = await res.json();
-				const user_id = payload.id;
-				try {
-					const res2 = await fetch(`${API_BASE_URL}/tokens/`, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify(
-							{username: form.username, password: form.password}
-						),
-						// credentials: 'include',
-					})
-					if (res2.ok) {
-						const payload = await res2.json();
-						const accessToken = payload.access;
-						const refreshToken = payload.refresh;
-						localStorage.setItem('access_token', accessToken);
-						localStorage.setItem('refresh_token', refreshToken);
-						const res3 = await fetch(
-							`${API_BASE_URL}/accounts/me/avatar/`, {
-								method: 'GET',
-								headers: {
-									'Content-Type': 'application/json',
-									'Authorization': `Bearer ${accessToken}`,
-								},
-							}
-						);
-						if (res3.ok) {
-							const payload3 = await res3.json();
-							login({
-								id: user_id,
-								username: form.username,
-								avatarUrl: payload3.avatarUrl });
-							navigate('/profile/update',
-								{ state: { success: success } }
-							);
-						} else {
-							const message3 = await parseDjangoError(res3);
-							setError('AvatarUrl retrieval failed');
-							setErrorMessage(message3);
-							setShowErrorModal(true);
-						}
-					} else {
-						const message2 = await parseDjangoError(res2);
-						setError('Login failed');
-						setErrorMessage(message2);
-						setShowErrorModal(true);
-					}
-				} catch (err) {
-					setError('Network error while trying to log-in');
-					setErrorMessage(err instanceof Error ? err.message : String(err));
-					setShowErrorModal(true);
-				}
-			} else {
-				const message = await parseDjangoError(res);
+
+			if (!createUserRes.ok) {
+				const message = await parseDjangoError(createUserRes);
+				console.error('[SignupPage] User creation failed:', message);
 				setError('Sign-up failed');
 				setErrorMessage(message);
 				setShowErrorModal(true);
+				setIsLoading(false);
+				return;
 			}
+
+			const userData = await createUserRes.json();
+			const userId = userData.id;
+			console.log('[SignupPage] User created successfully:', userId);
+
+			// Step 2: Get authentication tokens
+			console.log('[SignupPage] Step 2: Getting authentication tokens...');
+			const tokenRes = await fetch(`${API_BASE_URL}/tokens/`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					username: form.username,
+					password: form.password
+				}),
+			});
+
+			if (!tokenRes.ok) {
+				const message = await parseDjangoError(tokenRes);
+				console.error('[SignupPage] Token generation failed:', message);
+				setError('Auto-login failed after signup');
+				setErrorMessage(message);
+				setShowErrorModal(true);
+				setIsLoading(false);
+				return;
+			}
+
+			const tokenData = await tokenRes.json();
+			const accessToken = tokenData.access;
+			const refreshToken = tokenData.refresh;
+
+			localStorage.setItem('access_token', accessToken);
+			localStorage.setItem('refresh_token', refreshToken);
+			console.log('[SignupPage] Tokens stored successfully');
+
+			// Step 3: Get user info including avatar
+			console.log('[SignupPage] Step 3: Fetching user info...');
+			const userInfoRes = await fetch(`${API_BASE_URL}/accounts/me/`, {
+				method: 'GET',
+				headers: {
+					'Authorization': `Bearer ${accessToken}`,
+				},
+			});
+
+			if (!userInfoRes.ok) {
+				const message = await parseDjangoError(userInfoRes);
+				console.error('[SignupPage] User info fetch failed:', message);
+				// Still log them in with basic info
+				login({
+					id: userId,
+					username: form.username,
+					avatarUrl: ''
+				});
+				console.log('[SignupPage] Logged in with basic info, navigating to profile update');
+				navigate('/profile/update');
+				setIsLoading(false);
+				return;
+			}
+
+			const userInfo = await userInfoRes.json();
+			console.log('[SignupPage] User info retrieved:', userInfo);
+
+			// Step 4: Update auth context and navigate
+			login({
+				id: userId,
+				username: form.username,
+				avatarUrl: userInfo.avatar || ''
+			});
+
+			console.log('[SignupPage] Signup complete! Navigating to profile update...');
+			navigate('/profile/update');
+
 		} catch (err) {
-			setError('Network error while trying to sign-up');
+			console.error('[SignupPage] Unexpected error during signup:', err);
+			setError('Network error during sign-up');
 			setErrorMessage(err instanceof Error ? err.message : String(err));
 			setShowErrorModal(true);
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -140,6 +162,7 @@ const SignupForm: React.FC = () => {
 			        placeholder="Choose your hero name"
 			        className="signup-form__input"
 			        required
+			        disabled={isLoading}
 			      />
 			    </div>
 			    <div className="signup-form__field">
@@ -155,6 +178,7 @@ const SignupForm: React.FC = () => {
 			        type="email"
 			        className="signup-form__input"
 			        required
+			        disabled={isLoading}
 			      />
 			    </div>
 			    <div className="signup-form__field">
@@ -170,17 +194,18 @@ const SignupForm: React.FC = () => {
 			        type="password"
 			        className="signup-form__input"
 			        required
+			        disabled={isLoading}
 			      />
 			    </div>
-			    <button type="submit" className="signup-form__button">
-			      Sign Up
+			    <button type="submit" className="signup-form__button" disabled={isLoading}>
+			      {isLoading ? 'Creating Account...' : 'Sign Up'}
 			    </button>
 			  </form>
 			  <div className="signup-form__footer">
 			    Already have an account?{' '}
-			    <a href="/login" className="signup-form__link">
+			    <Link to="/login" className="signup-form__link">
 			      Log in here
-			    </a>
+			    </Link>
 			  </div>
 			</div>
 		  </div>
@@ -188,4 +213,4 @@ const SignupForm: React.FC = () => {
 	);
 };
 
-export default SignupForm;
+export default SignupPage;

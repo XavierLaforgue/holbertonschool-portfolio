@@ -111,7 +111,7 @@ const Header: React.FC = () => {
                     <li><Link to="/liked" onClick={() => setMenuOpen(false)}>Liked recipes</Link></li>
                     <li><Link to="/saved" onClick={() => setMenuOpen(false)}>Saved recipes</Link></li>
                     <li><Link to="/about" onClick={() => setMenuOpen(false)}>About Animize Eat</Link></li>
-                    <li><button className="header__user-logout" onClick={handleLogout}>Log out</button></li>
+                    <li><Link to="/" className="header__user-logout" onClick={handleLogout}>Log out</Link></li>
                   </ul>
                 )}
               </li>

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from './config';
+import { API_BASE_URL } from '../config';
 
 
 async function fetchWithRefresh(url: string, accessToken: string, options: RequestInit = {}) {
