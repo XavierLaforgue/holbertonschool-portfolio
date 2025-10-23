@@ -1,7 +1,14 @@
+/* User dropdown container - needs position relative for absolute dropdown */
+.header__user-dropdown {
+  position: relative;
+  z-index: 1002; /* Ensure dropdown container and menu appear above everything */
+}
+
 /* User avatar/name button */
 .header__user-btn {
   display: flex;
   align-items: center;
+  gap: 0.5em;
   cursor: pointer;
   background: none;
   border: none;
@@ -15,6 +22,10 @@
   position: relative;
 }
 
+.header__user-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
 .header__user-btn:focus {
   outline: 2px solid var(--color-primary-red);
   background: var(--gradient-red-primary);
@@ -26,50 +37,106 @@
   height: 32px;
   border-radius: 50%;
   object-fit: cover;
-  margin-right: 0.5em;
   border: 2px solid var(--color-primary-red);
   box-shadow: var(--shadow-logo-glow);
+  flex-shrink: 0;
 }
 
-/* Dropdown menu for user options */
+/* Avatar placeholder when no image */
+.header__avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gradient-red-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-md);
+  border: 2px solid var(--color-primary-red);
+  box-shadow: var(--shadow-logo-glow);
+  flex-shrink: 0;
+}
+
+.header__user-caret {
+  font-size: 0.75em;
+  color: var(--color-primary-red);
+  transition: transform var(--transition-normal);
+}
+
 .header__user-menu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 0.5em);
   right: 0;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  border-radius: 6px;
-  min-width: 180px;
-  z-index: 100;
-  padding: 0.5em 0;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.25),
+    0 8px 24px rgba(220, 38, 38, 0.2),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  border-radius: 8px;
+  min-width: 200px;
+  width: auto;
+  z-index: 1001; /* Higher than header (1000) to appear above page content */
+  padding: 0.75em 0;
   margin: 0;
   list-style: none;
   animation: fadeIn 0.2s ease;
+  border: 3px solid var(--color-primary-red);
+  backdrop-filter: blur(10px);
 }
 
 .header__user-menu li {
   width: 100%;
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.25),
+    0 8px 24px rgba(220, 38, 38, 0.2),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  border-radius: 8px;
+  border: 3px solid var(--color-primary-red);
+  backdrop-filter: blur(10px);
 }
 
 .header__user-menu a,
 .header__user-menu button {
   display: block;
   width: 100%;
-  padding: 0.5em 1em;
+  padding: 0.75em 1.25em;
   text-align: left;
-  background: none;
+  background: transparent;
   border: none;
-  color: var(--color-text-medium);
+  color: var(--color-text-dark);
   font-size: var(--font-size-md);
   font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
   cursor: pointer;
-  transition: background var(--transition-normal), color var(--transition-normal);
+  transition: all var(--transition-normal);
+  position: relative;
+  text-decoration: none;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .header__user-menu a:hover,
 .header__user-menu button:hover {
   background: var(--gradient-red-primary);
   color: var(--color-text-white);
+  padding-left: 1.5em;
+  text-shadow: var(--text-shadow-sm);
+  transform: translateX(2px);
+}
+
+.header__user-logout {
+  border-top: 2px solid rgba(220, 38, 38, 0.2);
+  margin-top: 0.5em;
+  padding-top: 0.75em !important;
+  color: var(--color-primary-red);
+  font-weight: var(--font-weight-bold);
 }
 
 @keyframes fadeIn {
@@ -99,7 +166,7 @@
   z-index: var(--z-header);
   backdrop-filter: var(--backdrop-blur);
   transition: var(--transition-all-normal);
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to allow dropdown menu to show */
 }
 
 /* Energy bar animation effect */
