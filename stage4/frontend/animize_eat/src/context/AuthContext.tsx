@@ -11,7 +11,9 @@ interface AuthContextType {
   user: UserInfo | null;
   login: (user: UserInfo) => void;
   logout: () => void;
-  setUser: (user: UserInfo) => void;
+  setUser: (user: UserInfo | null) => void;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
