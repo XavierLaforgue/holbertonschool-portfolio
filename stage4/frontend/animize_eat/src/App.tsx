@@ -5,7 +5,7 @@ import SignupPage from './pages/SignupPage';
 // import AboutPage from './components/AboutPage';
 import Header from './components/Header'
 import Footer from './Footer'
-import AuthProvider from './context/AuthContext';
+import AuthProvider from './context/AuthProvider';
 import UpdateProfilePage from './pages/UpdateProfilePage';
 
 

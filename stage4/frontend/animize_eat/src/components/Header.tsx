@@ -64,7 +64,8 @@ const Header: React.FC = () => {
                     <img 
                       src={user.avatarUrl} alt="avatar"
                       className="header__avatar" />
-                  )}
+                  )
+                  }
                   <span className="header__user-name">{user.username}</span>
                   {/* <svg className="header__user-caret" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6L8 10L12 6" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> */} {/* build the inverted triangle */}
                   <span className="header__user-caret">▼</span> {/* use unicode character for the inverted triangle */}

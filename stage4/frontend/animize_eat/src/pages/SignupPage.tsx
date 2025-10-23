@@ -4,7 +4,7 @@ import PopUpModal from '../components/PopUpModal';
 import { useNavigate } from 'react-router-dom';
 import '../styles/SignupPage.css';
 import parseDjangoError from '../parseDjangoError';
-import { AuthContext } from '../context/AuthContext';
+import AuthContext from '../context/AuthContext';
 
 
 const SignupForm: React.FC = () => {
@@ -40,6 +40,8 @@ const SignupForm: React.FC = () => {
 			});
 			if (res.ok) {
 				setSuccess('Sign-up successful!');
+				const payload = await res.json();
+				const user_id = payload.id;
 				try {
 					const res2 = await fetch(`${API_BASE_URL}/tokens/`, {
 						method: 'POST',
@@ -47,14 +49,38 @@ const SignupForm: React.FC = () => {
 						body: JSON.stringify(
 							{username: form.username, password: form.password}
 						),
-						credentials: 'include',
+						// credentials: 'include',
 					})
 					if (res2.ok) {
 						const payload = await res2.json();
-						login({ id: payload.id, username: form.username });
-						navigate('/profile/update',
-							{ state: { success: success } }
+						const accessToken = payload.access;
+						const refreshToken = payload.refresh;
+						localStorage.setItem('access_token', accessToken);
+						localStorage.setItem('refresh_token', refreshToken);
+						const res3 = await fetch(
+							`${API_BASE_URL}/accounts/me/avatar/`, {
+								method: 'GET',
+								headers: {
+									'Content-Type': 'application/json',
+									'Authorization': `Bearer ${accessToken}`,
+								},
+							}
 						);
+						if (res3.ok) {
+							const payload3 = await res3.json();
+							login({
+								id: user_id,
+								username: form.username,
+								avatarUrl: payload3.avatarUrl });
+							navigate('/profile/update',
+								{ state: { success: success } }
+							);
+						} else {
+							const message3 = await parseDjangoError(res3);
+							setError('AvatarUrl retrieval failed');
+							setErrorMessage(message3);
+							setShowErrorModal(true);
+						}
 					} else {
 						const message2 = await parseDjangoError(res2);
 						setError('Login failed');
