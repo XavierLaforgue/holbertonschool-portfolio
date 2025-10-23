@@ -4,7 +4,9 @@ import PopUpModal from '../components/PopUpModal';
 import { useNavigate } from 'react-router-dom';
 import '../styles/UpdateProfilePage.css';
 import parseDjangoError from '../parseDjangoError';
-import { AuthContext } from '../context/AuthContext';
+import AuthContext from '../context/AuthContext';
+import fetchRefresh from '../fetchRefresh';
+import PutProfile from '../functions/PutProfile';
 
 
 const UpdateProfilePage: React.FC = () => {
@@ -15,7 +17,7 @@ const UpdateProfilePage: React.FC = () => {
 		throw new Error(`UpdateProfilePage should be accessible only after being logged-in`)
 	}
 	const userId = auth.user.id;
-	const [form, setForm] = useState({ // TODO: add missing fields to the profile model in the backend
+	const [form, setForm] = useState({
 		bio: '',
 		favorite_anime: '',
 		favorite_meal: '',
@@ -24,7 +26,7 @@ const UpdateProfilePage: React.FC = () => {
 		dietary_preferences: '',
 	});
 	const [avatar, setAvatar] = useState<File | null>(null);
-	const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+	const [avatarPreview, setAvatarPreview] = useState<string | null>(auth.user.avatarUrl);
 	const [error, setError] = useState('');
 	const [errorMessage, setErrorMessage] = useState('');
 	const [success, setSuccess] = useState('');
@@ -32,11 +34,13 @@ const UpdateProfilePage: React.FC = () => {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		async function fetchProfile() { // TODO: create and add fetchRefresh function to refresh access tokens if a fetch request with tokens is rejected du to invalid/expired token
+		async function fetchProfile(token: string) {
 			try {
-				const res = await fetch(`${API_BASE_URL}/accounts/profiles/${userId}/`, { // TODO: change endpoint so the required id would be the userId and not the profile id
+				const res = await fetch(`${API_BASE_URL}/accounts/profiles/${userId}/`, {
 					method: 'GET',
-					credentials: 'include',
+					headers: {
+						'Authorization': `Bearer ${token}`,
+					}
 				});
 				if (res.ok) {
 					const data = await res.json();
@@ -48,18 +52,31 @@ const UpdateProfilePage: React.FC = () => {
 						personal_website: data.personal_website || '',
 						dietary_preferences: data.dietary_preferences || '',
 					});
-				    if (data.avatar) { // TODO: configure django server so it will serve the avatar from a url while stored in its local storage
-						setAvatarPreview(data.avatar);
-          			}
-        		}
+				}
+				return res;
     		} catch (err) {
 				setError('Network error while trying to retrieve user profile');
 				setErrorMessage(err instanceof Error ? err.message : String(err));
 				setShowErrorModal(true);
 			}
 		}
-		fetchProfile();
-	}, [userId]);
+		let accessToken = localStorage.getItem('access_token');
+		if (!accessToken) return;
+		fetchProfile(accessToken).then((res) => {
+			if (res && res.ok)
+				return;
+			else if (res && res.status === 401) {
+				const refreshToken = localStorage.getItem('refresh_token');
+				if (!refreshToken) {
+					throw new Error('there is access Token but no refresh token');
+				}
+				fetchRefresh(refreshToken);
+				accessToken = localStorage.getItem('access_token'); 
+				if (!accessToken) return;
+				fetchProfile(accessToken);
+			}
+		});
+	});
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
 		setForm({ ...form,
@@ -78,6 +95,8 @@ const UpdateProfilePage: React.FC = () => {
 		e.preventDefault();
 		setError('');
 		setSuccess('');
+		const token = localStorage.getItem('access_token');
+		if (!token) return;
 		try {
 			const formData = new FormData();
 			Object.entries(form).forEach(([key, value]) => {
@@ -86,16 +105,23 @@ const UpdateProfilePage: React.FC = () => {
 			if (avatar) {
 				formData.append('avatar', avatar);
 			}
-			const res = await fetch(`${API_BASE_URL}/accounts/profiles/${userId}/`,
-				{
-					method: 'PUT',
-					body: formData, // TODO: configure Django so it can receive the upload of an image
-					credentials: 'include',
-				}
-			);
+			const res = await PutProfile(token, userId, formData);
 			if (res.ok) {
 				setSuccess('Profile update successful!');
 				navigate('/recipes', { state: { success: success } });
+			} else if (res.status === 401) {
+				fetchRefresh(token);
+				if (!token) return;
+				const res2 = await PutProfile(token, userId, formData);
+				if (res2.ok) {
+					setSuccess('Profile update successful!');
+					navigate('/recipes', { state: { success: success } });
+				} else {
+				const message = await parseDjangoError(res);
+				setError('Profile update failed');
+				setErrorMessage(message);
+				setShowErrorModal(true);
+				}
 			} else {
 				const message = await parseDjangoError(res);
 				setError('Profile update failed');
