@@ -141,7 +141,7 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'tokens.authentication.CsrfExemptSessionAuthentication',
     ),
 }
 
@@ -151,6 +151,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     # Refresh token valid for 1 day
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'TOKEN_OBTAIN_SERIALIZER': ('accounts.serializers.'
+                                'MyTokenObtainPairSerializer'),
 }
 
 SWAGGER_SETTINGS = {
