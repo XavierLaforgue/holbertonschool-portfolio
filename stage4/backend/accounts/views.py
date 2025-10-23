@@ -1,24 +1,31 @@
 from django.http import HttpResponse
-from rest_framework import generics, response, status
+from rest_framework import generics
+from rest_framework import status as drf_status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Profile, CustomUser
-from .serializers import ProfileSerializer
+from .serializers import ProfileSerializer, AvatarOnlySerializer
 from .serializers import UserCreateSerializer, UserReadSerializer
 from django.utils.crypto import get_random_string
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.permissions import (
     IsAuthenticated, IsAdminUser, AllowAny, BasePermission
 )
-
-
-# Create your views here.
-def index(request):
-    return HttpResponse('Hello accounts world. Here I should manage '
-                        'registered accounts')
+from rest_framework_simplejwt.backends import TokenBackend
+from django.conf import settings
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 class IsNotTokenAuthentication(BasePermission):
     def has_permission(self, request, view):
         return not request.auth
+
+
+class IsTokenAuthenticated(BasePermission):
+    def has_permission(self, request, view):
+        return getattr(request, 'auth', False)
 
 
 class UserListCreateView(generics.ListCreateAPIView):
@@ -54,7 +61,7 @@ class UserListCreateView(generics.ListCreateAPIView):
 class IsSelf(BasePermission):
     def has_object_permission(self, request, view, obj):
         user = request.user
-        if not user or not user.is_authenticated:
+        if not user or not getattr(user, 'is_authenticated', False):
             return False
         # Only access is_staff and id for authenticated users
         return obj.id == getattr(user, 'id', None)
@@ -68,10 +75,30 @@ class IsSelfOrAdmin(BasePermission):
         )
 
 
+class IsProfileOwner(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if not user or not getattr(user, 'is_authenticated', False):
+            return False
+        return (
+            getattr(obj, 'user', False) and (
+                getattr(obj.user, 'id', None) == getattr(user, 'id', None)
+            )
+        )
+
+
+class IsProfileOwnerOrAdmin(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return (
+            IsProfileOwner().has_object_permission(request, view, obj)
+            or getattr(request.user, 'is_staff', False)
+        )
+
+
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserReadSerializer
-    permission_classes = [IsSelfOrAdmin]
+    permission_classes = [IsSelf]  # [IsSelfOrAdmin]
 
     @swagger_auto_schema(tags=['Account details'])
     def get(self, request, *args, **kwargs):
@@ -110,12 +137,12 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
         instance.set_password(random_password)
         instance.save()
-        return response.Response(
+        return Response(
             {'detail': 'User has been permanently deleted.'},
             status=204)
 
 
-class ProfileListCreateView(generics.ListAPIView):
+class ProfileListView(generics.ListAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = [AllowAny]
@@ -130,11 +157,17 @@ class ProfileListCreateView(generics.ListAPIView):
 class ProfileDetailView(generics.RetrieveUpdateAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
+    lookup_field = 'user__id'  # refers to traversing the relation: using the
+    # id of the user to search
+    lookup_url_kwarg = 'user_id'  # refers to the key in the path parameter
+    # that will be used to get the value that needs to match the lookup_field
+
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_permissions(self):
         if self.request.method == 'GET':
             return [AllowAny()]
-        return [IsSelfOrAdmin()]
+        return [IsProfileOwner()]  # [IsProfileOwnerOrAdmin()]
 
     @swagger_auto_schema(
         tags=['Profile details'],
@@ -156,3 +189,45 @@ class ProfileDetailView(generics.RetrieveUpdateAPIView):
     )
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
+
+
+class MeView(APIView):
+    permission_classes = [IsTokenAuthenticated]
+
+    @swagger_auto_schema(
+        tags=['Current user details'],
+        operation_summary='user id, username, avatar URL'
+    )
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if not user or not user.is_authenticated:
+            return Response(
+                {'detail': 'Authentication credentials were not provided.'},
+                status=drf_status.HTTP_401_UNAUTHORIZED,
+            )
+        profile = getattr(user, 'profile')
+        serializer = AvatarOnlySerializer(
+            profile, context={'request': request})
+        return Response({
+            'id': str(user.id),
+            'username': user.username,
+            **serializer.data,
+        })
+
+
+class AvatarView(APIView):
+    permission_classes = [IsTokenAuthenticated]
+
+    @swagger_auto_schema(
+        tags=['Current user details'],
+        operation_summary='Avatar URL'
+    )
+    def get(self, request, *args, **kwargs):
+        profile = getattr(request.user, 'profile', None)
+        if not profile:
+            return Response({'avatar_url': None})
+        serializer = AvatarOnlySerializer(
+            profile, context={'request': request})
+        return Response(serializer.data)
+
+

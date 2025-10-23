@@ -69,6 +69,24 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         model = Profile
-        fields = '__all__'
+        fields = ['username', 'bio', 'avatar', 'favorite_anime',
+                  'favorite_meal', 'location', 'personal_website',
+                  'dietary_preferences']
+
+
+class AvatarOnlySerializer(serializers.ModelSerializer):
+    avatar_url = serializers.SerializerMethodField()
+
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        model = Profile
+        fields = ['avatar_url']
+
+    def get_avatar_url(self, obj):
+        request = self.context.get('request')
+        if obj.avatar and request:
+            return request.build_absolute_uri(obj.avatar.url)
+        return None
