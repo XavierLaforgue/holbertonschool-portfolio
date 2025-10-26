@@ -6,11 +6,13 @@
 
 **/dist
 **/node_modules
-**/.classpath
+**/compose*.y*ml
+**/Dockerfile*
 **/.dockerignore
 **/.env*
-**/.git
 **/.gitignore
+**/.classpath
+**/.git
 **/.project
 **/.settings
 **/.toolstarget
@@ -23,8 +25,6 @@
 **/*.jfm
 **/charts
 **/docker-compose*
-**/compose.y*ml
-**/Dockerfile*
 **/npm-debug.log
 **/obj
 **/secrets.dev.yaml
