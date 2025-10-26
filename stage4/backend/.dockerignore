@@ -1,14 +1,12 @@
-**/.github
 **/.venv
 **/.vscode
 **/__pycache__
 **/.dockerignore
 **/.env*
 **/.gitignore
-Dockerfile.CLAUDE
-Dockerfile*
+**/Dockerfile*
 download_media.sh
-*.md
+**/*.md
 # Media files will be in a volume:
 media/
 **/.DS_Store
