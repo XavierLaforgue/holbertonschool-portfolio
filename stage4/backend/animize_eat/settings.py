@@ -30,7 +30,7 @@ SECRET_KEY = environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = environ.get('DJANGO_DEBUG')
-ALLOWED_HOSTS = [environ.get('DJANGO_ALLOWED_HOSTS')]
+ALLOWED_HOSTS = environ.get('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 
 # Application definition
 
@@ -62,15 +62,23 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'animize_eat.urls'
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",
+# ]
+
+CORS_ALLOWED_ORIGINS = environ.get(
+    'CORS_ALLOWED_ORIGINS', 'http://localhost:5173'  # second is default
+    ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True  # to send cookies in cross-origin requests
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://localhost:5173",
+# ]
+
+CSRF_TRUSTED_ORIGINS = environ.get(
+    'CSRF_TRUSTED_ORIGINS', 'http://localhost:5173'  # second is default
+    ).split(',')
 
 TEMPLATES = [
     {
