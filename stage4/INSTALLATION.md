@@ -78,7 +78,8 @@ To build image and launch container with the composed app run:
 ```bash
 docker compose --env-file .env.combined.dev -f compose.dev.yaml up --build
 ```
-**Note:** the variables provided by `--env-file .env.dev` are only available to docker-compose itself (for variable substitution in the compose file), but they aren not passed into the running containers.
+**Note:** the variables provided by `--env-file .env.combined.dev` are only available to docker-compose itself (for variable substitution in the compose file), but they are now also passed into the backend container via the `environment` section in compose.dev.yaml.
+
 #### 5.1 Single-service testing: build and start only backend
 Change directory to `backend`, build and start the container
 ```bash
