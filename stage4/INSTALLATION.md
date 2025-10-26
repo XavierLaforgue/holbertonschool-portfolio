@@ -80,3 +80,9 @@ In case we need to access the terminal inside the backend container we use:
 ```bash
 docker compose --env-file .env.dev -f compose.dev.yaml exec backend bash
 ```
+#### 5.2 Single-service testing: build and start only frontend
+Change directory to `frontend/animize_eat`, build and start the container
+```bash
+cd frontend/animize_eat
+docker compose --env-file .env.dev -f compose.dev.yaml up --build
+```
