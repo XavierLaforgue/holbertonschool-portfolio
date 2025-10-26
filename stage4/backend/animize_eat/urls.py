@@ -16,9 +16,42 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.conf.urls.static import static
+
+
+@login_required(login_url='/api/auth/login/')
+def swagger_redirect(request):
+    schema_view = get_schema_view(
+        openapi.Info(
+            title="Animize-eat API",
+            default_version='v1',
+            description="API documentation",
+        ),
+        public=True,
+        permission_classes=(permissions.IsAdminUser,),
+        # (permissions.AllowAny,),
+    )
+    return schema_view.with_ui('swagger', cache_timeout=0)(request)
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('first_app/', include('first_app.urls')),
+    path('api/swagger/',
+         swagger_redirect,  # schema_view.with_ui('swagger', cache_timeout=0),
+         name='schema-swagger-ui'),
+    path('api/auth/', include('rest_framework.urls')),
+    path('api/accounts/', include('accounts.urls')),
+    path('api/tokens/', include('tokens.urls')),
+    # path('redoc/',
+    #      schema_view.with_ui('redoc', cache_timeout=0),
+    #      name='schema-redoc'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,20 @@
+/* ===== HOME PAGE ===== */
+
+/* Main content wrapper to clear fixed header */
+.main-content {
+  width: 100%;
+  min-height: 100vh;
+  padding-top: calc(var(--header-min-height) + var(--spacing-3xl));
+  box-sizing: border-box;
+  position: relative;
+  background: var(--color-bg-white);
+}
+
+/* Ensure smooth transitions */
+.main-content > * {
+  transition: var(--transition-all-normal);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Responsive adjustments handled by --header-min-height variable */
