@@ -20,6 +20,8 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 @login_required(login_url='/api/auth/login/')
@@ -49,3 +51,7 @@ urlpatterns = [
     #      schema_view.with_ui('redoc', cache_timeout=0),
     #      name='schema-redoc'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL,
+                          document_root=settings.MEDIA_ROOT)

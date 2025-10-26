@@ -1,15 +1,15 @@
 from django.urls import path
-from . import views
-from .views import ProfileListCreateView, ProfileDetailView
-from .views import UserListCreateView, UserDetailView
+from .views import ProfileListView, ProfileDetailView, MeView
+from .views import UserListCreateView, UserDetailView, AvatarView
 
 
 urlpatterns = [
-    path("", views.index, name='index'),
-    path('profiles/', ProfileListCreateView.as_view(),
+    path('profiles/', ProfileListView.as_view(),
          name='profile-list-create'),
-    path('profiles/<uuid:pk>/', ProfileDetailView.as_view(),
+    path('profiles/<uuid:user_id>/', ProfileDetailView.as_view(),
          name='profile-detail'),
     path('users/', UserListCreateView.as_view(), name='user-list-create'),
     path('users/<uuid:pk>/', UserDetailView.as_view(), name='user-detail'),
+    path('me/avatar/', AvatarView.as_view(), name='me-avatar'),
+    path('me/', MeView.as_view(), name='me'),
 ]

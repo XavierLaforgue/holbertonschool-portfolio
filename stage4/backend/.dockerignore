@@ -1,0 +1,16 @@
+**/.venv
+**/.vscode
+**/__pycache__
+**/.dockerignore
+**/.env*
+**/.gitignore
+**/Dockerfile*
+download_media.sh
+**/*.md
+# Media files will be in a volume:
+media/
+# Static files will be collected in container:
+staticfiles/
+**/.DS_Store
+**/Thumbs.db
+**/.pytest_cache/

@@ -18,22 +18,22 @@ from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR / '.env')
+env_type = environ.get('DJANGO_ENV', 'dev')  # default to 'dev'
+env_file = BASE_DIR / f'.env.{env_type}'
+# Only load .env file if it exists (for local development)
+# In Docker, environment variables are passed directly
+if env_file.exists():
+    load_dotenv(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY =
-# 'django-insecure-u%rt(ak7+zc7v#m!tvu4ugod-!#+k0z^@&1l+mz&0v07ed16=#'
-
 SECRET_KEY = environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+DEBUG = environ.get('DJANGO_DEBUG')
+ALLOWED_HOSTS = environ.get('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 
 # Application definition
 
@@ -49,9 +49,11 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt.token_blacklist',
     'tokens',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -62,6 +64,24 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'animize_eat.urls'
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",
+# ]
+
+CORS_ALLOWED_ORIGINS = environ.get(
+    'CORS_ALLOWED_ORIGINS', 'http://localhost:5173'  # second is default
+    ).split(',')
+
+CORS_ALLOW_CREDENTIALS = True  # to send cookies in cross-origin requests
+
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://localhost:5173",
+# ]
+
+CSRF_TRUSTED_ORIGINS = environ.get(
+    'CSRF_TRUSTED_ORIGINS', 'http://localhost:5173'  # second is default
+    ).split(',')
 
 TEMPLATES = [
     {
@@ -129,7 +149,7 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'tokens.authentication.CsrfExemptSessionAuthentication',
     ),
 }
 
@@ -139,6 +159,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     # Refresh token valid for 1 day
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'TOKEN_OBTAIN_SERIALIZER': ('accounts.serializers.'
+                                'MyTokenObtainPairSerializer'),
 }
 
 SWAGGER_SETTINGS = {
@@ -166,7 +188,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

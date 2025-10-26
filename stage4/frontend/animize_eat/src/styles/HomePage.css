@@ -1,0 +1,32 @@
+/* ===== HOME PAGE ===== */
+
+/* Main content wrapper to clear fixed header */
+.main-content {
+  width: 100%;
+  min-height: 100vh;
+  padding-top: calc(var(--spacing-3xl) + 70px);
+  box-sizing: border-box;
+  position: relative;
+  background: var(--color-bg-white);
+}
+
+/* Ensure smooth transitions */
+.main-content > * {
+  transition: var(--transition-all-normal);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet and below - header becomes taller due to flex-direction: column */
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: calc(var(--spacing-3xl) + 120px);
+  }
+}
+
+/* Mobile - header is even taller with wrapped content */
+@media (max-width: 480px) {
+  .main-content {
+    padding-top: calc(var(--spacing-2xl) + 140px);
+  }
+}
