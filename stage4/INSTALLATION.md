@@ -6,10 +6,16 @@ The setup instructions provided below have been written for and tested on Ubuntu
 To install/run **animize-eat** you need the docker engine and CLI, i.e., the following terminal commands should return the installed version.
 ```bash
 docker --version
+docker compose version
 ```
 If anything other than the program version is output then install docker (e.g., https://docs.docker.com/get-started/) before resuming this guide.
 
-The application has been tested with: `Docker version 28.3.3, build 980b856`
+The application has been tested with: 
+```bash
+Docker version 28.3.3, build 980b856
+Docker Compose version v2.39.2-desktop.1
+```
+and it is known to require Docker Compose V2+.
 
 ## Start guide
 ### 1. Clone repository
@@ -68,15 +74,9 @@ Change directory to `backend`, build and start the container
 cd backend
 docker compose --env-file .env.dev -f compose.dev.yaml up --build
 ```
+It is setup to create the images, launch the containers, create the database and populate it, and launch the development server on `localhost:8000`.
 
-
-
-
-
---
+In case we need to access the terminal inside the backend container we use:
 ```bash
-DJANGO_ENV=dev python manage.py runserver localhost:8000
-```
-```bash
-docker compose --env-file path/to/.env.dev up
+docker compose --env-file .env.dev -f compose.dev.yaml exec backend bash
 ```

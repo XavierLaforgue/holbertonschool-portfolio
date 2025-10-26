@@ -22,9 +22,17 @@ services:
     volumes:
       - ./media:/app/media
       - .:/app # mounting the whole directory to update codebase while in development
+    # environment:
+    #   - DJANGO_ENV=dev
+    #   - SECRET_KEY=${SECRET_KEY}
+    #   - DB_NAME=${DB_NAME}
+    #   - DB_USER=${DB_USER}
+    #   - DB_PW=${DB_PW}
+    #   - DB_HOST=db
+    #   - DB_PORT=5432
 
 # `depends_on` tells Docker Compose to start the database before your
-# application. 
+# application.
     depends_on:
       db:
         condition: service_healthy
@@ -39,6 +47,7 @@ services:
     restart: always
     user: postgres
     environment:
+      TZ: Europe/Paris
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PW}
       POSTGRES_DB: ${DB_NAME}
@@ -53,7 +62,7 @@ services:
       - 5432
 # Run the pg_isready command to check if the database is ready to accept connections.
     healthcheck:
-      test: [ "CMD", "pg_isready" ]
+      test: [ "CMD", "pg_isready", "-U", "${DB_USER}", "-d", "${DB_NAME}" ]
       interval: 10s
       timeout: 5s
       retries: 5

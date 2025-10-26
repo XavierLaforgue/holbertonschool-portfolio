@@ -1,45 +1,16 @@
-# Python
-# __pycache__/
-# *.py[cod]
-# *$py.class
-# *.so
-# .Python
-# *.egg-info/
-# dist/
-# build/
-
-# Virtual Environment
-# .venv/
-# venv/
-# ENV/
-# env/
-
-# Django
-# *.log
-# db.sqlite3
-# db.sqlite3-journal
-
-# Environment variables
-# .env
-
-# IDE
-# .vscode/
-# .idea/
-# *.swp
-# *.swo
-
-# Git
-# .git/
-# .gitignore
-
-# Media files (will be in volume)
-# media/
-
-# Tests
-# .pytest_cache/
-# .coverage
-# htmlcov/
-
-# OS
-# .DS_Store
-# Thumbs.db
+**/.github
+**/.venv
+**/.vscode
+**/__pycache__
+**/.dockerignore
+**/.env*
+**/.gitignore
+Dockerfile.CLAUDE
+Dockerfile*
+download_media.sh
+*.md
+# Media files will be in a volume:
+media/
+**/.DS_Store
+**/Thumbs.db
+**/.pytest_cache/
