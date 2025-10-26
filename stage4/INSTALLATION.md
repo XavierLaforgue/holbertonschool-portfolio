@@ -35,9 +35,9 @@ openssl rand -base64 50
 #### 2.2. Database configuration
 Provide the desired database configuration.
 ### 3. Provide environment file (frontend)
-
+Use the provided `frontend/.env.dev.example` to create a private `frontend/.env.dev` file the frontend (React) will actually use.
 ### 4. Import media files
-No image broker has been implemented yet, Django is still in charge of delivering them.
+No image broker (object storage, e.g., `S3`) has been implemented yet, Django is still in charge of delivering them.
 As to not upload the media files to github, they are provided in the google drive: https://drive.google.com/drive/folders/1tCYiEiYwLagJAN0OKQOdKivf30HSud_F?usp=sharing.
 Download the media directory into the backend directory so the resulting structure is:
 ```
@@ -51,19 +51,32 @@ Download the media directory into the backend directory so the resulting structu
 			|_...
 	|-tokens/
 		|_...
-	|_.env.dev,Dockerfile.dev,manage.py,.dockerignore,requirements.txt,download_media.sh
+	|_.env.dev,Dockerfile.dev,manage.py,.dockerignore,requirements.txt,download_media.sh,...
 ```
 Alternatively, use the provided bash script: `download_media.sh` making sure it has execution permissions (still from `stage4/`):
 ```bash
-chmod +x backend/download_media.sh
-./backend/download_media.sh
+cd backend
+chmod +x download_media.sh
+./download_media.sh
+cd ..
 ```
+**Warning**: the script is slow and will not work if the folder contains more than 50 files.
 ### 5. Build and start services
-
 #### 5.1 Single-service testing: build and start only backend
 Change directory to `backend`, build and start the container
 ```bash
 cd backend
-docker build -f Dockerfile.dev -t backend:dev .
+docker compose --env-file .env.dev -f compose.dev.yaml up --build
 ```
 
+
+
+
+
+--
+```bash
+DJANGO_ENV=dev python manage.py runserver localhost:8000
+```
+```bash
+docker compose --env-file path/to/.env.dev up
+```

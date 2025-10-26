@@ -1,0 +1,63 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker Compose reference guide at
+# https://docs.docker.com/go/compose-spec-reference/
+
+# Here the instructions define your application as a service called "server".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - ${BACKEND_PORT:-8000}:8000
+    image: backend:dev # image name and tag (built because there is a 'build:' section')
+# Mounting as a volume is best for dynamic, persistent, or
+# user-uploaded files: this is the case of the 'media' directory. This
+# way the media directory stays on the host machine (not the container)
+# and there is no need to rebuild the image for new/changed files.
+    volumes:
+      - ./media:/app/media
+      - .:/app # mounting the whole directory to update codebase while in development
+
+# `depends_on` tells Docker Compose to start the database before your
+# application. 
+    depends_on:
+      db:
+        condition: service_healthy
+# the backend service will wait for the db service (your database) to
+# be healthy before starting.
+
+# Creates service with postgres image. The service restarts
+# automatically if it crashes. Postgres user is created with password
+# in environment file, database is also created.
+  db:
+    image: postgres # official image to use (it doesn't build a new one because there is no 'build:' section)
+    restart: always
+    user: postgres
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PW}
+      POSTGRES_DB: ${DB_NAME}
+# To make the database accessible from the local machine at port
+# LOCAL_DB_PORT (this port would have to be free)
+    # ports:
+    #   - ${LOCAL_DB_PORT}:5432
+# Make the database persistent between container restarts
+    volumes:
+      - db-data:/var/lib/postgresql 
+    expose:
+      - 5432
+# Run the pg_isready command to check if the database is ready to accept connections.
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+# The `db-data` volume persists the database data between container
+# restarts.
+volumes:
+  db-data:
