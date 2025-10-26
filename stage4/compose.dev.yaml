@@ -1,0 +1,72 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+# traffic should go through the reverse proxy
+    # ports:
+    #   - ${BACKEND_PORT:-8000}:8000
+    image: backend:dev
+    develop:
+      watch:
+        - path: ./backend
+          target: /app
+          action: sync
+    volumes:
+      - ./backend/media:/app/media
+      # - ./backend:/app 
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres 
+    restart: always
+    user: postgres
+    environment:
+      TZ: Europe/Paris
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PW}
+      POSTGRES_DB: ${DB_NAME}
+# To make the database accessible from the local machine at port
+# LOCAL_DB_PORT (this port would have to be free)
+    # ports:
+    #   - ${LOCAL_DB_PORT}:5432
+# Make the database persistent between container restarts
+    volumes:
+      - db-data:/var/lib/postgresql 
+    expose:
+      - 5432
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${DB_USER}", "-d", "${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    # ports:
+    #   - 5173:5173
+    image: frontend:dev
+    develop:
+      watch:
+        - path: ./frontend
+          target: /usr/src/app
+          action: sync
+  reverse-proxy:
+    build:
+      context: ./reverse-proxy
+      dockerfile: Dockerfile.dev
+    ports:
+      - 80:80
+    depends_on:
+      - frontend
+      - backend
+    develop:
+      watch:
+        - path: ./reverse-proxy/nginx.dev.conf
+          target: /etc/nginx/conf.d/nginx.dev.conf
+          action: sync
+volumes:
+  db-data:
