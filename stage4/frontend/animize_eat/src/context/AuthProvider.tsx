@@ -39,7 +39,12 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         if (res.ok) {
           const userInfo = await res.json();
           console.log('[AuthProvider] User fetched successfully:', userInfo.username);
-          login(userInfo);
+          // Map avatar_url from backend to avatarUrl for frontend
+          login({
+            id: userInfo.id,
+            username: userInfo.username,
+            avatarUrl: userInfo.avatar_url || ''
+          });
           return;
         }
 
@@ -74,7 +79,12 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             if (retryRes.ok) {
               const userInfo = await retryRes.json();
               console.log('[AuthProvider] User fetched successfully after refresh:', userInfo.username);
-              login(userInfo);
+              // Map avatar_url from backend to avatarUrl for frontend
+              login({
+                id: userInfo.id,
+                username: userInfo.username,
+                avatarUrl: userInfo.avatar_url || ''
+              });
               return;
             } else {
               console.error('[AuthProvider] Failed to fetch user after token refresh');

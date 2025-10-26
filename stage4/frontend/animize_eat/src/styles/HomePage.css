@@ -4,7 +4,7 @@
 .main-content {
   width: 100%;
   min-height: 100vh;
-  padding-top: calc(var(--spacing-3xl) + 70px);
+  padding-top: calc(var(--header-min-height) + var(--spacing-3xl));
   box-sizing: border-box;
   position: relative;
   background: var(--color-bg-white);
@@ -17,16 +17,4 @@
 
 /* ===== RESPONSIVE DESIGN ===== */
 
-/* Tablet and below - header becomes taller due to flex-direction: column */
-@media (max-width: 768px) {
-  .main-content {
-    padding-top: calc(var(--spacing-3xl) + 120px);
-  }
-}
-
-/* Mobile - header is even taller with wrapped content */
-@media (max-width: 480px) {
-  .main-content {
-    padding-top: calc(var(--spacing-2xl) + 140px);
-  }
-}
+/* Responsive adjustments handled by --header-min-height variable */

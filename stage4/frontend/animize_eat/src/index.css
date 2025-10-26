@@ -165,6 +165,9 @@
   --z-base: 1;
 
   /* ===== SIZING ===== */
+  /* Header Height - used to offset main content below fixed header */
+  --header-min-height: 70px;
+
   --logo-size-sm: 50px;
   --logo-size-md: 60px;
   --logo-size-lg: 75px;

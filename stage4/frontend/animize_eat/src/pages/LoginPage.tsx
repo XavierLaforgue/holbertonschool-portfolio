@@ -82,7 +82,7 @@ const LoginPage: React.FC = () => {
       login({
         id: userInfo.id,
         username: userInfo.username,
-        avatarUrl: userInfo.avatar || ''
+        avatarUrl: userInfo.avatar_url || ''
       });
 
       console.log('[LoginPage] Login successful, redirecting...');
