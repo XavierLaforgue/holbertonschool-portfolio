@@ -1,0 +1,282 @@
+/* Main page - starts below fixed header */
+.recipe-update-page {
+	width: 100%;
+	min-height: 100vh;
+	/* Padding accounts for fixed header height + extra spacing */
+	padding-top: calc(var(--header-min-height) + var(--spacing-3xl));
+	box-sizing: border-box;
+	background: linear-gradient(135deg, #fff5f5 0%, #ffffff 100%);
+	position: relative;
+}
+
+/* Cover Image Section */
+.recipe-cover-section {
+	width: 100%;
+	max-width: 1200px;
+	margin: 0 auto 2rem;
+	position: relative;
+}
+
+/* Placeholder when no image */
+.recipe-cover-placeholder {
+	width: 100%;
+	height: 400px;
+	background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+	border: 3px dashed #dc2626;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	position: relative;
+	overflow: hidden;
+}
+
+.recipe-cover-placeholder::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.1), transparent);
+	transition: left 0.5s ease;
+}
+
+.recipe-cover-placeholder:hover {
+	border-color: #991b1b;
+	background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+	transform: scale(1.01);
+	box-shadow: 0 8px 24px rgba(220, 38, 38, 0.15);
+}
+
+.recipe-cover-placeholder:hover::before {
+	left: 100%;
+}
+
+.recipe-cover-placeholder-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+	z-index: 1;
+}
+
+.recipe-cover-icon {
+	font-size: 4rem;
+	opacity: 0.6;
+	transition: all 0.3s ease;
+}
+
+.recipe-cover-placeholder:hover .recipe-cover-icon {
+	opacity: 1;
+	transform: scale(1.2) rotate(10deg);
+}
+
+.recipe-cover-text {
+	font-size: 1.75rem;
+	font-weight: 700;
+	color: #dc2626;
+	font-family: var(--font-heading, 'Bangers', cursive);
+	letter-spacing: 1px;
+	text-transform: uppercase;
+}
+
+.recipe-cover-subtext {
+	font-size: 1rem;
+	color: #6b7280;
+	font-weight: 500;
+}
+
+/* Image Container */
+.recipe-cover-image-container {
+	width: 100%;
+	height: 400px;
+	position: relative;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+	border: 3px solid #dc2626;
+	background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.recipe-cover-image {
+	max-width: 100%;
+	max-height: 100%;
+	width: auto;
+	height: auto;
+	object-fit: contain; /* Shows entire image, scales to fit */
+	display: block;
+	transition: transform 0.3s ease;
+}
+
+.recipe-cover-image-container:hover .recipe-cover-image {
+	transform: scale(1.05);
+}
+
+/* Remove button */
+.recipe-cover-remove {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	width: 40px;
+	height: 40px;
+	background: rgba(220, 38, 38, 0.9);
+	color: white;
+	border: 2px solid white;
+	border-radius: 50%;
+	font-size: 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+	z-index: 10;
+}
+
+.recipe-cover-remove:hover {
+	background: #991b1b;
+	transform: scale(1.1) rotate(90deg);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Button container */
+.recipe-cover-buttons {
+	position: absolute;
+	bottom: 1.5rem;
+	right: 1.5rem;
+	display: flex;
+	gap: 1rem;
+	z-index: 10;
+}
+
+/* Change Image button */
+.recipe-cover-change {
+	padding: 0.75rem 1.5rem;
+	background: rgba(220, 38, 38, 0.95);
+	color: white;
+	border: 2px solid white;
+	border-radius: 8px;
+	font-size: 1rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	backdrop-filter: blur(10px);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.recipe-cover-change:hover {
+	background: #991b1b;
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.recipe-cover-change:active {
+	transform: translateY(0);
+}
+
+/* Confirm Image button */
+.recipe-cover-confirm {
+	padding: 0.75rem 1.5rem;
+	background: rgba(34, 197, 94, 0.95); /* Green */
+	color: white;
+	border: 2px solid white;
+	border-radius: 8px;
+	font-size: 1rem;
+	font-weight: 700;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	backdrop-filter: blur(10px);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	animation: pulse 2s infinite;
+}
+
+.recipe-cover-confirm:hover {
+	background: #16a34a; /* Darker green */
+	transform: translateY(-2px);
+	box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.recipe-cover-confirm:active {
+	transform: translateY(0);
+}
+
+.recipe-cover-confirm:disabled {
+	background: rgba(156, 163, 175, 0.95); /* Gray */
+	cursor: wait;
+	animation: none;
+}
+
+@keyframes pulse {
+	0%, 100% {
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	}
+	50% {
+		box-shadow: 0 4px 12px rgba(34, 197, 94, 0.6);
+	}
+}
+
+/* Content Container */
+.recipe-update-container {
+	max-width: 1200px;
+	margin: 0 auto;
+	background: #ffffff;
+	padding: 2.5rem;
+	border-radius: 12px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+	border: 2px solid #fecaca;
+}
+
+.recipe-creation-container h1 {
+	margin-bottom: 1.5rem;
+	color: #dc2626;
+	font-family: var(--font-heading, 'Bangers', cursive);
+	font-size: 2.5rem;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+}
+
+.recipe-update-container p {
+	color: #6b7280;
+	font-size: 1.125rem;
+	line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+	.recipe-cover-section {
+		padding: 0 1rem;
+	}
+
+	.recipe-cover-placeholder,
+	.recipe-cover-image-container {
+		height: 250px;
+		border-radius: 8px;
+	}
+
+	.recipe-cover-icon {
+		font-size: 3rem;
+	}
+
+	.recipe-cover-text {
+		font-size: 1.25rem;
+	}
+
+	.recipe-update-container {
+		margin: 0 1rem;
+		padding: 1.5rem;
+	}
+
+	.recipe-update-container h1 {
+		font-size: 1.75rem;
+	}
+}

@@ -1,13 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../styles/Header.css';
 import logo from '../assets/logo.png';
-import { useAuth } from '../context/useAuth'; 
+import { useAuth } from '../context/useAuth';
+import { API_BASE_URL } from '../config'; 
 
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [isCreatingRecipe, setIsCreatingRecipe] = React.useState(false);
   const menuRef = React.useRef<HTMLLIElement>(null);
 
   const handleMenuToggle = () => {
@@ -19,6 +22,53 @@ const Header: React.FC = () => {
     console.log('[Header] Logging out');
     logout();
     setMenuOpen(false);
+  };
+
+  const handleCreateRecipe = async (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    if (isCreatingRecipe) return; // Prevent double-clicks
+
+    setIsCreatingRecipe(true);
+    const accessToken = localStorage.getItem('access_token');
+
+    if (!accessToken) {
+      console.error('[Header] No access token found');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      console.log('[Header] Creating new recipe...');
+
+      // Create empty recipe
+      const response = await fetch(`${API_BASE_URL}/recipes/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: 'Untitled Recipe',
+          // Other required fields will be set as empty/default by backend
+        }),
+      });
+
+      if (response.ok) {
+        const recipe = await response.json();
+        console.log('[Header] Recipe created:', recipe.id);
+        // Navigate to update page with the new recipe ID
+        navigate(`/recipe/update/${recipe.id}`);
+      } else {
+        console.error('[Header] Failed to create recipe:', response.status);
+        alert('Failed to create recipe. Please try again.');
+      }
+    } catch (error) {
+      console.error('[Header] Error creating recipe:', error);
+      alert('Network error. Please try again.');
+    } finally {
+      setIsCreatingRecipe(false);
+    }
   };
 
   // Close menu when clicking outside
@@ -72,11 +122,22 @@ const Header: React.FC = () => {
           {/* Show username and avatar with dropdown if logged in */}
           {user && (
             <>
-              <li key="recipes" id="header__nav__first">
-                <Link 
-                  to="/Recipes"
-                  title="Recipes"
-                >Recipes</Link>
+              <li key="create" id="header__nav__first">
+                <button
+                  onClick={handleCreateRecipe}
+                  disabled={isCreatingRecipe}
+                  title="Create Recipe"
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    cursor: isCreatingRecipe ? 'wait' : 'pointer',
+                    font: 'inherit',
+                    color: 'inherit',
+                  }}
+                >
+                  {isCreatingRecipe ? 'Creating...' : 'Create'}
+                </button>
               </li>
               <li key="user" id="header__nav__last" className="header__user-dropdown" ref={menuRef}>
                 <button

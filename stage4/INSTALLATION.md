@@ -78,8 +78,52 @@ To build image and launch container with the composed app run:
 ```bash
 docker compose --env-file .env.combined.dev -f compose.dev.yaml up --build
 ```
-**Note:** the variables provided by `--env-file .env.dev` are only available to docker-compose itself (for variable substitution in the compose file), but they aren not passed into the running containers.
-#### 5.1 Single-service testing: build and start only backend
+**Note:** the variables provided by `--env-file .env.combined.dev` are only available to docker-compose itself (for variable substitution in the compose file), but they are now also passed into the backend container via the `environment` section in compose.dev.yaml.
+
+#### 5.0 Build and start with hot reload
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml watch --build
+```
+#### 5.1 Stop the container
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml down
+```
+#### 5.2 Launch the container in the background
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml up --build -d
+```
+#### 5.3 Examine logs in real-time 
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml logs -f
+```
+#### 5.4 Examine the logs of a single service
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml logs -f <service>
+```
+#### 5.5 Access the shell of a service running in the container
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml exec <service-name> sh
+```
+- For the backend:
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml exec backend sh
+```
+- For the frontend:
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml exec frontend sh
+```
+- For the reverse proxy:
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml exec reverse-proxy sh
+```
+- For the database:
+```bash
+docker compose --env-file .env.combined.dev -f compose.dev.yaml exec db sh
+psql -d <DB_NAME> -U <DB_USERNAME> -h <DB_HOST> -p <DB_PORT>
+```
+
+
+<!-- #### 5.1 Single-service testing: build and start only backend
 Change directory to `backend`, build and start the container
 ```bash
 cd backend
@@ -110,4 +154,4 @@ docker compose -f compose.dev.yaml up --build
 In case we need to access the shell inside the frontend container we use (in another terminal, in the same directory, while the first is active with the stdout of the running container):
 ```bash
 docker compose -f compose.dev.yaml exec reverse-proxy sh
-```
+``` -->
