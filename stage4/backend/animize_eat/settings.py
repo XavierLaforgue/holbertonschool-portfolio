@@ -20,7 +20,10 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 env_type = environ.get('DJANGO_ENV', 'dev')  # default to 'dev'
 env_file = BASE_DIR / f'.env.{env_type}'
-load_dotenv(env_file)
+# Only load .env file if it exists (for local development)
+# In Docker, environment variables are passed directly
+if env_file.exists():
+    load_dotenv(env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -185,7 +188,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

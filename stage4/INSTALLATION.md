@@ -47,7 +47,7 @@ Now that `.env.dev` files are available for backend and frontend, execute the ba
 ```bash
 ./combine-env-files.dev.sh
 ```
-to combine them into a single file with all environment variables (or just copy-paste into one).
+to combine them into a single file (`.env.combined.dev`) with all environment variables (or just copy-paste into one).
 ### 4. Import media files
 No image broker (object storage, e.g., `S3`) has been implemented yet, Django is still in charge of delivering them.
 As to not upload the media files to github, they are provided in the google drive: https://drive.google.com/drive/folders/1tCYiEiYwLagJAN0OKQOdKivf30HSud_F?usp=sharing.
@@ -76,12 +76,9 @@ cd ..
 ### 5. Build and start services
 To build image and launch container with the composed app run:
 ```bash
-docker compose --env-file .env.dev -f compose.dev.yaml up --build
+docker compose --env-file .env.combined.dev -f compose.dev.yaml up --build
 ```
-
-
-
-
+**Note:** the variables provided by `--env-file .env.dev` are only available to docker-compose itself (for variable substitution in the compose file), but they aren not passed into the running containers.
 #### 5.1 Single-service testing: build and start only backend
 Change directory to `backend`, build and start the container
 ```bash
