@@ -82,7 +82,7 @@ docker compose --env-file .env.combined.dev -f compose.dev.yaml up --build
 
 #### 5.0 Build and start with hot reload
 ```bash
-docker compose --env-file .env.combined.dev -f compose.dev.yaml watch --build
+docker compose --env-file .env.combined.dev -f compose.dev.yaml watch
 ```
 #### 5.1 Stop the container
 ```bash

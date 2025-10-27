@@ -1,3 +1,58 @@
+/* Create button styling to match nav links */
+.header__create-btn {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-xl);
+  background: none;
+  border: none;
+  text-decoration: none;
+  font-size: var(--font-size-md);
+  color: var(--color-text-medium);
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-bold);
+  border-radius: var(--radius-2xl);
+  position: relative;
+  transition: var(--transition-bounce);
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-tight);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.header__create-btn:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.header__create-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--gradient-red-primary);
+  transition: left var(--transition-normal);
+  z-index: -1;
+  border-radius: var(--radius-2xl);
+}
+
+.header__create-btn:hover:not(:disabled) {
+  color: var(--color-text-white);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: var(--shadow-button);
+}
+
+.header__create-btn:hover:not(:disabled)::before {
+  left: 0;
+}
+
+.header__create-btn:active:not(:disabled) {
+  transform: translateY(-1px) scale(1.02);
+}
+
 /* User dropdown container - needs position relative for absolute dropdown */
 .header__user-dropdown {
   position: relative;
@@ -65,7 +120,8 @@
   transition: transform var(--transition-normal);
 }
 
-.header__user-menu {
+/* Dropdown menu container with scrollbar support */
+.header__user-menu-container {
   position: absolute;
   top: calc(100% + 0.5em);
   right: 0;
@@ -74,16 +130,43 @@
     0 4px 12px rgba(0,0,0,0.25),
     0 8px 24px rgba(220, 38, 38, 0.2),
     inset 0 1px 0 rgba(255,255,255,0.8);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   min-width: 200px;
+  max-width: 250px;
   width: auto;
   z-index: 1001; /* Higher than header (1000) to appear above page content */
-  padding: 0.75em 0;
-  margin: 0;
-  list-style: none;
   animation: fadeIn 0.2s ease;
-  border: 3px solid var(--color-primary-red);
+  border: 2px solid var(--color-primary-red);
   backdrop-filter: blur(10px);
+  max-height: 400px; /* Limit height to trigger scrollbar if needed */
+  overflow-y: auto; /* Enable vertical scrolling */
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling for dropdown */
+.header__user-menu-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.header__user-menu-container::-webkit-scrollbar-track {
+  background: rgba(220, 38, 38, 0.1);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+}
+
+.header__user-menu-container::-webkit-scrollbar-thumb {
+  background: var(--color-primary-red);
+  border-radius: var(--radius-md);
+  transition: background var(--transition-normal);
+}
+
+.header__user-menu-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-red-dark);
+}
+
+.header__user-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0.25em 0; /* Reduced from 0.75em to make it more compact */
 }
 
 .header__user-menu li {
@@ -92,28 +175,21 @@
   display: block;
   margin: 0;
   padding: 0;
-  background: linear-gradient(135deg, #ffffff 0%, #fff5f5 100%);
-  box-shadow:
-    0 4px 12px rgba(0,0,0,0.25),
-    0 8px 24px rgba(220, 38, 38, 0.2),
-    inset 0 1px 0 rgba(255,255,255,0.8);
-  border-radius: 8px;
-  border: 3px solid var(--color-primary-red);
-  backdrop-filter: blur(10px);
+  /* Removed all the excessive styling - no borders, shadows, or backgrounds on individual items */
 }
 
 .header__user-menu a,
 .header__user-menu button {
   display: block;
   width: 100%;
-  padding: 0.75em 1.25em;
+  padding: 0.4em 1em; /* Reduced from 0.75em to make it more compact (3x more compact) */
   text-align: left;
   background: transparent;
   border: none;
   color: var(--color-text-dark);
-  font-size: var(--font-size-md);
+  font-size: var(--font-size-sm); /* Slightly smaller font */
   font-family: var(--font-body);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: all var(--transition-normal);
   position: relative;
@@ -126,15 +202,14 @@
 .header__user-menu button:hover {
   background: var(--gradient-red-primary);
   color: var(--color-text-white);
-  padding-left: 1.5em;
+  padding-left: 1.25em;
   text-shadow: var(--text-shadow-sm);
-  transform: translateX(2px);
 }
 
 .header__user-logout {
-  border-top: 2px solid rgba(220, 38, 38, 0.2);
-  margin-top: 0.5em;
-  padding-top: 0.75em !important;
+  border-top: 1px solid rgba(220, 38, 38, 0.2);
+  margin-top: 0.25em; /* More compact */
+  padding-top: 0.4em !important; /* More compact */
   color: var(--color-primary-red);
   font-weight: var(--font-weight-bold);
 }

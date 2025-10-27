@@ -127,14 +127,7 @@ const Header: React.FC = () => {
                   onClick={handleCreateRecipe}
                   disabled={isCreatingRecipe}
                   title="Create Recipe"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    cursor: isCreatingRecipe ? 'wait' : 'pointer',
-                    font: 'inherit',
-                    color: 'inherit',
-                  }}
+                  className="header__create-btn"
                 >
                   {isCreatingRecipe ? 'Creating...' : 'Create'}
                 </button>
@@ -166,14 +159,16 @@ const Header: React.FC = () => {
                   <span className="header__user-caret">{menuOpen ? '▲' : '▼'}</span>
                 </button>
                 {menuOpen && (
-                  <ul className="header__user-menu">
-                    <li><Link to="/account" onClick={() => setMenuOpen(false)}>Account</Link></li>
-                    <li><Link to="/profile" onClick={() => setMenuOpen(false)}>Profile</Link></li>
-                    <li><Link to="/liked" onClick={() => setMenuOpen(false)}>Liked recipes</Link></li>
-                    <li><Link to="/saved" onClick={() => setMenuOpen(false)}>Saved recipes</Link></li>
-                    <li><Link to="/about" onClick={() => setMenuOpen(false)}>About Animize Eat</Link></li>
-                    <li><Link to="/" className="header__user-logout" onClick={handleLogout}>Log out</Link></li>
-                  </ul>
+                  <div className="header__user-menu-container">
+                    <ul className="header__user-menu">
+                      <li><Link to="/account" onClick={() => setMenuOpen(false)}>Account</Link></li>
+                      <li><Link to="/profile" onClick={() => setMenuOpen(false)}>Profile</Link></li>
+                      <li><Link to="/liked" onClick={() => setMenuOpen(false)}>Liked recipes</Link></li>
+                      <li><Link to="/saved" onClick={() => setMenuOpen(false)}>Saved recipes</Link></li>
+                      <li><Link to="/about" onClick={() => setMenuOpen(false)}>About Animize Eat</Link></li>
+                      <li><Link to="/" className="header__user-logout" onClick={handleLogout}>Log out</Link></li>
+                    </ul>
+                  </div>
                 )}
               </li>
             </>
