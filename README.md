@@ -1,21 +1,13 @@
-# holberton-portfolio
-Final project of the Holberton School's web developer program.
+# Portfolio project - Holberton School
+Final project for the Holberton School's web developer program.
 
-## Technical stack
-- Django + DRF
-- React + TS / Next.js
-- TailwindCSS
-- Postgresql
-- S3
-- Vercel (+CI/CD) for Next.js
-- AWS (ECS/Beanstalk) or Heroku for Django
-- pre-commit framework
-- poetry or conda ?
-- Docker
-- Docker compose
-- mypy + pydantic + django-stubs
-- GitHub Actions (Django: CI/CD, linters and tests. NextJs: frontend linters and tests) + GitHub Projects
-- GitHub Pages ? GitBook
-- Postman
-- Some free monitoring tool
-  
+In the scope of this program, its students are required to carry out a project in its entirety: from ideation to delivery of the completed web-based software product.
+As one of the students, I will develop, publish, and document all stages of my portfolio project in this repository.
+
+## Stage 1: Team formation, brainstorming, and MVP
+
+## Stage 2
+## Stage 3
+## Stage 4
+## Stage 5
+
