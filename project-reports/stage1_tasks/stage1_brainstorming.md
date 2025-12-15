@@ -73,7 +73,7 @@ Making emphasis on personal preference, feasibility and technical alignment with
 |||
 
 ## Ideas explored
-Choosing among the highlighted concepts and mixing and matching themes, the following ideas came up, ranked by feasibility, challenges, risks and impact:
+Choosing among the highlighted concepts and mixing and matching themes, the following ideas came up, ranked by feasibility, challenges, risks and impact (where 1 is the best case and 5 the worst, i.e., risk 1/5 is the best case of lowest risk):
 - **Anime-inspired recipe-sharing site** (f: 1/5, c: 1/5, r: 1/5, i: 4/5): create users, create recipes,
   create time tracker per cooking step when
   preparing a recipe, create nutritional information of ingredients,
