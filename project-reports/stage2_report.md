@@ -73,4 +73,4 @@ These may be described as follows.
     * *Deliverable* (week 13): Project presentation.
     * *Deliverable* (week 13): Final report.
 ## Roadmap
-The roadmap for this project is depicted in the Gantt diagram found at ![Project roadmap](https://miro.com/app/live-embed/uXjVGa0JRyI=/?focusWidget=3458764631506367758&embedMode=view_only_without_ui&embedId=189071450334)
+The roadmap for this project is depicted in the Gantt diagram found at [Project roadmap](https://miro.com/app/live-embed/uXjVGa0JRyI=/?focusWidget=3458764631506367758&embedMode=view_only_without_ui&embedId=189071450334)
