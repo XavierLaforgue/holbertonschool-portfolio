@@ -37,6 +37,7 @@ MVP, categorized by priority using the MoSCoW method:
 
 ## System architecture
 ![High-level architecture diagram](./stage3_tasks/Diagrams-Architecture.drawio.png)
+
 The system follows the typical architecture of a web application with a graphical UI.
 Users may use desktop or mobile devices to access the web site communicating securely with a reverse proxy.
 The reverse proxy redirects the requests to the front-end or the back-end, accordingly.
@@ -44,4 +45,125 @@ The front-end and back-end servers may be instantiated multiple times, scaling t
 The back-end uses external services to store user files, such as images, and to fill the database of recipe ingredients and anime titles.
 
 ## Components, classes, and database design
+### Class diagram
+```mermaid
+classDiagram
+    class BaseEntity {
+        +id: UUID
+        +created_at: DateTime
+        +updated_at: DateTime
+        +deleted_at: DateTime
+        +is_active: Bool
+        +is_staff: Bool
+        +soft_delete()
+    }
 
+    %% User accounts
+    BaseEntity <|-- User : extends
+
+    class User {
+        +username: String
+        +email: String
+        +password_hash: String
+        +is_admin: Bool
+        +login()
+        +logout()
+    }
+
+    %% User profiles
+    BaseEntity <|-- Profile : extends
+
+    class Profile { 
+        +display_name: String
+        +bio: String
+        +avatar_url: String
+        +favorite_anime: String
+        %% +posted_recipes: List[Recipe]
+        %% +drafted_recipes: List[Recipe]
+        %% +saved_recipes: List[Recipe]
+    }
+
+    User "1" *--> "1" Profile : has
+
+    %% Recipes
+    BaseEntity <|-- Recipe : extends
+
+    class Recipe {
+        +title: String
+        +description: String
+        +difficulty: Difficulty
+        +portions: Integer
+        +total_time: Duration
+        +status: RecipeStatus 
+        +published_at: DateTime
+        +publish()
+        +retract()
+        +save()
+    }
+
+    Profile "1" *--> "0..*" Recipe : manages
+
+    BaseEntity <|-- RecipePhoto : extends
+
+    Recipe "1" *--> "0..4" RecipePhoto : includes
+ 
+    class RecipePhoto {
+        +order: Integer
+        +photo_url: String
+        *comment: String
+    }
+
+    %% Ingredients
+    BaseEntity <|-- Ingredient : extends
+
+    class Ingredient {
+        +name: String
+        +unit: String
+    }
+
+    BaseEntity <|-- RecipeIngredient : extends
+
+    class RecipeIngredient {
+        +ingredient: Ingredient
+        +quantity: Float
+    }
+
+    Recipe "1" --> "1..*" RecipeIngredient : uses
+    RecipeIngredient "*" --> "1" Ingredient : references
+
+    %% Steps
+    BaseEntity <|-- Step : extends
+
+    class Step {
+        +order: Integer
+        +description: String
+        +duration: Duration 
+    }
+
+    Recipe "1" *--> "0..*" Step : lists
+
+    BaseEntity <|-- Anime : extends
+    
+    %% Anime
+    class Anime {
+        +String title
+        +String source
+    }
+
+    Recipe "0..*" <-- "1" Anime : inspires
+
+    %% ===== Enums =====
+    class Difficulty {
+        <<enumeration>>
+        EASY
+        MEDIUM
+        HARD
+    }
+
+    class RecipeStatus {
+        <<enumeration>>
+        DRAFT
+        PUBLISHED
+    }
+```
+### Entity-relationship diagram
