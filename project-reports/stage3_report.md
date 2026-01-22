@@ -46,6 +46,7 @@ The back-end uses external services to store user files, such as images, and to 
 
 ## Components, classes, and database design
 ### Class diagram
+%% #TODO: update class diagram to match new ER diagram 
 ```mermaid
 classDiagram
     class BaseEntity {
@@ -146,8 +147,8 @@ classDiagram
     
     %% Anime
     class Anime {
-        +String title
-        +String source
+        +title: String
+        +source: String
     }
 
     Recipe "0..*" <-- "1" Anime : inspires
@@ -167,3 +168,145 @@ classDiagram
     }
 ```
 ### Entity-relationship diagram
+```mermaid
+erDiagram   
+    User[User]:::fontClassName {
+        uuid id PK
+        str username UK
+        str email UK
+        str first_name
+        str last_name
+        date birth_date
+        str password_hash
+        bool is_superuser
+        bool is_active
+        bool is_staff
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+
+    User ||--|| Profile : has
+
+    Profile[Profile]:::fontClassName {
+        uuid id PK
+        uuid user_id FK "User.id"
+        str display_name UK
+        str bio
+        str avatar_url
+        uuid favorite_anime_id FK "Anime.id"
+        str favorite_anime_custom
+        str myAnimeList_profile
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+
+    Profile ||--o{ Recipe : manages
+    
+    Recipe[Recipe]:::fontClassName {
+        uuid id PK
+        uuid profile_id FK "Profile.id"
+        uuid anime_id FK "Anime.id"
+        str title
+        str description
+        str difficulty FK "Difficulty.id"
+        int portions
+        int preparation_time_minutes
+        str status FK "Recipe_Status.id"
+        timestamptz published_at
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+
+    Anime ||--o{ Recipe : inspires
+
+    Anime[Anime] {
+        uuid id PK
+        str title
+        str reference_page
+    }
+
+    Anime_Db_Version ||--|{ Anime : versions
+
+    Anime_Db_Version[Anime_Db_Version] {
+        uuid id PK
+        str provider_name
+        str provider_version
+        timestamptz imported_at
+        timestamptz updated_at
+    }
+
+    Difficulty ||--o{ Recipe : classifies
+
+    Difficulty {
+        uuid id PK
+        str value
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+
+    Recipe_Status ||--o{ Recipe : classifies
+
+    Recipe_Status {
+        uuid id PK
+        str value
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+
+    Recipe_Photo |{--}| Recipe : enriches
+
+    Recipe_Photo {
+        uuid id PK
+        uuid recipe_id FK "Recipe.id"
+        int order UK "(recipe_id, order)"
+        str photo_url
+        str comment
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at
+    }
+
+    Recipe ||--|{ Recipe_Ingredient : uses
+
+    Recipe_Ingredient {
+        uuid id PK
+        uuid recipe_id FK "Recipe.id"
+        uuid ingredient_id FK "Ingredient.id"
+        float quantity
+        uuid unit_id FK "Unit.id"
+    }
+
+    Recipe_Ingredient }o--|| Ingredient : quantifies
+
+    Ingredient {
+        uuid id PK
+        str name
+        bool is_countable
+    }
+
+    Recipe_Ingredient }o--o| Unit : "is measured in"
+
+    Unit {
+        uuid id PK
+        str name
+        str abbreviation
+        bool is_countable
+    }
+
+    Recipe ||--|{ Step : lists
+
+    Step {
+        uuid id PK
+        uuid recipe_id FK "Recipe.id"
+        int order UK "(recipe_id, order)"
+        str description
+        int duration_hours
+        int duration_minutes
+        int duration_seconds
+    }
+```
