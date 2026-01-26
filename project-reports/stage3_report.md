@@ -1171,3 +1171,47 @@ When authentication will be required, an authorization header with a token will 
 
 ## Plan for SCM and QA strategies
 
+### Source Control Management (SCM)
+- Version control: the complete codebase is part of a Git repository dedicated to the project's development and hosted on GitHub. This repository has documented the project since its conception and will document it until its completion.  
+- Branching strategy: typical `main`, `dev`, and `feature` branches lifecycle with an occassional `hotfix` branch.
+  - `main`: always deployable; contains reviewed, tested, working code.
+  - `dev`: contains completed features that are ready for system testing; merged into `main` once it passes review.
+  - `feature/{label}`: short‑lived branches created from `dev` for each development task; deleted after merging-back into `dev`.
+  - `hotfix/{label}`: emergency fixes branched from `main`, merged back into both `main` and `dev`.
+- Workflow: commits are done early and often with meaningful commit messages. Work is done on the `feature` branch and merged via pull request into `dev`. Every pull request (PR) needs to be carefully reviewed and it needs to pass all automated tests (CI pipeline trigered at pull request submission) before it may be accepted.
+When `dev` is considered stable, it is merged into `main` and tagged for deployment.
+
+### Quality Assurance (QA)
+- Testing strategy: 
+  - Unit tests for:
+    - Back-end (Django): business logic, models, API serializers (input validation, expected object instantiation from JSON and expected incoming JSON), and endpoint handlers (function that handles the endpoint, response body and status code, use of right services and repositories). Tool: `django.test.TestCase`.
+    - Front-end (Vue/React): UI components and state management. Tool: `Vitest + Vue Test Utils`.
+  - Integration tests:
+    - Test API endpoints with the back-end test framework (e.g., `DRF APITestCase`) (using a test database).
+    - API contract tests using `Postman`.
+  - End-to-end (E2E) tests (if time allows):
+    - User flows for main tasks: sign-up, login, recipe creation, and viewing recipe details. Tool: `PlayWright`.
+- CI/CD pipeline:
+  - On each push (same branch) and PR (merge from `feature` to `dev`, from `dev` to `main`, or from `hotfix`to `main` and `dev`):
+    - Run linters (code style, basic static checks).
+    - Run unit and integration tests; fail the pipeline on any error.
+  - On merge to main:
+    - Run the full test suite (previous + E2E).
+    - Build front-end and back-end container images.
+    - Deploy automatically to a staging environment.
+  - Staging environment:
+    - Run the full test suite again (now in production-like environment).
+    - Perform manual checks of main user flows.
+  - Production deployments:
+    - Triggered from a tested and tagged main commit.
+    - Use the same build as staging.
+  
+## Technical justifications
+I have chosen a typical layered web architecture for its simplicity to develop and to up-scale if necessary, without starting with an unnecesssarily high degree of complexity.
+The three layers:
+- Front-end: Vue/React + TypeScrypt + TailwindCSS. I chose the Vue/React framework because it is widely used and thi would be my first time using a framework. TypeScript to avoid the common unexpected behaviors steeming from JavaScript's dynamic typing and type cohersion. TailwindCSS to facilitate the construction of UI elements.
+- Back-end: Django. I chose Django to gain experience on a another widely used production-level framework and to learn what it means to use an opinionated development framework.
+- Reverse proxy: Nginx. Because it is the typical choice and it is easy to use.
+- Database: Postgresql. Because it is a production-level relational database with modern capabilities and utilities.
+- Environment: Docker. To avoid dependency and system incompatibility issues.
+- CI/CD: GitHub actions. Because I am hosting the project on GitHub.
