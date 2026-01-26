@@ -33,8 +33,6 @@ MVP, categorized by priority using the MoSCoW method:
 - *As **any user**, I want to <u>participate in forums or group chats</u> so that <u>I can engage in community discussions</u>.*
 - *As **any user**, I want to <u>have access to a dedicated mobile app</u> so that <u>I can use the platform offline</u>.*
 
-### Mockups
-
 ## System architecture
 ![High-level architecture diagram](./stage3_tasks/Diagrams-Architecture.drawio.png)
 
@@ -168,6 +166,7 @@ classDiagram
     }
 ```
 ### Entity-relationship diagram
+%% #TODO: Verify if additional Uniqueness and Nullness details have been specified
 ```mermaid
 erDiagram   
     User[User]:::fontClassName {
@@ -310,3 +309,217 @@ erDiagram
         int duration_seconds
     }
 ```
+### UI components
+The UI is that of a single-page application with dynamic components.
+The main views of the application will be:
+- Homepage view with recipe cards
+- Log-in view
+- Sign-up view
+- Profile creation/update view
+- Profile view
+- Recipe creation view
+- Recipe view
+- Creations view
+- Saved view
+
+The components of the front-end may be outlined as:
+```
+App
+ ├── Layout
+ │    ├── Header
+ │    │    ├── Navbar
+ │    │    └── Logo
+ │    └── Footer
+ └── Router
+      ├── HomePage
+      │    ├── RecipeSearchBar
+      │    ├── RecipeFilterPanel
+      │    │    └── RecipeFilter
+      │    └── RecipeFeed
+      │         └── RecipeCard
+      ├── LogInPage
+      ├── SignUpPage
+      ├── UserDashBoardPage
+      │    ├── TabPanel
+      │    ├── AccountDetailsCard
+      │    ├── ProfileEditorCard
+      │    ├── ProfileCard
+      │    ├── CreatedRecipesList
+      │    │    └── RecipeCard
+      │    └── SavedRecipesList
+      │         └── RecipeCard
+      ├── RecipeDetailsPage
+      │    ├── RecipeMeta
+      │    ├── IngredientList
+      │    │    └── IngredientItem
+      │    └── StepList
+      │         └── StepItem
+      │              └── StepTimer
+      └── RecipeEditorPage
+           ├── RecipeForm
+           ├── IngredientEditor
+           └── StepEditor
+```
+
+#### Main components (always present):
+- App: global root component.
+- Layout: global UI controls (changes the most between desktop and mobile displays).
+  - Header: always at the top of the viewport.
+    - Navigation bar: redirecting to different views.
+    - Logo: platform logo redirecting to the homepage.
+  - Footer: containing legal information on desktop or navigation on mobile devices. Visible when scrolling upwards or at the bottom of the page.
+- Router: translating URIs into components.
+
+#### HomePage components:
+- HomePage: containing recipe pseudo-feed
+- RecipeSearchBar: reduces the displayed recipes to those matching the input text and the active filters. Once pagination will be active, it will retrieve the recipes matching the filters and search query from the database.
+- RecipeFilterPanel: allows to set the parameters of the search that the RecipeSearchBar will perform.
+  - RecipeFilter: sets a specific recipe attribute to a certain value or values, such as difficulty, preparation time, and inspiring anime.
+- RecipeFeed: vertical succession of recipes posted by users. Not a real feed for the MVP (no personalized suggestions, only listing of existing recipes marked as published). It retrieves a fix number of recipes from the database (or all of them before pagination is implemented).
+  - RecipeCard: main recipe information (presentation card of the recipe) with images, title, duration, difficulty, and inspiring anime. It presents the data retrieved by RecipeFeed.
+
+#### Account management components:
+- SignUpPage: form to introduce account information (email and password). Form data to be sent to the *create user* back-end endpoint.  
+- LogInPage: form to introduce login credentials (email and password). Form data is sent to the *log-in* back-end endpoint to authenticate the user (retrieve a JWT and store it in the cookies if the login is successful).
+- UserDashBoardPage: page to access user related information and user actions.
+  - TabPanel: panel to select the information to display. Performs the fetch operations for *account details*, *profile details*, *created recipes*, *saved recipes*, and *log-out*. The *log-out* operation would blacklist the refresh token and remove the current token fro the cookies.
+  - AccountDetailsCard: displays user account details (email, username, real name) and a button to delete the acccount. Connects to the *delete user* back-end endpoint. 
+  - ProfileEditorCard: form to modify or input (modify null fields) all profile information. Form data is sent to the *update profile* back-end endpoint.
+  - ProfileCard:  displays profile information and a button to update it which bring forth the ProfileEditorCard.
+  - CreatedRecipesList: lists all recipes created by the user and a button to create a new one which brings forth the RecipeEditorCard.
+    - RecipeCard: displays summary of the corresponding recipe information, fetches the specific recipe on click of the card and uses data to bring forth and fill the RecipeDetailsPage. 
+  - SavedRecipesList: lists recipes of other users that have been found on the feed and saved for future use. 
+    - RecipeCard: same as the one in CreatedRecipesList.
+
+#### Recipe management components:
+- RecipeDetailsPage: displays all information of a recipe (photos, title, ingredients, steps, inspiring anime, etc). It is superposed over previous page content and it can be closed (X in corner) to recover the page as it was before accessing the recipe details. It has an *edit* button to bring forth the RecipeEditorPage if the user is the author of the recipe and a *save* button otherwise. 
+  - RecipeAttributes: displays attributes of the recipe such as difficulty, inspiring anime, and total preparation time.
+  - IngredientList: lists ingredients of the recipe with a modifiable number portions. 
+    - IngredientItem: states quantity, unit of measurement, and name of the ingredient.
+  - StepList: lists steps of the recipe in order.
+    - StepItem: displays a description of the step and an associated timer if useful.
+      - StepTimer: timer, with preset step duration, that may be started, paused, resumed, and reset.
+- RecipeEditorPage: dynamic form to modify recipe data. Form data is sent to the *update recipe* back-end endpoint on submission.
+  - RecipeForm: form to modify recipe attributes.
+  - IngredientEditor: dynamic form (free number of fields) to modify recipe ingredients, their quantities and units of measurement.
+  - StepEditor: dynamic form to modify recipe steps (instructions).
+
+## External and internal APIs
+### External APIs
+For the MVP user-written ingredients and animes would be sufficient, but, if time allows, data of both would be used to feed the project's database from the public APIs:
+-  [AniAPI](https://aniapi.com/docs/) or [AniDB](https://wiki.anidb.net/HTTP_API_Definition) or [AniList](https://github.com/AniList/ApiV2-GraphQL-Docs).
+-  [Open Food Facts](https://world.openfoodfacts.org/data) or [edamam nutrition](https://developer.edamam.com/edamam-docs-nutrition-api) or [chomp](https://chompthis.com/api/).
+When the database is not available for download the API would be used directly when the user would require the data.
+
+### Internal APIs
+All API endpoints will be prefixed by `/api/`.
+When authentication will be required, an authorization header with a token will be used.
+
+#### Authentication
+<table>
+  <tr>
+    <th colspan="2"><code>POST /api/auth/register/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "username": "string",
+  "email": "string",
+  "password": "string"
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "username": "string",
+  "email": "string"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>POST /api/auth/login/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td> 
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "email": "string",
+  "password": "string"
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "access_token": "jwt",
+  "refresh_token": "jwt",
+  "user": {
+    "id": "uuid",
+    "username": "string"
+  }
+  "profile": {
+    "avatar_url": "string",
+    "display_name": "string"
+  }
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>POST /api/auth/refresh/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "refresh_token": "jwt"
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "access_token": "jwt"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>POST /api/auth/logout/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td>
+      <pre><code>
+{
+  "refresh_token": "jwt"
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "detail": "string"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+#### User account
+
+#### Recipes
+
