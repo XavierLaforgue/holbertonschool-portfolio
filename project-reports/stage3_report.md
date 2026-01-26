@@ -44,7 +44,7 @@ The back-end uses external services to store user files, such as images, and to 
 
 ## Components, classes, and database design
 ### Class diagram
-%% #TODO: update class diagram to match new ER diagram 
+<!-- #TODO: update class diagram to match new ER diagram -->
 ```mermaid
 classDiagram
     class BaseEntity {
@@ -166,7 +166,7 @@ classDiagram
     }
 ```
 ### Entity-relationship diagram
-%% #TODO: Verify if additional Uniqueness and Nullness details have been specified
+<!-- %% #TODO: Verify if additional Uniqueness and Nullness details have been specified -->
 ```mermaid
 erDiagram   
     User[User]:::fontClassName {
