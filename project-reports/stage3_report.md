@@ -207,6 +207,7 @@ erDiagram
         uuid id PK
         uuid profile_id FK "Profile.id"
         uuid anime_id FK "Anime.id"
+        str anime_custom
         str title
         str description
         str difficulty FK "Difficulty.id"
@@ -304,7 +305,6 @@ erDiagram
         uuid recipe_id FK "Recipe.id"
         int order UK "(recipe_id, order)"
         str description
-        int duration_hours
         int duration_minutes
         int duration_seconds
     }
@@ -519,7 +519,655 @@ When authentication will be required, an authorization header with a token will 
   </tr>
 </table>
 
-#### User account
+#### User 
+
+<table>
+  <tr>
+    <th colspan="2"><code>GET /api/users/me/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "username": "string",
+  "email": "string",
+  "first_name": "string" | null,
+  "last_name": "string" | null,
+  "birth_date": "date" | null,
+  "created_at": "datetime",
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>PATCH /api/users/me/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "first_name": "string" (optional),
+  "last_name": "string" (optional),
+  "birth_date": "date" (optional)
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "username": "string",
+  "email": "string",
+  "first_name": "string" | null,
+  "last_name": "string" | null,
+  "birth_date": "date" | null,
+  "created_at": "datetime",
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>DELETE /api/users/me/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "detail": "string"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+#### Profile
+
+<table>
+  <tr>
+    <th colspan="2"><code>GET /api/profile/me/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "display_name": "string",
+  "bio": "string" | null,
+  "avatar_url": "string" | null,
+  "favorite_anime_id": "uuid" | null,
+  "favorite_anime_custom": "string" | null,
+  "myAnimeList_profile": "string" | null,
+  "created_at": "datetime",
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>PATCH /api/profile/me/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "display_name": "string" (optional),
+  "bio": "string" (optional),
+  "avatar_url": "string" (optional),
+  "favorite_anime_id": "uuid" (optional),
+  "favorite_anime_custom": "string" (optional),
+  "myAnimeList_profile": "string" (optional)
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "display_name": "string",
+  "bio": "string" | null,
+  "avatar_url": "string" | null,
+  "favorite_anime_id": "uuid" | null,
+  "favorite_anime_custom": "string" | null,
+  "myAnimeList_profile": "string" | null,
+  "created_at": "datetime",
+}
+    </code></pre></td>
+  </tr>
+</table>
 
 #### Recipes
+
+<table>
+  <tr>
+    <th colspan="2"><code>GET /api/recipes/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+[
+  {
+    "id": "uuid",
+    "title": "string",
+    "description": "string",
+    "difficulty": "string",
+    "preparation_time_minutes": "integer",
+    "anime": "string",
+    "published_at": "datetime",
+  }
+]
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>GET /api/recipes/{id}/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "title": "string",
+  "description": "string",
+  "difficulty": "string",
+  "portions": "integer",
+  "preparation_time_minutes": "integer",
+  "anime": "string",
+  "published_at": "datetime",
+  "recipe_ingredients": {
+    "ingredient": "string",
+    "quantity": float | integer,
+    "unit": "string",
+    "unit_abbreviation": "string"
+  }
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>POST /api/recipes/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "title": "string",
+  "description": "string",
+  "difficulty": "string",
+  "portions": "integer",
+  "preparation_time_minutes": "integer",
+  "status": "string",
+  "anime_id": "uuid" | null,
+  "anime_custom": "string" | null,
+  "created_at": "datetime",
+  "recipe_ingredients": []
+  "steps": []
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>PATCH /api/recipes/{id}/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "title": "string" (optional),
+  "description": "string" (optional),
+  "difficulty": "string" (optional),
+  "portions": "integer" (optional),
+  "preparation_time_minutes": "integer" (optional),
+  "status": "string" (optional),
+  "anime_id": "uuid" | null (optional),
+  "anime_custom": "string" | null (optional),
+  "recipe_ingredients": [
+    {
+      "id": "uuid"
+    }
+  ]
+  "steps": [
+    {
+      "id": "uuid"
+    }
+  ]
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "title": "string",
+  "description": "string",
+  "difficulty": "string",
+  "portions": "integer",
+  "preparation_time_minutes": "integer",
+  "status": "string",
+  "anime": "string",
+  "updated_at": "datetime",
+  "recipe_ingredients": [
+    {
+      "id": "uuid",
+      "ingredient": "string",
+      "quantity": float,
+      "unit": "string",
+    }
+  ]
+  "steps": [
+    {
+      "id": "uuid",
+      "order": integer,
+      "description": "string",
+      "duration_minutes": integer",
+      "duration_seconds": "integer"
+    }
+  ]
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>DELETE /api/recipes/{id}/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "detail": "string"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+#### Anime
+<table>
+  <tr>
+    <th colspan="2"><code>GET /api/animes/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+[
+  {
+    "id": "uuid",
+    "title": "string",
+    "reference_page": "string" | null
+  }
+]
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>POST /api/animes/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "title": "string",
+  "reference_page": "string" | null (optional)
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "title": "string",
+  "reference_page": "string" | null
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>PATCH /api/animes/{id}/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "title": "string" (optional),
+  "reference_page": "string" (optional)
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "title": "string",
+  "reference_page": "string" | null
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>DELETE /api/animes/{id}/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "detail": "string"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+#### Recipe_Ingredient
+<table>
+  <tr>
+    <th colspan="2"><code>GET /api/recipes/{recipe_id}/ingredients/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+[
+  {
+    "id": "uuid",
+    "ingredient": "string",
+    "quantity": "float",
+    "unit": "string",
+    "unit_abbreviation": "string"
+  }
+]
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>POST /api/recipes/{recipe_id}/ingredients/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "ingredient_id": "uuid",
+  "quantity": "float",
+  "unit_id": "uuid"
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "ingredient": "uuid",
+  "quantity": "float",
+  "unit": "string",
+  "unit_abbreviation": "string"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>PATCH /api/recipes/{recipe_id}/ingredients/{id}/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "quantity": "float" (optional),
+  "unit_id": "uuid" (optional)
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "ingredient_id": "uuid",
+  "quantity": "float",
+  "unit": "string",
+  "unit_abbreviation": "string"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>DELETE /api/recipes/{recipe_id}/ingredients/{id}/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "detail": "string"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+#### Step
+<table>
+  <tr>
+    <th colspan="2"><code>GET /api/recipes/{recipe_id}/steps/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+[
+  {
+    "id": "uuid",
+    "order": "integer",
+    "description": "string",
+    "duration_minutes": "integer" | null,
+    "duration_seconds": "integer" | null
+  }
+]
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>POST /api/recipes/{recipe_id}/steps/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "description": "string",
+  "duration_minutes": "integer" | null,
+  "duration_seconds": "integer" | null
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "order": "integer",
+  "description": "string",
+  "duration_minutes": "integer" | null,
+  "duration_seconds": "integer" | null
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>PATCH /api/recipes/{recipe_id}/steps/{id}/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{
+  "description": "string" (optional),
+  "duration_minutes": "integer" (optional),
+  "duration_seconds": "integer" (optional)
+}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "id": "uuid",
+  "order": "integer",
+  "description": "string",
+  "duration_minutes": "integer",
+  "duration_seconds": "integer"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>PUT /api/recipes/{recipe_id}/steps/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+[
+  {
+    "id": "uuid",
+    "order": "integer",
+  }
+]
+    </code></pre></td>
+    <td><pre><code>
+[
+  {
+    "id": "uuid",
+    "order": "integer",
+    "description": "string",
+    "duration_minutes": "integer",
+    "duration_seconds": "integer"
+  }
+]
+    </code></pre></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th colspan="2"><code>DELETE /api/recipes/{recipe_id}/steps/{id}/</code></th>
+  </tr>
+  <tr>
+    <td>Input (JSON)</td>
+    <td>Output (JSON)</td>
+  </tr>
+  <tr>
+    <td><pre><code>
+{}
+    </code></pre></td>
+    <td><pre><code>
+{
+  "detail": "string"
+}
+    </code></pre></td>
+  </tr>
+</table>
+
+## Plan for SCM and QA strategies
 
