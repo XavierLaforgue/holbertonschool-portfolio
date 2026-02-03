@@ -1,4 +1,4 @@
-# uv
+# Notes on `uv`
 `uv` is a virtual environment, dependency manager, and version manager for `python` projects.
 
 ## Installation
@@ -47,6 +47,7 @@ uv init my-project
 Contains metadata about the project.
 This file is used to specify dependencies, as well as details about the project such as its description or license.
 It can be edited manually, or with commands like `uv add` and `uv remove` to manage your project from the terminal.
+Details about the `pyproject.toml` file can be found in [https://packaging.python.org/en/latest/guides/writing-pyproject-toml/](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/).
 ### `.python.version`
 The `.python-version` file contains the project's default Python version. This file tells uv which Python version to use when creating the project's virtual environment.
 ### `.venv`
@@ -116,3 +117,4 @@ uv export -o requirements.txt
 [https://www.datacamp.com/tutorial/python-uv](https://www.datacamp.com/tutorial/python-uv)
 [https://realpython.com/python-uv/](https://realpython.com/python-uv/)
 [https://github.com/astral-sh/uv](https://github.com/astral-sh/uv)
+[https://packaging.python.org/en/latest/guides/writing-pyproject-toml/](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)
