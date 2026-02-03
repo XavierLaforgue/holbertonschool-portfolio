@@ -82,6 +82,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# TODO: Configure a potgres database instead of sqlite
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -117,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
+#TODO: change time zone to local French time, but keeping time-zone data
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
