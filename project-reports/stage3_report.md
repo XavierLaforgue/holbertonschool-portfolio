@@ -1,4 +1,6 @@
 # Portfolio project - Stage 3: Technical Documentation
+**Author:** [Xavier Laforgue](https://github.com/XavierLaforgue)
+
 This documentation is meant to provide a detailed technical plan for the
 development of the MVP, namely, an anime-inspired recipe-sharing
 website.

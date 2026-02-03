@@ -1,4 +1,5 @@
 # Portfolio project - Stage 2: Project planning
+**Author:** [Xavier Laforgue](https://github.com/XavierLaforgue)
 ## Timeline
 The portfolio project of the Holberton School has a duration of 14 weeks.
 Below is the expected timeline for the project's multiple stages. 

@@ -1,4 +1,6 @@
 # Portfolio project - Stage 1: Team formation, brainstorming, and MVP
+**Author:** [Xavier Laforgue](https://github.com/XavierLaforgue)
+
 This report is meant for providing an overview on the team formation
 process, list the ideas explored and give a summary of the chosen
 Minimal Viable Product concept.
