@@ -129,8 +129,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-#TODO: change time zone to local French time, but keeping time-zone data
-TIME_ZONE = 'UTC'
+
+# local french time
+TIME_ZONE = 'Europe/Paris'  # originally UTC
 
 USE_I18N = True
 
