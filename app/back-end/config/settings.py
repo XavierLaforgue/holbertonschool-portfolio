@@ -33,10 +33,10 @@ if env_file.exists():
 SECRET_KEY = environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
-
+# choose between DEBUG (dev) mode or not (for production)
+DEBUG = environ.get('DJANGO_DEBUG', True)
+# keep list of allowed hosts in the environment (only localhost for dev)
+ALLOWED_HOSTS = environ.get('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 
 # Application definition
 
