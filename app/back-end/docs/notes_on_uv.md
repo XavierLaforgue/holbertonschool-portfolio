@@ -111,10 +111,21 @@ To generate a requirements.txt from a UV lock file, use the following command:
 ```
 uv export -o requirements.txt
 ```
+### Development or produciton dependencies
+Dependencies can be marked as for development using 
+```
+uv add --dev dependency
+```
+and only-production dependencies may be installed using
+```
+uv sync --no-dev --locked
+```
+Details at: [blog.pecar.me/uv-with-django](https://blog.pecar.me/uv-with-django)
 ## References
-[https://blog.stephane-robert.info/docs/developper/programmation/python/uv/](https://blog.stephane-robert.info/docs/developper/programmation/python/uv/)
-[https://docs.astral.sh/uv/guides/projects/#project-structure](https://docs.astral.sh/uv/guides/projects/#project-structure)
-[https://www.datacamp.com/tutorial/python-uv](https://www.datacamp.com/tutorial/python-uv)
-[https://realpython.com/python-uv/](https://realpython.com/python-uv/)
-[https://github.com/astral-sh/uv](https://github.com/astral-sh/uv)
-[https://packaging.python.org/en/latest/guides/writing-pyproject-toml/](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)
+- [blog.stephane-robert.info/docs/developper/programmation/python/uv/](https://blog.stephane-robert.info/docs/developper/programmation/python/uv/)
+- [docs.astral.sh/uv/guides/projects/#project-structure](https://docs.astral.sh/uv/guides/projects/#project-structure)
+- [datacamp.com/tutorial/python-uv](https://www.datacamp.com/tutorial/python-uv)
+- [realpython.com/python-uv/](https://realpython.com/python-uv/)
+ [github.com/astral-sh/uv](https://github.com/astral-sh/uv)
+- [packaging.python.org/en/latest/guides/writing-pyproject-toml/](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)
+- [blog.pecar.me/uv-with-django](https://blog.pecar.me/uv-with-django)
