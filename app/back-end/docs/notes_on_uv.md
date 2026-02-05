@@ -1,4 +1,5 @@
 # Notes on `uv`
+<!-- TODO: write bash script to initialize `uv` project-->
 `uv` is a virtual environment, dependency manager, and version manager for `python` projects.
 
 ## Installation
