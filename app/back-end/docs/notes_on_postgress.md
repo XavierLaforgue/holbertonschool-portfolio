@@ -27,10 +27,26 @@ To assign a password to the new user
 export $(grep '^DB_PW=' .env.dev)
 sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER ROLE $DB_USER WITH PASSWORD '$DB_PW';"
 ```
-<!-- TODO: create database -->
-<!-- TODO: change ownership of the database to the django user -->
+To create the database with the new user as owner
+```bash
+export $(grep '^DB_USER=' .env.dev)
+export $(grep '^DB_NAME=' .env.dev)
+sudo -u postgres createdb --owner=$DB_USER $DB_NAME
+```
+And we can connect to it, with the new user, using
+```bash
+psql -U $DB_USER -d $DB_NAME -h localhost -p 5432
+```
+and inputting the password when prompted.
+### Protect `postgres` user in production
+It is a good idea to protect the `postgres` user in production, to do this we'll add a password:
+```bash
+export $(grep '^POSTGRES_PW=' .env.prod)
+sudo -u postgres psql -v ON_ERROR_STOP=1 -c "ALTER USER postgres PASSWORD '$POSTGRES_PW';"
+```
 ## References
 - [postgresql.org/download/linux/ubuntu/](https://www.postgresql.org/download/linux/ubuntu/)
-- [https://doc.ubuntu-fr.org/postgresql](https://doc.ubuntu-fr.org/postgresql)
-- [https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-20-04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-20-04)
+- [doc.ubuntu-fr.org/postgresql](https://doc.ubuntu-fr.org/postgresql)
+- [digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-20-04](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-postgresql-on-ubuntu-20-04)
+- [neon.com/postgresql/postgresql-getting-started/install-postgresql-linux](https://neon.com/postgresql/postgresql-getting-started/install-postgresql-linux)
 <!-- TODO: consider trying [https://www.pgmodeler.io/](https://www.pgmodeler.io/) -->
