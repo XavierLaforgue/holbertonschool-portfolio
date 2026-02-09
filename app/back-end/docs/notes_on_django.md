@@ -1,21 +1,21 @@
 # Notes on `django`
 <!-- TODO: write bash script to initialize `django` project-->
 Once installed `django`, e.g., with
-```
+```bash
 uv add django
 ```
 We can initialize a ne django project with
-```
+```bash
 uv run django-admin startproject my_project .
 ```
 This will generate the file tree for a basic `django` project.
 
 The `django` server is launched with
-```
+```bash
 uv run manage.py runserver
 ```
 which may require migrations, i.e.,
-```
+```bash
 uv run manage.py migrate
 ```
 
@@ -37,3 +37,8 @@ And we need to install the driver:
 ```bash
 uv add psycopg
 ```
+## Admin - Superuser
+To create an admin user, a user that can access the admin panel and operating directly on the models for CRUD operations, do
+```bash
+uv run manage.py createsuperuser
+``` 
