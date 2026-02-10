@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'accounts',
     # 'recipes',
     # 'ingredients',
-    # 'animes'
+    'animes'
 ]
 
 MIDDLEWARE = [
