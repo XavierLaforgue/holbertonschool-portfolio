@@ -22,9 +22,11 @@ To create a branch `dev` from the branch `main`:
 git checkout -b dev main
 ```
 
-After creating a new local branch we must update the repote repository.
-When on the new branch, we can commit changes and use
+After creating a new local branch we must update the remote repository.
+When on the new branch, we can use
 
 ```bash
 git push --set-upstream origin dev
 ```
+
+to set it up and then commit the changes.
