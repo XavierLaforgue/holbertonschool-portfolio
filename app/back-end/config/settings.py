@@ -90,7 +90,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 #     }
 # }
 
-# TODO: use postgres to create the user django needs to use it
 # Configuration for postgresql database
 # TODO: add TEST database configuration (test database may be a mirror from
 # the main one, migration may be configured too)
