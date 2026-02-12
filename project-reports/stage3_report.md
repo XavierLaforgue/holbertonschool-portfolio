@@ -1,4 +1,5 @@
 # Portfolio project - Stage 3: Technical Documentation
+
 **Author:** [Xavier Laforgue](https://github.com/XavierLaforgue)
 
 This documentation is meant to provide a detailed technical plan for the
@@ -8,26 +9,31 @@ website.
 ## User stories and mockups
 
 ### User stories
+
 The following are a list of **User Stories** in line with the
 MVP, categorized by priority using the MoSCoW method:
 
 #### Must have
+
 - *As **an anime fan and a home cook**, I want to <u>create and log-in to an account</u> so that <u>I can save my favorite anime-inspired recipes</u>.*
 - *As **a home cook**, I want to <u>browse and search for recipes</u> so that I can <u>find new meals to try</u>.*
 - *As **a content creator**, I want to <u>submit and share anime-inspired recipes of my own creation with step-by-step instructions and images</u> so that <u>others can follow and recreate it</u>.*
 - *As **any user**, I want to <u>experience a responsive and dynamic platform</u> so that <u>I can be comfortable and use the website with ease on any device</u>.*
   
 #### Should have
+
 - *As **an anime fan and a home cook**, I want to <u>filter recipes by ingredient, number of ingredients, preparation time, difficulty, and anime of inspiration</u> so that <u>I can find recipes that suit my needs</u>.*
 - *As **a home cook**, I want to <u>leave reviews and ratings on recipes</u> so that <u>I can share feedback and help others choose</u>.*
 - *As **a home cook**, I want to <u>adjust quantity of ingredients according to the desired number of portions</u> so that <u>I can cook for any number of people</u>.*
 - *As **a home cook**, I want to <u>have a countdown timer already programmed with each step duration</u> such that <u>I won't need any other support tools (besides the cooking utensils, of course) other than the website to track the progress and simplify following the recipe</u>.*
 
 #### Could have
+
 - *As **a home cook**, I want to <u>bookmark or favorite recipes</u> so that <u>I can easily find them later</u>.*
 - *As **a home cook**, I want to <u>follow other users or content creators</u> so that <u>I can see their latest recipes</u>.*
 
 #### Won't have (for MVP)
+
 - *As **a home cook**, I want to <u>view detailed nutritional information for each recipe</u> so that <u>I can make informed choices</u>.*
 - *As **a home cook**, I want to <u>create a meal plan from selected recipes</u> so that <u>I can organize my weekly cooking</u>.*
 - *As **a home cook**, I want to <u>export a shopping list based on my meal plan</u> so that <u>I can shop efficiently</u>.*
@@ -36,6 +42,7 @@ MVP, categorized by priority using the MoSCoW method:
 - *As **any user**, I want to <u>have access to a dedicated mobile app</u> so that <u>I can use the platform offline</u>.*
 
 ## System architecture
+
 ![High-level architecture diagram](./stage3_tasks/Diagrams-Architecture.drawio.png)
 
 The system follows the typical architecture of a web application with a graphical UI.
@@ -45,11 +52,44 @@ The front-end and back-end servers may be instantiated multiple times, scaling t
 The back-end uses external services to store user files, such as images, and to fill the database of recipe ingredients and anime titles.
 
 ## Components, classes, and database design
+
 ### Class diagram
+
 <!-- #TODO: update class diagram to match new ER diagram -->
 ```mermaid
+---
+title: animize_eat
+---
 classDiagram
-    class BaseEntity {
+    class AbstractUser {
+      +id: Int
+      +username: Text
+      +first_name: Text
+      +last_name: Text
+      +email: Email
+      -password_hash: String
+      +last_login: DateTime
+      +date_joined: DateTime
+      +is_staff: Bool
+      +is_active: Bool
+      +is_superuser: Bool
+    }
+
+    %% User accounts
+    AbstractUser <|-- User : extends
+
+    class User["CustomUser"] {
+        +username: String
+        +email: String
+        +last_authenticated_at: DateTime
+        +created_at: DateTime
+        +updated_at: DateTime
+        +deactivated_at: DateTime
+        +login()
+        +logout()
+    }
+
+    class BaseEntity["UUIDModel"] {
         +id: UUID
         +created_at: DateTime
         +updated_at: DateTime
@@ -57,18 +97,6 @@ classDiagram
         +is_active: Bool
         +is_staff: Bool
         +soft_delete()
-    }
-
-    %% User accounts
-    BaseEntity <|-- User : extends
-
-    class User {
-        +username: String
-        +email: String
-        +password_hash: String
-        +is_admin: Bool
-        +login()
-        +logout()
     }
 
     %% User profiles
@@ -167,24 +195,27 @@ classDiagram
         PUBLISHED
     }
 ```
+
 ### Entity-relationship diagram
+
 <!-- %% #TODO: Verify if additional Uniqueness and Nullness details have been specified -->
+<!-- TODO: Profile.favorite_anime_id field/relationship not yet implemented -->
 ```mermaid
 erDiagram   
-    User[User]:::fontClassName {
+    User[CustomUser]:::fontClassName {
         uuid id PK
         str username UK
         str email UK
         str first_name
         str last_name
-        date birth_date
         str password_hash
         bool is_superuser
         bool is_active
         bool is_staff
+        timestamptz last_authenticated_at
         timestamptz created_at
         timestamptz updated_at
-        timestamptz deleted_at
+        timestamptz deactivated_at
     }
 
     User ||--|| Profile : has
@@ -192,15 +223,17 @@ erDiagram
     Profile[Profile]:::fontClassName {
         uuid id PK
         uuid user_id FK "User.id"
+        date birth_date
         str display_name UK
         str bio
-        str avatar_url
+        url avatar_url
         uuid favorite_anime_id FK "Anime.id"
         str favorite_anime_custom
-        str myAnimeList_profile
+        url myAnimeList_profile
+        str dietary_preferences
         timestamptz created_at
         timestamptz updated_at
-        timestamptz deleted_at
+        timestamptz cleared_at
     }
 
     Profile ||--o{ Recipe : manages
