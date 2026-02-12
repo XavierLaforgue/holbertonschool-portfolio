@@ -1,5 +1,22 @@
 # Notes on `git`
 
+## Update
+
+To update `git` itself its repository must first be added:
+
+```bash
+sudo add-apt-repository ppa:git-core/ppa
+```
+
+Now, we can do
+
+```bash
+sudo apt update
+sudo apt upgrade
+```
+
+To upgrade `git` to the latest stable version (check with `git --version`).
+
 ## Commits
 
 `git` every-day commands: `add`, `commit`, and `push`.
