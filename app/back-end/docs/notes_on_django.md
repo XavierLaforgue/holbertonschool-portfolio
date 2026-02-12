@@ -122,15 +122,29 @@ uv run manage.py shell [-v 2]
 
 where the optional `-v 2` sets the level of verbosity.
 
-## How to use `UUID4` instead of `int`s [^django-uuid]
+In the shell we can create instances of objects, retrieve them from and store them in the database,
+
+```python
+# create an instance of CustomUser
+new_user = CustomUser(username='new_user1', email='new_user_1@example.com', password='visible_password')
+# retrieve `CustomUser` objects from the database
+stored_users = CustomUser.objects.all()
+# store new user in the database
+new_user.save()
+```
+
+## How to use `UUID4` as default `id` instead of `int` in the base model [^django-uuid] [^django-abstract]
+
+Create a new app (e.g., `core`), as one of its models, the abstract class that overwrites the id field in the base model:
 
 ```python
 import uuid
 from django.db import models
 
-
-class MyUUIDModel(models.Model):
+class UUIDModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    class Meta:
+        abstract = True
 ```
 
 When the model is then created it must be filled with key-value pairs and the id field must be omitted.
@@ -156,14 +170,44 @@ As this is the model that will be used for authentication, we'll need to state i
 AUTH_USER_MODEL = "accounts.CustomUser"
 ```
 
-And the database will have to be remade and migrations applied.
+And the database will have to be remade, the superuser recreated, and migrations made and applied.
+
+### Adding relationships to `CustomUser`
+
+To add the `CustomUser` in a relationship use, instead of `CustomUser` directly,
+
+```python
+user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                         on_delete=models.CASCADE)
+```
+
+<!-- #### Signals sent by the `CustomUser` model [^django-user-signal]
+
+When connecting to signals sent by the user model, we need to specify the custom model using the AUTH_USER_MODEL setting. For example:
+
+```python
+from django.conf import settings
+from django.db.models.signals import post_save
+
+def post_save_receiver(sender, instance, created, **kwargs):
+    pass
+
+post_save.connect(post_save_receiver, sender=settings.AUTH_USER_MODEL)
+``` -->
 
 ## References
 
 [^django-custom-user-model]: Django documentation - Customizing User
     [docs.djangoproject.com/en/6.0/topics/auth/customizing/#substituting-a-custom-user-model](https://docs.djangoproject.com/en/6.0/topics/auth/customizing/#substituting-a-custom-user-model)
+
 [^django-uuid]: Django documentation - Model field reference
     [docs.djangoproject.com/en/6.0/ref/models/fields/#uuidfield](https://docs.djangoproject.com/en/6.0/ref/models/fields/#uuidfield)
 
+[^django-abstract]: Django documentation - Modifying base model
+    [docs.djangoproject.com/en/6.0/topics/db/models/#abstract-base-classes](https://docs.djangoproject.com/en/6.0/topics/db/models/#abstract-base-classes)
+
 [^djangoproject-postgres]: Django documentation - postgresql notes
     [docs.djangoproject.com/en/6.0/ref/databases/#postgresql-notes](https://docs.djangoproject.com/en/6.0/ref/databases/#postgresql-notes)
+
+<!-- [^django-user-signal]: Django documentation - signals
+    [docs.djangoproject.com/en/6.0/topics/signals/](https://docs.djangoproject.com/en/6.0/topics/signals/) -->
