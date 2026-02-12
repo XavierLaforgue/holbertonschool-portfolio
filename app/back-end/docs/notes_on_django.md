@@ -133,8 +133,35 @@ class MyUUIDModel(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 ```
 
+When the model is then created it must be filled with key-value pairs and the id field must be omitted.
+
+## How to modify the `User` model (the authentication model) [^django-custom-user-model]
+
+We need to import `django`'s abstract class for the authenticating user: `AbstractUser`:
+
+```python
+from django.contrib.auth.models import AbstractUser
+```
+
+Then we define the User model inheriting from that class, we can use a different name to highlight that it is not the built-in `User` model:
+
+```python
+class CustomUser(AbstractUser):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+```
+
+As this is the model that will be used for authentication, we'll need to state it in `settings.py`.
+
+```python
+AUTH_USER_MODEL = "accounts.CustomUser"
+```
+
+And the database will have to be remade and migrations applied.
+
 ## References
 
+[^django-custom-user-model]: Django documentation - Customizing User
+    [docs.djangoproject.com/en/6.0/topics/auth/customizing/#substituting-a-custom-user-model](https://docs.djangoproject.com/en/6.0/topics/auth/customizing/#substituting-a-custom-user-model)
 [^django-uuid]: Django documentation - Model field reference
     [docs.djangoproject.com/en/6.0/ref/models/fields/#uuidfield](https://docs.djangoproject.com/en/6.0/ref/models/fields/#uuidfield)
 
