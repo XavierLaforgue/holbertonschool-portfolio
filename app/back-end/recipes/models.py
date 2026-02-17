@@ -47,4 +47,7 @@ class Recipe(UUIDModel):
     preparation_time_minutes = models.PositiveSmallIntegerField(null=False,
                                                                 blank=False)
     published_at = models.DateTimeField(blank=True, null=True,
-                                        default=timezone.now())
+                                        default=timezone.now)
+
+    def __str__(self) -> str:
+        return self.title
