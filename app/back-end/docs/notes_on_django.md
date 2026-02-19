@@ -195,6 +195,9 @@ def post_save_receiver(sender, instance, created, **kwargs):
 post_save.connect(post_save_receiver, sender=settings.AUTH_USER_MODEL)
 ``` -->
 
+## Django models and validation of fields/attributes
+
+
 ## References
 
 [^django-custom-user-model]: Django documentation - Customizing User
