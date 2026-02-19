@@ -8,6 +8,8 @@ from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 import uuid
 
+from .validators import person_name_validator
+
 # Create your models here.
 
 
@@ -23,6 +25,19 @@ class CustomUser(
                                 max_length=150)
     email = models.EmailField(unique=True, blank=False, null=False,
                               max_length=150)
+    # Optional, but when provided must look like a person name.
+    first_name = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        validators=[person_name_validator],
+    )
+    last_name = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        validators=[person_name_validator],
+    )
     # TODO: make sure this is updated each time the user requests an
     # authentication token, e.g.,
     #     user.last_auth_time = timezone.now()
