@@ -13,10 +13,21 @@ class Difficulty(UUIDModel):
     value = models.PositiveSmallIntegerField(blank=False, null=False,
                                              unique=True)
 
+    class Meta(UUIDModel.Meta):
+        verbose_name = "Difficulty"
+        verbose_name_plural = "Degrees of difficulty"
 
-class Recipe_Status(UUIDModel):
+
+class RecipeStatus(UUIDModel):
     value = models.TextField(blank=False, null=False, unique=True,
                              max_length=25, default="Draft")
+
+    def __str__(self):
+        return f"{self.value}"
+
+    class Meta(UUIDModel.Meta):
+        verbose_name = "Recipe status"
+        verbose_name_plural = "Recipe statuses"
 
 
 class Recipe(UUIDModel):
@@ -46,6 +57,8 @@ class Recipe(UUIDModel):
                                                 default=1)
     preparation_time_minutes = models.PositiveSmallIntegerField(null=False,
                                                                 blank=False)
+    # TODO: figure out how to properly add the Recipe status relationship
+    # status = models.ForeignKey(RecipeStatus)
     published_at = models.DateTimeField(blank=True, null=True,
                                         default=timezone.now)
 
