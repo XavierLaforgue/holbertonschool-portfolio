@@ -1,12 +1,12 @@
 from django.db import models
 # to to use the abstract model with uuid instead
 from core.models import UUIDModel
-# from core.models import UUIDPkMixin
+from core.models import UUIDPkMixin
 # to create a CustomUser with UUID4 as identifier instead of an int:
 from django.contrib.auth.models import AbstractUser
 # to link models to the model used for authentication:
 from django.conf import settings
-import uuid
+# import uuid
 
 from .validators import person_name_validator
 
@@ -14,13 +14,13 @@ from .validators import person_name_validator
 
 
 class CustomUser(
-                 # UUIDPkMixin,
+                 UUIDPkMixin,
                  AbstractUser,
                  ):
     # TODO: Try again using the UUIDPkMixin with a clean database and no
     # migration files
-    id = models.UUIDField(
-        primary_key=True, default=uuid.uuid4, editable=False)
+    # id = models.UUIDField(
+    #     primary_key=True, default=uuid.uuid4, editable=False)
     username = models.TextField(unique=True, blank=False, null=False,
                                 max_length=150)
     email = models.EmailField(unique=True, blank=False, null=False,
