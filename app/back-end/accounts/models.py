@@ -1,7 +1,7 @@
 from django.db import models
 # to to use the abstract model with uuid instead
 from core.models import UUIDModel
-from core.models import UUIDPkMixin
+# from core.models import UUIDPkMixin
 # to create a CustomUser with UUID4 as identifier instead of an int:
 from django.contrib.auth.models import AbstractUser
 # to link models to the model used for authentication:
@@ -14,14 +14,15 @@ from .validators import person_name_validator
 
 
 class CustomUser(
-                 UUIDPkMixin,
+                 # UUIDPkMixin,
+                 UUIDModel,
                  AbstractUser,
                  ):
     # TODO: Try again using the UUIDPkMixin with a clean database and no
     # migration files
     # id = models.UUIDField(
     #     primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.TextField(unique=True, blank=False, null=False,
+    username = models.CharField(unique=True, blank=False, null=False,
                                 max_length=150)
     email = models.EmailField(unique=True, blank=False, null=False,
                               max_length=150)
@@ -51,6 +52,11 @@ class CustomUser(
         return self.username
 
 
+def default_display_name():
+    n = Profile.objects.count() + 1
+    return f"unnamed_user_{n}"
+
+
 class Profile(UUIDModel):
     # TODO: make it so it is created when the associated user is created. This
     # will be included in the user creation logic.
@@ -63,10 +69,10 @@ class Profile(UUIDModel):
                                 null=False,
                                 blank=False)
     birth_date = models.DateField(blank=True, null=True, default=None)
-    display_name = models.TextField(blank=False, null=False,
-                                    default="unnamed_user_#",
+    display_name = models.CharField(blank=False, null=False,
+                                    default=default_display_name,
                                     max_length=150,
-                                    # unique=True
+                                    unique=True
                                     )
     bio = models.TextField(blank=True, null=True, default=None,
                            max_length=500)
@@ -75,17 +81,21 @@ class Profile(UUIDModel):
     #     upload_to='avatars/',
     #     default='avatars/default_avatar.png',
     #     blank=True, null=True)
-    favorite_anime_custom = models.TextField(blank=True, null=True,
+    favorite_anime_custom = models.CharField(blank=True, null=True,
                                              max_length=150)
     # TODO: Create a relationship with an anime entity that is replaced by a
     # simple text (the title of the anime it was related to) on delete
-    # favorite_anime = models.OneToOneField(Anime, on_delete=???)
-    favorite_meal = models.TextField(blank=True, null=True, max_length=150)
-    location = models.TextField(blank=True, null=True, max_length=150)
+    # favorite_anime = models.ForeignKey(
+    #   Anime,
+    #   on_delete=models.PROTECT,
+    #   related_name="favorites"
+    # )
+    favorite_meal = models.CharField(blank=True, null=True, max_length=150)
+    location = models.CharField(blank=True, null=True, max_length=150)
     myAnimeList_profile = models.URLField(blank=True, null=True,
                                           max_length=200)
     dietary_preferences = models.TextField(blank=True, null=True,
-                                           max_length=100)
+                                           max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     cleared_at = models.DateTimeField(blank=True, null=True)

@@ -1,4 +1,9 @@
 #!/usr/bin/bash
+set -euo pipefail
+# flags breakdown:
+# - set -e: exit immediately if any command returns a non‑zero status.
+# - set -u: treat use of unset variables as an error.
+# - set -o pipefail: make pipelines fail if any part fails.
 
 # To be executed from the Django-project directory (back-end/), e.g.,
 # ```bash

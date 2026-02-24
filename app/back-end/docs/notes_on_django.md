@@ -198,6 +198,46 @@ post_save.connect(post_save_receiver, sender=settings.AUTH_USER_MODEL)
 ## Django models and validation of fields/attributes
 
 
+## Django choices
+
+In Django `choices` is always an iterable of 2‑tuples: `(value_stored_in_DB, human_readable_label)`.
+
+The first element is what gets saved in the database.
+For example, in
+
+```python
+class Unit(UUIDModel):
+    WEIGHT = "weight"
+    KIND_CHOICES = [(WEIGHT, "Weight")]
+    kind = models.CharField(choices=KIND_CHOICES)
+```
+
+what you compare in code is
+
+```python
+if unit.kind == Unit.WEIGHT: 
+    ...
+```
+
+The second element (`"Weight"`) is what Django shows in forms/admin/HTML as the label.
+
+## Django `CharField` vs `TextField`
+
+- `CharField`:
+
+You must give `max_length`.
+Stored as something like `VARCHAR(max_length)` in the DB.
+Slightly more efficient and usually indexed; good for short strings (names, titles, codes, choices).
+Often rendered as a single‑line `<input>` in forms.
+
+- `TextField`:
+
+No `max_length` requirement (can still be added for validation).
+Stored as a large `TEXT/CLOB` type in the DB.
+Used for long, free‑form text (descriptions, notes, comments).
+Usually rendered as a multi‑line `<textarea>` in forms.
+Rule of thumb: "short, structured, maybe used in filters or choices" -> `CharField`; "long, free text" -> `TextField`.
+
 ## References
 
 [^django-custom-user-model]: Django documentation - Customizing User

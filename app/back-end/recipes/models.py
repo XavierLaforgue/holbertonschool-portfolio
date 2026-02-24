@@ -8,7 +8,7 @@ from django.utils import timezone
 
 
 class Difficulty(UUIDModel):
-    label = models.TextField(blank=False, null=False, unique=True,
+    label = models.CharField(blank=False, null=False, unique=True,
                              max_length=25)
     value = models.PositiveSmallIntegerField(blank=False, null=False,
                                              unique=True)
@@ -17,9 +17,12 @@ class Difficulty(UUIDModel):
         verbose_name = "Difficulty"
         verbose_name_plural = "Degrees of difficulty"
 
+    def __str__(self):
+        return f"{self.label}"
+
 
 class RecipeStatus(UUIDModel):
-    value = models.TextField(blank=False, null=False, unique=True,
+    value = models.CharField(blank=False, null=False, unique=True,
                              max_length=25, default="Draft")
 
     def __str__(self):
@@ -30,12 +33,9 @@ class RecipeStatus(UUIDModel):
         verbose_name_plural = "Recipe statuses"
 
 
-class Recipe(UUIDModel):
-    owner = models.ForeignKey(
-        Profile,
-        on_delete=models.CASCADE,
-        related_name="recipes",  # to do profile.recipes.all()
-    )
+class RecipeBase(UUIDModel):
+    title = models.CharField(blank=False, null=False, max_length=150)
+    # TODO: create Anime model (in the Animes app)
     # anime = models.ForeignKey(
     #     Anime,
     #     # TODO: figure out what to use for on_delete when I don't want the
@@ -44,23 +44,67 @@ class Recipe(UUIDModel):
     #     null=False,
     #     blank=False
     # )
-    anime_custom = models.TextField(blank=False, null=False, max_length=150)
-    title = models.TextField(blank=False, null=False, max_length=150)
+    anime_custom = models.CharField(blank=False, null=False, max_length=150)
     description = models.TextField(blank=False, null=False, max_length=500)
-    # TODO: Figure out what to do in case of delete
-    # on_delete=models.???,
-    # difficulty = models.ForeignKey(
-    #     Difficulty,
-    #     # related_name="recipes",
-    # )
+    difficulty = models.ForeignKey(
+        Difficulty,
+        on_delete=models.PROTECT,
+        # Use a dynamic related_name so each concrete subclass
+        # gets its own reverse accessor on Difficulty
+        related_name="%(class)s_recipes",
+        null=True
+    )
     portions = models.PositiveSmallIntegerField(null=False, blank=False,
                                                 default=1)
     preparation_time_minutes = models.PositiveSmallIntegerField(null=False,
                                                                 blank=False)
-    # TODO: figure out how to properly add the Recipe status relationship
-    # status = models.ForeignKey(RecipeStatus)
+    status = models.ForeignKey(
+        RecipeStatus,
+        on_delete=models.PROTECT,
+        # Use a dynamic related_name so each concrete subclass
+        # gets its own reverse accessor on RecipeStatus
+        related_name="%(class)s_recipes",
+        null=True
+    )
     published_at = models.DateTimeField(blank=True, null=True,
                                         default=timezone.now)
 
+    # TODO: add RecipePhoto model
+
+    class Meta(UUIDModel.Meta):
+        abstract = True
+
+
+class Recipe(RecipeBase):
+    author = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="authored_recipes",  # for profile.authored_recipes.all()
+        null=True
+    )
+
     def __str__(self) -> str:
         return self.title
+
+
+class SavedRecipe(RecipeBase):
+    saver = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name="saved_recipes",  # to do profile.saved_recipes.all()
+    )
+    original_recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.SET_NULL,  # author can delete; snapshot stays
+        null=True,
+        blank=True,
+        related_name="saved_copies",
+    )
+    original_author = models.ForeignKey(
+        Profile,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="authored_recipes_saved",
+        editable=False
+    )
