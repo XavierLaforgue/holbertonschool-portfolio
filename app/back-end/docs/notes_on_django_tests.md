@@ -33,6 +33,63 @@ Django (and `unittest`) discovers tests by looking for:
 - classes that inherit from `unittest.TestCase` (or any subclass)
 - methods whose name starts with `test`
 
+### `unittest` vs `pytest`
+
+Both are valid choices for a Django project. Here is a side-by-side comparison
+to help decide which to use (or when to mix them):
+
+| Aspect | `unittest` (built-in) | `pytest` + `pytest-django` |
+|---|---|---|
+| **Origin** | Python standard library | Third-party (`pip install pytest pytest-django`) |
+| **Test syntax** | Classes inheriting `TestCase`; `self.assertEqual(…)` | Plain functions (`def test_…`) **or** classes; `assert a == b` |
+| **Setup / teardown** | `setUp` / `tearDown` methods on the class | `@pytest.fixture` functions injected by name into test parameters |
+| **Discovery** | Files starting with `test`; classes inheriting `TestCase`; methods starting with `test` | Same file/function naming rules, **plus** plain functions outside classes |
+| **Assertions** | `self.assert*` methods (`assertEqual`, `assertRaises`, …) | Plain Python `assert`; pytest rewrites the bytecode to show diffs on failure |
+| **Output on failure** | Shows the assertion line and message | Shows full context: local variables, intermediate values, diff of objects |
+| **Fixtures** | Tied to the class via `setUp` | Reusable across files; can be scoped to function / class / module / session |
+| **Django integration** | Native — `django.test.TestCase` extends `unittest.TestCase` | Via `pytest-django`; provides `@pytest.mark.django_db`, `client`, `rf` fixtures |
+| **Parametrize** | Manual looping or `subTest` | `@pytest.mark.parametrize` — concise, clear test IDs |
+| **Plugins ecosystem** | Limited | Large ecosystem (`pytest-cov`, `pytest-xdist`, `pytest-playwright`, …) |
+
+**Practical recommendation:** Django's own documentation uses `unittest`-style
+`TestCase` classes, and those classes work equally well under `pytest` (the two
+are fully compatible — `pytest` discovers and runs `TestCase` subclasses
+automatically). A common approach is to **write tests as `TestCase` subclasses
+for heavy Django integration** (database, client, …) and use **plain `pytest`
+functions with fixtures for pure-Python logic** (validators, utility functions).
+
+```python
+# unittest style (works with both `manage.py test` and `pytest`)
+from django.test import TestCase
+
+class CustomUserModelTest(TestCase):
+    def test_str(self):
+        ...
+
+# pytest style (requires pytest-django; does NOT work with `manage.py test`)
+import pytest
+
+@pytest.mark.django_db
+def test_str(user_factory):
+    user = user_factory(username="alice")
+    assert str(user) == "alice"
+```
+
+Run `pytest` with Django using a `pytest.ini` (or `pyproject.toml` section):
+
+```ini
+# pytest.ini
+[pytest]
+DJANGO_SETTINGS_MODULE = config.settings
+```
+
+or in `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+```
+
 ---
 
 ## Kinds of testing available in a Django project
@@ -125,6 +182,92 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(CustomUserFactory)
     display_name = factory.Sequence(lambda n: f"display_{n}")
 ```
+
+### Centralizing model constraints to keep tests resilient
+
+**The problem:** if you hard-code values like `max_length=150` or a forbidden
+regex pattern directly inside the test, any future change to the model field
+breaks the test for the wrong reason — the assertion was testing the old value,
+not the behaviour.
+
+**The solution:** define constraints as class-level constants on the model, then
+import those constants in both the model field definition and the tests.
+This creates a **single source of truth**: change the constant once, and every
+consumer (model field, serializer, form, test) picks up the new value
+automatically.
+
+```python
+# accounts/models.py
+class CustomUser(UUIDModel, AbstractUser):
+    USERNAME_MAX_LENGTH = 150
+    EMAIL_MAX_LENGTH = 150
+
+    username = models.CharField(unique=True, blank=False, null=False,
+                                max_length=USERNAME_MAX_LENGTH)
+    email = models.EmailField(unique=True, blank=False, null=False,
+                              max_length=EMAIL_MAX_LENGTH)
+    ...
+
+
+class Profile(UUIDModel):
+    BIO_MAX_LENGTH = 500
+    DISPLAY_NAME_MAX_LENGTH = 150
+
+    display_name = models.CharField(blank=False, null=False,
+                                    default=default_display_name,
+                                    max_length=DISPLAY_NAME_MAX_LENGTH,
+                                    unique=True)
+    bio = models.TextField(blank=True, null=True, default=None,
+                           max_length=BIO_MAX_LENGTH)
+    ...
+```
+
+```python
+# accounts/tests/test_models.py  — importing the constants
+from accounts.models import CustomUser, Profile
+
+
+class CustomUserFieldConstraintsTest(TestCase):
+
+    def test_username_respects_max_length(self):
+        long_username = "a" * (CustomUser.USERNAME_MAX_LENGTH + 1)
+        user = CustomUser(username=long_username, email="x@example.com")
+        with self.assertRaises(ValidationError):
+            user.full_clean()
+
+    def test_bio_respects_max_length(self):
+        user = CustomUser.objects.create_user(
+            username="bio_user", email="bio@example.com", password="TestPass123!"
+        )
+        profile = Profile(user=user,
+                          bio="x" * (Profile.BIO_MAX_LENGTH + 1))
+        with self.assertRaises(ValidationError):
+            profile.full_clean()
+```
+
+**Is this a good idea?** Yes, for the following reasons:
+
+- **Single source of truth** — the constant lives in one place; update the
+  model, the tests update for free.
+- **Self-documenting** — `CustomUser.USERNAME_MAX_LENGTH` is far clearer than
+  a bare `150` in a test.
+- **Encourages testing behaviour, not values** — the test asserts that the
+  field *enforces* its own declared limit, regardless of what that limit is.
+
+**Caveats and good practices:**
+
+- Constants that affect **database-level** constraints (e.g. `max_length` which
+  maps to `VARCHAR(n)`) require a migration whenever they change. Make sure your
+  CI runs migrations before the test suite.
+- For constraints that have **business meaning** (e.g. "a bio may not exceed
+  X characters because of UI layout"), consider also documenting *why* the value
+  was chosen (in a comment or docstring next to the constant), so future
+  contributors know whether changing it is safe.
+- Keep constants **on the model**, not in a separate `constants.py` file.
+  Scoping them to the class avoids naming conflicts and makes imports explicit:
+  `from accounts.models import Profile` gives access to `Profile.BIO_MAX_LENGTH`.
+- When constraints come from a **shared abstract base model** (like `UUIDModel`),
+  define the constant there, and subclasses inherit it.
 
 ---
 
@@ -329,10 +472,10 @@ class CustomUserQueryTest(TestCase):
 
     def test_manager_filters_active_users(self):
         CustomUser.objects.create_user(
-            username="active_user", email="a@example.com", password="P@ss1"
+            username="active_user", email="a@example.com", password="TestPass123!"
         )
         inactive = CustomUser.objects.create_user(
-            username="inactive_user", email="b@example.com", password="P@ss1"
+            username="inactive_user", email="b@example.com", password="TestPass123!"
         )
         inactive.is_active = False
         inactive.save()
@@ -345,11 +488,11 @@ class UniqueConstraintTest(TransactionTestCase):
 
     def test_duplicate_username_raises_integrity_error(self):
         CustomUser.objects.create_user(
-            username="dup", email="dup1@example.com", password="P@ss1"
+            username="dup", email="dup1@example.com", password="TestPass123!"
         )
         with self.assertRaises(IntegrityError):
             CustomUser.objects.create_user(
-                username="dup", email="dup2@example.com", password="P@ss1"
+                username="dup", email="dup2@example.com", password="TestPass123!"
             )
 ```
 
