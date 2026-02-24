@@ -1,7 +1,10 @@
 from django.contrib import admin
-from .models import Recipe, Difficulty, RecipeStatus
+from .models import Recipe, Difficulty, RecipeStatus, SavedRecipe
 # Register your models here.
 
-admin.site.register(Recipe)
-admin.site.register(Difficulty)
-admin.site.register(RecipeStatus)
+admin.site.register([
+    Recipe,
+    Difficulty,
+    RecipeStatus,
+    SavedRecipe
+])
