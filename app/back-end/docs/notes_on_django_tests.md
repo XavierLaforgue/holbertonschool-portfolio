@@ -625,6 +625,59 @@ class PermissionTest(TestCase):
 
 ## Measuring test coverage
 
+### What is test coverage?
+
+**Test coverage** (also called *code coverage*) is a metric that quantifies what
+proportion of your source code is actually *executed* when your test suite runs.
+It is usually expressed as a percentage:
+
+```
+coverage = (lines executed by tests / total executable lines) × 100
+```
+
+Coverage tools instrument the code at run-time, recording which lines, branches,
+and functions were reached. After the suite finishes they produce a report
+showing which parts of the codebase were exercised — and, crucially, which were
+not.
+
+There are several levels of granularity:
+
+| Metric | What it counts |
+|---|---|
+| **Line coverage** | Was each line executed at least once? |
+| **Branch coverage** | Was each branch of every `if`/`elif`/`else` taken? |
+| **Function / method coverage** | Was each callable invoked at least once? |
+
+Line coverage is the most common starting point; branch coverage is stricter and
+catches untested conditional paths.
+
+### Why measure it?
+
+- **Find untested code.** A function that is never called by any test is invisible
+  to the suite; coverage makes it visible. Untested code can harbour hidden bugs
+  that only surface in production.
+- **Guide where to write tests next.** Low-coverage modules are the highest-risk
+  areas and the best candidates for new tests.
+- **Prevent regressions.** Setting a minimum coverage threshold in CI (e.g. 80 %)
+  prevents new code from being merged without corresponding tests.
+- **Build confidence during refactoring.** High coverage means changes are more
+  likely to be caught if they break existing behaviour.
+- **Documentation of intent.** Tests that cover a code path implicitly document
+  what that path is supposed to do.
+
+### Important caveats
+
+Coverage is a *necessary* but not *sufficient* condition for quality. A test
+suite can reach 100 % line coverage while testing nothing meaningful (e.g. by
+calling every function and ignoring the return values). Coverage should be used
+as a **floor** ("at least X % must be covered") combined with meaningful
+assertions, not as the sole quality metric.
+
+A pragmatic target for a Django project is **80–90 % line coverage**, with
+critical paths (authentication, payment, data validation) at or near 100 %.
+
+### How to measure it in this project
+
 ```bash
 # install
 uv add --dev coverage pytest-cov
