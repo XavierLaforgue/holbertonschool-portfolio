@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import viewsets, permissions
 from .models import CustomUser, Profile
 from .serializers import (CustomUserModelSerializer,
@@ -10,18 +11,38 @@ class CustomUserModelViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = CustomUser.objects.all().order_by("-date_joined")
+    queryset = CustomUser.objects.filter(is_active=True)\
+        .order_by("-date_joined")
     serializer_class = CustomUserModelSerializer
     permission_classes = [permissions.AllowAny]
+
+    def perform_destroy(self, instance):
+        """Soft-delete a user instead of removing it from the database.
+
+        Marks the user as inactive and records when it was deactivated.
+        """
+        instance.is_active = False
+        instance.deactivated_at = timezone.now()
+        instance.save(update_fields=["is_active", "deactivated_at"])
 
 
 class CustomUserHyperlinkedViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = CustomUser.objects.all().order_by("-date_joined")
+    queryset = CustomUser.objects.filter(is_active=True)\
+        .order_by("-date_joined")
     serializer_class = CustomUserHyperlinkedSerializer
     permission_classes = [permissions.AllowAny]
+
+    def perform_destroy(self, instance):
+        """Soft-delete a user instead of removing it from the database.
+
+        Marks the user as inactive and records when it was deactivated.
+        """
+        instance.is_active = False
+        instance.deactivated_at = timezone.now()
+        instance.save(update_fields=["is_active", "deactivated_at"])
 
 
 class ProfileModelViewSet(viewsets.ModelViewSet):
