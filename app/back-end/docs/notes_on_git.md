@@ -48,6 +48,23 @@ git push --set-upstream origin dev
 
 to set it up and then commit the changes.
 
+A modern way to change the active branch is
+
+```bash
+git switch <branch-name>
+# or, if we want to create and switch to a new branch:
+git switch -c <new-branch-name>
+```
+
+We may even be able to switch branches with uncommitted changes.
+
+To change the name of a branch we do
+
+```bash
+# if we are at the branch whose name we want to change
+git branch -m <new-branch-name>
+```
+
 ## Merging
 
 In collaborative projects we would always use pull requests and never merges (upwards).
@@ -76,4 +93,24 @@ git checkout dev
 git merge feature-branch
 # Push the local changes to github:
 git push origin dev
+```
+
+## Stashing
+
+when we made some changes but we do not want to commit them and we want to clean the worktree, we can stash the changes.
+
+```bash
+git stash -u -m "WIP put on the side"
+```
+
+where the `-u` includes the untracked files (it doesn't, by default) and `m` gives a name/label to the stash.
+
+When we are ready to bring forth the stashed changes we can do
+
+```bash
+git stash pop
+# which brings forth the modifications and removes them from the stash
+# or
+git stash apply
+# which applies the changes to the worktree without deleting them from the stash
 ```
