@@ -1,0 +1,742 @@
+# Notes on Django tests
+
+## How Django suggests implementing tests
+
+Django's testing framework is built on top of Python's standard `unittest` module.
+Django extends it with a test runner, a test client for simulating HTTP requests,
+and helpers for working with the database in isolation.
+
+The recommended workflow is:
+
+1. Write test classes that extend `django.test.TestCase` (or a subclass thereof).
+2. Place test code in `tests.py` inside each app, or inside a `tests/` package
+   (a directory containing an `__init__.py` and one file per category of tests,
+   e.g. `tests/test_models.py`, `tests/test_views.py`, …).
+3. Run the suite with the management command:
+
+```bash
+uv run manage.py test
+# or, to target a single app:
+uv run manage.py test accounts
+# or a single module/class/method:
+uv run manage.py test accounts.tests.test_models.CustomUserModelTest
+```
+
+Each test class wraps every test method in a database transaction that is rolled
+back automatically after the method returns, so tests are isolated and the
+database is left clean.
+
+### Test discovery rules
+
+Django (and `unittest`) discovers tests by looking for:
+- files whose name starts with `test` (e.g. `test_models.py`)
+- classes that inherit from `unittest.TestCase` (or any subclass)
+- methods whose name starts with `test`
+
+### `unittest` vs `pytest`
+
+Both are valid choices for a Django project. Here is a side-by-side comparison
+to help decide which to use (or when to mix them):
+
+| Aspect | `unittest` (built-in) | `pytest` + `pytest-django` |
+|---|---|---|
+| **Origin** | Python standard library | Third-party (`pip install pytest pytest-django`) |
+| **Test syntax** | Classes inheriting `TestCase`; `self.assertEqual(…)` | Plain functions (`def test_…`) **or** classes; `assert a == b` |
+| **Setup / teardown** | `setUp` / `tearDown` methods on the class | `@pytest.fixture` functions injected by name into test parameters |
+| **Discovery** | Files starting with `test`; classes inheriting `TestCase`; methods starting with `test` | Same file/function naming rules, **plus** plain functions outside classes |
+| **Assertions** | `self.assert*` methods (`assertEqual`, `assertRaises`, …) | Plain Python `assert`; pytest rewrites the bytecode to show diffs on failure |
+| **Output on failure** | Shows the assertion line and message | Shows full context: local variables, intermediate values, diff of objects |
+| **Fixtures** | Tied to the class via `setUp` | Reusable across files; can be scoped to function / class / module / session |
+| **Django integration** | Native — `django.test.TestCase` extends `unittest.TestCase` | Via `pytest-django`; provides `@pytest.mark.django_db`, `client`, `rf` fixtures |
+| **Parametrize** | Manual looping or `subTest` | `@pytest.mark.parametrize` — concise, clear test IDs |
+| **Plugins ecosystem** | Limited | Large ecosystem (`pytest-cov`, `pytest-xdist`, `pytest-playwright`, …) |
+
+**Practical recommendation:** Django's own documentation uses `unittest`-style
+`TestCase` classes, and those classes work equally well under `pytest` (the two
+are fully compatible — `pytest` discovers and runs `TestCase` subclasses
+automatically). A common approach is to **write tests as `TestCase` subclasses
+for heavy Django integration** (database, client, …) and use **plain `pytest`
+functions with fixtures for pure-Python logic** (validators, utility functions).
+
+```python
+# unittest style (works with both `manage.py test` and `pytest`)
+from django.test import TestCase
+
+class CustomUserModelTest(TestCase):
+    def test_str(self):
+        ...
+
+# pytest style (requires pytest-django; does NOT work with `manage.py test`)
+import pytest
+
+@pytest.mark.django_db
+def test_str(user_factory):
+    user = user_factory(username="alice")
+    assert str(user) == "alice"
+```
+
+Run `pytest` with Django using a `pytest.ini` (or `pyproject.toml` section):
+
+```ini
+# pytest.ini
+[pytest]
+DJANGO_SETTINGS_MODULE = config.settings
+```
+
+or in `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+```
+
+---
+
+## Kinds of testing available in a Django project
+
+| Kind | Scope | Django entry-point |
+|---|---|---|
+| **Unit tests – models** | A single model class and its methods | `TestCase` |
+| **Unit tests – validators / utils** | A standalone function or class | `TestCase` / `SimpleTestCase` |
+| **Unit tests – forms** | A `Form` or `ModelForm` class | `TestCase` |
+| **Integration tests – views** | A URL + view + template rendering | `TestCase` + `Client` |
+| **API tests** | REST endpoints (JSON in / JSON out) | `APITestCase` (DRF) |
+| **Database / query tests** | ORM behaviour, constraints, signals | `TestCase` / `TransactionTestCase` |
+| **Browser / end-to-end tests** | Full browser interaction with the running app | Selenium / Playwright |
+| **Performance / load tests** | Throughput, latency under load | Locust / k6 |
+| **Security tests** | Auth, permissions, injection | manual + Bandit / OWASP ZAP |
+
+---
+
+## Unit tests – models
+
+Model tests verify that:
+- instances can be created and persisted correctly,
+- field constraints (blank, null, unique, max_length, …) are enforced,
+- `__str__` and other custom methods return the expected values,
+- validators attached to fields raise `ValidationError` for invalid input.
+
+```python
+# accounts/tests/test_models.py
+from django.test import TestCase
+from django.core.exceptions import ValidationError
+from accounts.models import CustomUser, Profile
+
+
+class CustomUserModelTest(TestCase):
+
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username="alice",
+            email="alice@example.com",
+            password="StrongPass123!",
+        )
+
+    def test_str_returns_username(self):
+        self.assertEqual(str(self.user), "alice")
+
+    def test_email_is_unique(self):
+        with self.assertRaises(Exception):
+            CustomUser.objects.create_user(
+                username="alice2",
+                email="alice@example.com",  # duplicate
+                password="AnotherPass456!",
+            )
+
+    def test_first_name_validator_rejects_digits(self):
+        self.user.first_name = "Al1ce"
+        with self.assertRaises(ValidationError):
+            self.user.full_clean()
+```
+
+### Tools / libraries
+
+| Tool | Role |
+|---|---|
+| `django.test.TestCase` | Base class; wraps every test in a transaction |
+| `factory_boy` | Creates model instances with sensible defaults (see below) |
+| `Faker` | Generates realistic fake data for fields |
+| `mixer` | Alternative to `factory_boy` for quick fixture creation |
+
+#### `factory_boy` example
+
+```python
+# accounts/tests/factories.py
+import factory
+from accounts.models import CustomUser, Profile
+
+
+class CustomUserFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = CustomUser
+
+    username = factory.Sequence(lambda n: f"user_{n}")
+    email = factory.LazyAttribute(lambda o: f"{o.username}@example.com")
+    password = factory.PostGenerationMethodCall("set_password", "Pass1234!")
+
+
+class ProfileFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Profile
+
+    user = factory.SubFactory(CustomUserFactory)
+    display_name = factory.Sequence(lambda n: f"display_{n}")
+```
+
+### Centralizing model constraints to keep tests resilient
+
+**The problem:** if you hard-code values like `max_length=150` or a forbidden
+regex pattern directly inside the test, any future change to the model field
+breaks the test for the wrong reason — the assertion was testing the old value,
+not the behaviour.
+
+**The solution:** define constraints as class-level constants on the model, then
+import those constants in both the model field definition and the tests.
+This creates a **single source of truth**: change the constant once, and every
+consumer (model field, serializer, form, test) picks up the new value
+automatically.
+
+```python
+# accounts/models.py
+class CustomUser(UUIDModel, AbstractUser):
+    USERNAME_MAX_LENGTH = 150
+    EMAIL_MAX_LENGTH = 150
+
+    username = models.CharField(unique=True, blank=False, null=False,
+                                max_length=USERNAME_MAX_LENGTH)
+    email = models.EmailField(unique=True, blank=False, null=False,
+                              max_length=EMAIL_MAX_LENGTH)
+    ...
+
+
+class Profile(UUIDModel):
+    BIO_MAX_LENGTH = 500
+    DISPLAY_NAME_MAX_LENGTH = 150
+
+    display_name = models.CharField(blank=False, null=False,
+                                    default=default_display_name,
+                                    max_length=DISPLAY_NAME_MAX_LENGTH,
+                                    unique=True)
+    bio = models.TextField(blank=True, null=True, default=None,
+                           max_length=BIO_MAX_LENGTH)
+    ...
+```
+
+```python
+# accounts/tests/test_models.py  — importing the constants
+from accounts.models import CustomUser, Profile
+
+
+class CustomUserFieldConstraintsTest(TestCase):
+
+    def test_username_respects_max_length(self):
+        long_username = "a" * (CustomUser.USERNAME_MAX_LENGTH + 1)
+        user = CustomUser(username=long_username, email="x@example.com")
+        with self.assertRaises(ValidationError):
+            user.full_clean()
+
+    def test_bio_respects_max_length(self):
+        user = CustomUser.objects.create_user(
+            username="bio_user", email="bio@example.com", password="TestPass123!"
+        )
+        profile = Profile(user=user,
+                          bio="x" * (Profile.BIO_MAX_LENGTH + 1))
+        with self.assertRaises(ValidationError):
+            profile.full_clean()
+```
+
+**Is this a good idea?** Yes, for the following reasons:
+
+- **Single source of truth** — the constant lives in one place; update the
+  model, the tests update for free.
+- **Self-documenting** — `CustomUser.USERNAME_MAX_LENGTH` is far clearer than
+  a bare `150` in a test.
+- **Encourages testing behaviour, not values** — the test asserts that the
+  field *enforces* its own declared limit, regardless of what that limit is.
+
+**Caveats and good practices:**
+
+- Constants that affect **database-level** constraints (e.g. `max_length` which
+  maps to `VARCHAR(n)`) require a migration whenever they change. Make sure your
+  CI runs migrations before the test suite.
+- For constraints that have **business meaning** (e.g. "a bio may not exceed
+  X characters because of UI layout"), consider also documenting *why* the value
+  was chosen (in a comment or docstring next to the constant), so future
+  contributors know whether changing it is safe.
+- Keep constants **on the model**, not in a separate `constants.py` file.
+  Scoping them to the class avoids naming conflicts and makes imports explicit:
+  `from accounts.models import Profile` gives access to `Profile.BIO_MAX_LENGTH`.
+- When constraints come from a **shared abstract base model** (like `UUIDModel`),
+  define the constant there, and subclasses inherit it.
+
+---
+
+## Unit tests – validators and utility functions
+
+Pure Python functions (validators, helpers, …) can be tested with
+`django.test.SimpleTestCase`, which skips all database set-up and is therefore
+faster.
+
+```python
+# accounts/tests/test_validators.py
+from django.test import SimpleTestCase
+from django.core.exceptions import ValidationError
+from accounts.validators import person_name_validator
+
+
+class PersonNameValidatorTest(SimpleTestCase):
+
+    def test_valid_name_passes(self):
+        # Should not raise
+        person_name_validator("Marie-Curie")
+
+    def test_name_with_digits_raises(self):
+        with self.assertRaises(ValidationError):
+            person_name_validator("J0hn")
+
+    def test_empty_string_behaviour(self):
+        # Document whether empty strings are accepted or rejected
+        person_name_validator("")  # adjust assertion to match actual behaviour
+```
+
+### Tools / libraries
+
+| Tool | Role |
+|---|---|
+| `django.test.SimpleTestCase` | Base class; **no** database access |
+| `pytest` + `pytest-django` | Alternative runner with fixture injection and richer assertions |
+| `hypothesis` | Property-based testing – generates many inputs automatically |
+
+---
+
+## Unit tests – forms
+
+Form tests verify that:
+- a form is valid when given correct data,
+- a form is invalid (and produces the right error messages) for bad data,
+- `save()` creates / updates the database record.
+
+```python
+# accounts/tests/test_forms.py
+from django.test import TestCase
+from django.contrib.auth.forms import UserCreationForm
+
+
+class UserCreationFormTest(TestCase):
+
+    def test_valid_data_creates_user(self):
+        form = UserCreationForm(data={
+            "username": "bob",
+            "password1": "ComplexPass99!",
+            "password2": "ComplexPass99!",
+        })
+        self.assertTrue(form.is_valid())
+
+    def test_password_mismatch_is_invalid(self):
+        form = UserCreationForm(data={
+            "username": "bob",
+            "password1": "ComplexPass99!",
+            "password2": "WrongPass",
+        })
+        self.assertFalse(form.is_valid())
+        self.assertIn("password2", form.errors)
+```
+
+### Tools / libraries
+
+| Tool | Role |
+|---|---|
+| `django.test.TestCase` | Provides `assertFormError` and database support |
+| `factory_boy` | Supplies initial data dictionaries via `factory.build()` |
+
+---
+
+## Integration tests – views
+
+View tests exercise the full Django request/response cycle: URL routing,
+view logic, template rendering, redirects, status codes, and context data.
+`django.test.TestCase` provides a built-in `self.client` (an instance of
+`django.test.Client`).
+
+```python
+# accounts/tests/test_views.py
+from django.test import TestCase
+from django.urls import reverse
+from accounts.tests.factories import CustomUserFactory
+
+
+class LoginViewTest(TestCase):
+
+    def setUp(self):
+        self.user = CustomUserFactory(username="carol")
+        self.user.set_password("Pass1234!")
+        self.user.save()
+        self.url = reverse("login")  # adjust to actual URL name
+
+    def test_login_page_loads(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_valid_credentials_redirect(self):
+        response = self.client.post(self.url, {
+            "username": "carol",
+            "password": "Pass1234!",
+        })
+        self.assertRedirects(response, reverse("home"))  # adjust target
+
+    def test_invalid_credentials_return_form_errors(self):
+        response = self.client.post(self.url, {
+            "username": "carol",
+            "password": "wrong",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "error")  # adjust to actual copy
+```
+
+### Tools / libraries
+
+| Tool | Role |
+|---|---|
+| `django.test.Client` | Simulates GET / POST / … requests without a real HTTP server |
+| `django.test.TestCase` | Provides `assertRedirects`, `assertContains`, `assertTemplateUsed` |
+| `pytest-django` | `rf` fixture (RequestFactory), `client` fixture, `django_db` marker |
+| `django.test.RequestFactory` | Builds request objects directly (faster than `Client`, no middleware) |
+
+---
+
+## API tests (Django REST Framework)
+
+When the project uses **Django REST Framework** (DRF), use `rest_framework.test.APITestCase`
+and `APIClient`, which add helpers for JSON serialisation and authentication tokens.
+
+```python
+# accounts/tests/test_api.py
+from rest_framework.test import APITestCase
+from rest_framework import status
+from django.urls import reverse
+from accounts.tests.factories import CustomUserFactory
+
+
+class UserListAPITest(APITestCase):
+
+    def setUp(self):
+        self.admin = CustomUserFactory(is_staff=True)
+        self.client.force_authenticate(user=self.admin)
+        self.url = reverse("user-list")  # adjust to actual router URL name
+
+    def test_list_returns_200(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_unauthenticated_request_returns_401(self):
+        self.client.force_authenticate(user=None)
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_user_returns_201(self):
+        payload = {
+            "username": "dave",
+            "email": "dave@example.com",
+            "password": "NewPass99!",
+        }
+        response = self.client.post(self.url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+```
+
+### Tools / libraries
+
+| Tool | Role |
+|---|---|
+| `rest_framework.test.APITestCase` | DRF-aware base class |
+| `rest_framework.test.APIClient` | Client with `force_authenticate`, `credentials` helpers |
+| `drf-spectacular` / `drf-yasg` | OpenAPI schema generation; can be validated in tests |
+
+---
+
+## Database / query tests
+
+These tests verify ORM behaviour that goes beyond a single model method:
+queries, managers, signals, constraints, and transactions.
+Use `TransactionTestCase` when you need to test behaviour that spans
+transaction boundaries (e.g. `IntegrityError` handling), because
+`TestCase` wraps everything in a savepoint.
+
+```python
+# accounts/tests/test_db.py
+from django.test import TestCase, TransactionTestCase
+from django.db.utils import IntegrityError
+from accounts.models import CustomUser
+
+
+class CustomUserQueryTest(TestCase):
+
+    def test_manager_filters_active_users(self):
+        CustomUser.objects.create_user(
+            username="active_user", email="a@example.com", password="TestPass123!"
+        )
+        inactive = CustomUser.objects.create_user(
+            username="inactive_user", email="b@example.com", password="TestPass123!"
+        )
+        inactive.is_active = False
+        inactive.save()
+
+        active_users = CustomUser.objects.filter(is_active=True)
+        self.assertEqual(active_users.count(), 1)
+
+
+class UniqueConstraintTest(TransactionTestCase):
+
+    def test_duplicate_username_raises_integrity_error(self):
+        CustomUser.objects.create_user(
+            username="dup", email="dup1@example.com", password="TestPass123!"
+        )
+        with self.assertRaises(IntegrityError):
+            CustomUser.objects.create_user(
+                username="dup", email="dup2@example.com", password="TestPass123!"
+            )
+```
+
+### Tools / libraries
+
+| Tool | Role |
+|---|---|
+| `django.test.TestCase` | Fast; wraps in a transaction (no real commit) |
+| `django.test.TransactionTestCase` | Slower; allows testing actual commits / rollbacks |
+| `django.test.LiveServerTestCase` | Starts a real HTTP server; needed for Selenium |
+| `pytest-django` | `db`, `django_db_reset_sequences`, `transactional_db` fixtures |
+
+---
+
+## Browser / end-to-end tests
+
+End-to-end (E2E) tests drive a real browser to interact with the running
+application and verify complete user workflows.
+
+```python
+# e2e/test_login_flow.py  (example with Playwright)
+from playwright.sync_api import sync_playwright
+from django.test import LiveServerTestCase
+
+
+class LoginFlowE2ETest(LiveServerTestCase):
+
+    def test_user_can_log_in(self):
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page()
+            page.goto(f"{self.live_server_url}/login/")
+            page.fill('input[name="username"]', "alice")
+            page.fill('input[name="password"]', "Pass1234!")
+            page.click('button[type="submit"]')
+            page.wait_for_url(f"{self.live_server_url}/")
+            self.assertIn("Welcome", page.content())
+            browser.close()
+```
+
+### Tools / libraries
+
+| Tool | Role |
+|---|---|
+| `Selenium` + `selenium` (pip) | Classic browser automation; works with `LiveServerTestCase` |
+| `Playwright` + `pytest-playwright` | Modern alternative to Selenium; faster and more reliable |
+| `django.test.LiveServerTestCase` | Spins up a real WSGI server on a free port for browser tests |
+| `splinter` | High-level wrapper around Selenium / WebDriver |
+
+---
+
+## Performance / load tests
+
+Load tests measure how the application behaves under concurrent traffic.
+They are typically run outside the Django test suite.
+
+```python
+# locustfile.py
+from locust import HttpUser, task, between
+
+
+class AnonymousUser(HttpUser):
+    wait_time = between(1, 3)
+
+    @task
+    def view_home(self):
+        self.client.get("/")
+
+    @task(3)
+    def view_recipe_list(self):
+        self.client.get("/api/recipes/")
+```
+
+Run with:
+
+```bash
+locust -f locustfile.py --host=http://localhost:8000
+```
+
+### Tools / libraries
+
+| Tool | Role |
+|---|---|
+| `Locust` | Python-based load testing framework |
+| `k6` | JavaScript-based; integrates well with CI/CD |
+| `Apache JMeter` | GUI-based; widely used in enterprise settings |
+| `django-silk` | Profiling middleware for identifying slow queries / views |
+
+---
+
+## Security tests
+
+Security tests verify that the application correctly enforces authentication,
+authorisation, and input sanitisation.
+
+```python
+# accounts/tests/test_security.py
+from django.test import TestCase
+from django.urls import reverse
+from accounts.tests.factories import CustomUserFactory
+
+
+class PermissionTest(TestCase):
+
+    def test_unauthenticated_user_cannot_access_profile(self):
+        url = reverse("profile-detail", kwargs={"pk": "profile-uuid"})
+        response = self.client.get(url)
+        # expect a redirect to login or a 401/403
+        self.assertIn(response.status_code, [302, 401, 403])
+
+    def test_user_cannot_access_another_users_profile(self):
+        owner = CustomUserFactory()
+        other = CustomUserFactory()
+        self.client.force_login(other)
+        url = reverse("profile-detail", kwargs={"pk": owner.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+```
+
+### Tools / libraries
+
+| Tool | Role |
+|---|---|
+| `django.test.Client` | Sufficient for auth / permission checks |
+| `Bandit` | Static analysis for common security issues in Python code |
+| `Safety` / `pip-audit` | Checks dependencies for known CVEs |
+| `OWASP ZAP` | Dynamic application security testing (DAST) scanner |
+
+---
+
+## Measuring test coverage
+
+### What is test coverage?
+
+**Test coverage** (also called *code coverage*) is a metric that quantifies what
+proportion of your source code is actually *executed* when your test suite runs.
+It is usually expressed as a percentage:
+
+```
+coverage = (lines executed by tests / total executable lines) × 100
+```
+
+Coverage tools instrument the code at run-time, recording which lines, branches,
+and functions were reached. After the suite finishes they produce a report
+showing which parts of the codebase were exercised — and, crucially, which were
+not.
+
+There are several levels of granularity:
+
+| Metric | What it counts |
+|---|---|
+| **Line coverage** | Was each line executed at least once? |
+| **Branch coverage** | Was each branch of every `if`/`elif`/`else` taken? |
+| **Function / method coverage** | Was each callable invoked at least once? |
+
+Line coverage is the most common starting point; branch coverage is stricter and
+catches untested conditional paths.
+
+### Why measure it?
+
+- **Find untested code.** A function that is never called by any test is invisible
+  to the suite; coverage makes it visible. Untested code can harbour hidden bugs
+  that only surface in production.
+- **Guide where to write tests next.** Low-coverage modules are the highest-risk
+  areas and the best candidates for new tests.
+- **Prevent regressions.** Setting a minimum coverage threshold in CI (e.g. 80 %)
+  prevents new code from being merged without corresponding tests.
+- **Build confidence during refactoring.** High coverage means changes are more
+  likely to be caught if they break existing behaviour.
+- **Documentation of intent.** Tests that cover a code path implicitly document
+  what that path is supposed to do.
+
+### Important caveats
+
+Coverage is a *necessary* but not *sufficient* condition for quality. A test
+suite can reach 100 % line coverage while testing nothing meaningful (e.g. by
+calling every function and ignoring the return values). Coverage should be used
+as a **floor** ("at least X % must be covered") combined with meaningful
+assertions, not as the sole quality metric.
+
+A pragmatic target for a Django project is **80–90 % line coverage**, with
+critical paths (authentication, payment, data validation) at or near 100 %.
+
+### How to measure it in this project
+
+```bash
+# install
+uv add --dev coverage pytest-cov
+
+# run with coverage
+uv run coverage run manage.py test
+uv run coverage report -m          # text summary
+uv run coverage html                # HTML report in htmlcov/
+```
+
+Or with `pytest-django`:
+
+```bash
+uv run pytest --cov=. --cov-report=html
+```
+
+---
+
+## Recommended project structure
+
+```
+back-end/
+└── accounts/
+    ├── tests/
+    │   ├── __init__.py
+    │   ├── factories.py          # factory_boy factories
+    │   ├── test_models.py        # unit tests for models
+    │   ├── test_validators.py    # unit tests for validators / utils
+    │   ├── test_forms.py         # unit tests for forms
+    │   ├── test_views.py         # integration tests for views
+    │   ├── test_api.py           # API endpoint tests (DRF)
+    │   └── test_security.py      # permission / auth tests
+    └── ...
+```
+
+---
+
+## References
+
+[^django-testing]: Django documentation – Testing
+    [docs.djangoproject.com/en/stable/topics/testing/](https://docs.djangoproject.com/en/stable/topics/testing/)
+
+[^django-test-tools]: Django documentation – Testing tools
+    [docs.djangoproject.com/en/stable/topics/testing/tools/](https://docs.djangoproject.com/en/stable/topics/testing/tools/)
+
+[^drf-testing]: Django REST Framework – Testing
+    [www.django-rest-framework.org/api-guide/testing/](https://www.django-rest-framework.org/api-guide/testing/)
+
+[^factory-boy]: factory_boy documentation
+    [factoryboy.readthedocs.io/en/stable/](https://factoryboy.readthedocs.io/en/stable/)
+
+[^pytest-django]: pytest-django documentation
+    [pytest-django.readthedocs.io/en/latest/](https://pytest-django.readthedocs.io/en/latest/)
+
+[^coverage]: coverage.py documentation
+    [coverage.readthedocs.io/en/latest/](https://coverage.readthedocs.io/en/latest/)
+
+[^playwright]: Playwright for Python documentation
+    [playwright.dev/python/](https://playwright.dev/python/)
+
+[^locust]: Locust documentation
+    [docs.locust.io/en/stable/](https://docs.locust.io/en/stable/)

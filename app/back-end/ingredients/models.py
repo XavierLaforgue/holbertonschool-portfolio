@@ -5,13 +5,13 @@ from recipes.models import Recipe
 
 
 class UnitKind(UUIDModel):
-    value = models.CharField(max_length=10, unique=True)  # "weight",
+    label = models.CharField(max_length=10, unique=True)  # "weight",
     # "volume", "count"
-    label = models.CharField(max_length=50)              # "Weight",
+    descriptive_name = models.CharField(max_length=50)    # "Weight",
     # "Volume", ...
 
     def __str__(self):
-        return f"{self.label}"
+        return f"{self.descriptive_name}"
 
 
 class Unit(UUIDModel):
@@ -61,6 +61,8 @@ class RecipeIngredient(UUIDModel):
         related_name="recipe_ingredients",
         blank=False, null=False
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.quantity} {self.unit} of {self.ingredient}"
