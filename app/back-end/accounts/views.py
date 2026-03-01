@@ -49,6 +49,7 @@ class ProfileModelViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows user profiles to be viewed or edited.
     """
+    # TODO: filter active users/cleared profiles
     queryset = Profile.objects.all().order_by("-updated_at")
     serializer_class = ProfileModelSerializer
     permission_classes = [permissions.AllowAny]
@@ -58,6 +59,7 @@ class ProfileHyperlinkedViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows user profiles to be viewed or edited.
     """
+    # TODO: filter active users/cleared profiles
     queryset = Profile.objects.all().order_by("-updated_at")
     serializer_class = ProfileHyperlinkedSerializer
     permission_classes = [permissions.AllowAny]
