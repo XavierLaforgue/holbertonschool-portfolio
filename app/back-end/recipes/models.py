@@ -3,7 +3,7 @@ from core.models import UUIDModel
 from accounts.models import Profile
 # TODO: Create Anime model in the anime app
 # from animes.models import Anime
-from django.utils import timezone
+# from django.utils import timezone
 # Create your models here.
 
 
@@ -12,6 +12,8 @@ class Difficulty(UUIDModel):
                              max_length=25)
     value = models.PositiveSmallIntegerField(blank=False, null=False,
                                              unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta(UUIDModel.Meta):
         verbose_name = "Difficulty"
@@ -24,6 +26,8 @@ class Difficulty(UUIDModel):
 class RecipeStatus(UUIDModel):
     value = models.CharField(blank=False, null=False, unique=True,
                              max_length=25, default="Draft")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.value}"
@@ -45,14 +49,14 @@ class RecipeBase(UUIDModel):
     #     blank=False
     # )
     anime_custom = models.CharField(blank=False, null=False, max_length=150)
-    description = models.TextField(blank=False, null=False, max_length=500)
+    description = models.TextField(blank=True, null=True, max_length=500)
     difficulty = models.ForeignKey(
         Difficulty,
         on_delete=models.PROTECT,
         # Use a dynamic related_name so each concrete subclass
         # gets its own reverse accessor on Difficulty
         related_name="%(class)s_recipes",
-        null=True
+        null=True,
     )
     portions = models.PositiveSmallIntegerField(null=False, blank=False,
                                                 default=1)
@@ -67,7 +71,9 @@ class RecipeBase(UUIDModel):
         null=True
     )
     published_at = models.DateTimeField(blank=True, null=True,
-                                        default=timezone.now)
+                                        default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     # TODO: add RecipePhoto model
 
@@ -108,3 +114,4 @@ class SavedRecipe(RecipeBase):
         related_name="authored_recipes_saved",
         editable=False
     )
+    saved_at = models.DateTimeField(auto_now_add=True)

@@ -238,6 +238,36 @@ Used for long, free‑form text (descriptions, notes, comments).
 Usually rendered as a multi‑line `<textarea>` in forms.
 Rule of thumb: "short, structured, maybe used in filters or choices" -> `CharField`; "long, free text" -> `TextField`.
 
+## Django REST Framework
+
+### Installation
+
+- Install the dependance.
+
+```bash
+uv add djangorestframework
+```
+
+- Install it as a django app.
+
+```python
+INSTALLED_APPS = [
+    ...
+    'rest_framework',
+    ...
+]
+```
+
+### Additions of the DRF
+
+The DRF uses serializers, urls, and viewsets (instead of regular Django views).
+
+#### Serializers
+<!-- TODO: Describe how to use serializers taking advantage of DRF extensions -->
+#### URLs
+<!-- TODO: Describe how to use url_patterns taking advantage of the DRF Router extension -->
+#### Viewsets
+<!-- TODO: Describe how to use views taking advantage of DRF viewsets extensions -->
 ## References
 
 [^django-custom-user-model]: Django documentation - Customizing User
