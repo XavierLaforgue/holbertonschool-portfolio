@@ -43,7 +43,8 @@ class CustomUser(
     # authentication token, e.g.,
     #     user.last_auth_time = timezone.now()
     #     user.save(update_fields=["last_auth_time"])
-    last_authenticated_at = models.DateTimeField(blank=True, null=True)
+    # Unnecessary with SIMPLE_JWT = {"UPDATE_LAST_LOGIN": True}:
+    # last_authenticated_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deactivated_at = models.DateTimeField(blank=True, null=True)

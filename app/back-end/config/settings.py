@@ -14,6 +14,7 @@ from pathlib import Path
 from os import environ  # to manage the environment variables directly
 # to load environment variables from a `.env` file.
 from dotenv import load_dotenv
+from datetime import timedelta  # for the JWT duration
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -34,7 +35,7 @@ SECRET_KEY = environ.get('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # choose between DEBUG (dev) mode or not (for production)
-DEBUG = environ.get('DJANGO_DEBUG', True)
+DEBUG = environ.get('DJANGO_DEBUG', "False").lower() == "true"
 # keep list of allowed hosts in the environment (only localhost for dev)
 ALLOWED_HOSTS = environ.get('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
 
@@ -48,19 +49,55 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    # 'rest_framework_simplejwt.token_blacklist',
     'core',
     'accounts',
     'recipes',
     'ingredients',
-    'animes'
+    'animes',
 ]
 
-# TODO: configue pagination
-# REST_FRAMEWORK = {
-#     "DEFAULT_PAGINATION_CLASS":
-#         "rest_framework.pagination.PageNumberPagination",
-#     "PAGE_SIZE": 10,
-# }
+REST_FRAMEWORK: dict[str, list[str]] = {
+    # TODO: configue pagination
+    #     "DEFAULT_PAGINATION_CLASS":
+    #         "rest_framework.pagination.PageNumberPagination",
+    #     "PAGE_SIZE": 10,
+    # To choose a default permission if none is provided explicitly for a
+    # view
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAdminUser",
+        # isAdminUser refers to is_staff not to is_superuser
+    ],
+}
+
+# Disable browsable API when in production:
+if DEBUG:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ]
+    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ]
+else:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
+        "rest_framework.renderers.JSONRenderer",
+    ]
+    REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ]
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "UPDATE_LAST_LOGIN": True,  # default: False. Serves to update last_login
+                                # default user field
+    # TODO: implement rotating refresh tokens (necessitates the blacklist app)
+    "ROTATE_REFRESH_TOKENS": False,  # default: False
+    "BLACKLIST_AFTER_ROTATION": False,  # default: False
+    "CHECK_USER_IS_ACTIVE": True,  # default: True
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

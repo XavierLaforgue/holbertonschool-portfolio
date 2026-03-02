@@ -16,10 +16,46 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+    # TODO: check if it is worthwhile to implement the blacklist app
+    # TokenBlacklistView,
+)
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+
+@api_view(["GET"])
+def api_root(request, format=None):
+    return Response({
+        "accounts": request.build_absolute_uri("/api/accounts/"),
+        "ingredients": request.build_absolute_uri("/api/ingredients/"),
+        "recipes": request.build_absolute_uri("/api/recipes/"),
+        "token_obtain_pair": request.build_absolute_uri("/api/token/"),
+        "token_refresh": request.build_absolute_uri("/api/token/refresh/"),
+        "token_verify": request.build_absolute_uri("/api/token/verify/"),
+        # "token_blacklist": request.build_absolute_uri(
+        #     "/api/token/blacklist/"),
+    })
+
 
 urlpatterns = [
+    # admin endpoint:
     path('admin/', admin.site.urls),
+    # REST API endpoints:
+    path("api/", api_root, name="api-root"),
     path('api/accounts/', include('accounts.urls')),
     path('api/ingredients/', include('ingredients.urls')),
     path('api/recipes/', include('recipes.urls')),
+    # JWT authentication endpoints:
+    path('api/token/', include([
+        path("", TokenObtainPairView.as_view(), name='token_obtain_pair'),
+        path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+        path('verify/', TokenVerifyView.as_view(), name='token_verify'),
+        # path('blacklist/', TokenBlacklistView.as_view(),
+        #      name='token_blacklist')
+        ])
+    )
 ]
