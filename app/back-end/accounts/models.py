@@ -6,11 +6,13 @@ from core.models import UUIDModel
 from django.contrib.auth.models import AbstractUser
 # to link models to the model used for authentication:
 from django.conf import settings
-# import uuid
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from .validators import person_name_validator
 
-# Create your models here.
+
+# TODO: build a customuser manager to enforce constraints at all levels
+# (admin, API, shell)
 
 
 class CustomUser(
@@ -26,6 +28,8 @@ class CustomUser(
                                 max_length=150)
     email = models.EmailField(unique=True, blank=False, null=False,
                               max_length=150)
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []  # for createsuperuser: only email + password
     # Optional, but when provided must look like a person name.
     first_name = models.CharField(
         max_length=150,
@@ -47,15 +51,19 @@ class CustomUser(
     # last_authenticated_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    deactivated_at = models.DateTimeField(blank=True, null=True)
+    deactivated_at = models.DateTimeField(blank=True, null=True, default=None)
 
     def __str__(self) -> str:
-        return self.username
+        return self.email
 
 
 def default_display_name():
     n = Profile.objects.count() + 1
-    return f"unnamed_user_{n}"
+    while True:
+        display_name = f"unnamed_user_{n}"
+        if not Profile.objects.filter(display_name=display_name).first():
+            return display_name
+        n += 1
 
 
 class Profile(UUIDModel):
@@ -102,4 +110,10 @@ class Profile(UUIDModel):
     cleared_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self) -> str:
-        return self.user.username
+        return self.user.email
+
+
+@receiver(post_save, sender=CustomUser)
+def create_profile_for_new_user(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
