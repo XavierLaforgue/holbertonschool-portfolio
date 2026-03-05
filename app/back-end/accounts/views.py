@@ -7,59 +7,51 @@ from .serializers import (CustomUserModelSerializer,
                           ProfileHyperlinkedSerializer)
 
 
-class CustomUserModelViewSet(viewsets.ModelViewSet):
+class BaseCustomUserViewSet(viewsets.ModelViewSet):
+    queryset = CustomUser.objects.filter(is_active=True)\
+        .order_by("-date_joined")
+    permission_classes = [permissions.AllowAny]
+
+    def perform_destroy(self, instance):
+        """Soft-delete a user instead of removing it from the database.
+
+        Marks the user as inactive and records when it was deactivated.
+        """
+        instance.is_active = False
+        instance.deactivated_at = timezone.now()
+        instance.save(update_fields=["is_active", "deactivated_at"])
+
+
+class CustomUserModelViewSet(BaseCustomUserViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = CustomUser.objects.filter(is_active=True)\
-        .order_by("-date_joined")
     serializer_class = CustomUserModelSerializer
-    permission_classes = [permissions.AllowAny]
-
-    def perform_destroy(self, instance):
-        """Soft-delete a user instead of removing it from the database.
-
-        Marks the user as inactive and records when it was deactivated.
-        """
-        instance.is_active = False
-        instance.deactivated_at = timezone.now()
-        instance.save(update_fields=["is_active", "deactivated_at"])
 
 
-class CustomUserHyperlinkedViewSet(viewsets.ModelViewSet):
+class CustomUserHyperlinkedViewSet(BaseCustomUserViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = CustomUser.objects.filter(is_active=True)\
-        .order_by("-date_joined")
     serializer_class = CustomUserHyperlinkedSerializer
+
+
+class BaseProfileViewSet(viewsets.ModelViewSet):
+    queryset = Profile.objects.filter(user__is_active=True)\
+        .order_by("-updated_at")
     permission_classes = [permissions.AllowAny]
-
-    def perform_destroy(self, instance):
-        """Soft-delete a user instead of removing it from the database.
-
-        Marks the user as inactive and records when it was deactivated.
-        """
-        instance.is_active = False
-        instance.deactivated_at = timezone.now()
-        instance.save(update_fields=["is_active", "deactivated_at"])
+    http_method_names = ["get", "head", "options", "put", "patch", "delete"]
 
 
-class ProfileModelViewSet(viewsets.ModelViewSet):
+class ProfileModelViewSet(BaseProfileViewSet):
     """
     API endpoint that allows user profiles to be viewed or edited.
     """
-    # TODO: filter active users/cleared profiles
-    queryset = Profile.objects.all().order_by("-updated_at")
     serializer_class = ProfileModelSerializer
-    permission_classes = [permissions.AllowAny]
 
 
-class ProfileHyperlinkedViewSet(viewsets.ModelViewSet):
+class ProfileHyperlinkedViewSet(BaseProfileViewSet):
     """
     API endpoint that allows user profiles to be viewed or edited.
     """
-    # TODO: filter active users/cleared profiles
-    queryset = Profile.objects.all().order_by("-updated_at")
     serializer_class = ProfileHyperlinkedSerializer
-    permission_classes = [permissions.AllowAny]
