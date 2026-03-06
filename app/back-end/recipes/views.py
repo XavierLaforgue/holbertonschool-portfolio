@@ -1,13 +1,15 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import transaction
 from .models import (Recipe, RecipeStatus, SavedRecipe, Difficulty, Step,
                      SavedStep)
-from .serializers import (RecipeModelSerializer,
-                          RecipeHyperlinkedSerializer,
-                          SavedRecipeModelSerializer,
-                          SavedRecipeHyperlinkedSerializer,
+from .serializers import (RecipeSummarySerializer,
+                          RecipeSummaryHyperlinkedSerializer,
+                          RecipeExpandedSerializer,
+                          SavedRecipeSummarySerializer,
+                          SavedRecipeSummaryHyperlinkedSerializer,
+                          SavedRecipeExpandedSerializer,
                           DifficultyModelSerializer,
                           DifficultyHyperlinkedSerializer,
                           RecipeStatusModelSerializer,
@@ -21,46 +23,127 @@ from .serializers import (RecipeModelSerializer,
 class BaseRecipeViewSet(viewsets.ModelViewSet):
     """
     Shared behavior for recipe viewsets.
+    GET /recipes/ - List with summaries
+    GET /recipes/<id>/ - Detail with nested full objects
     """
     # TODO: filter published recipes and order by publication date
-    queryset = Recipe.objects.all().order_by("-created_at")
+    queryset = Recipe.objects.all()
     permission_classes = [permissions.AllowAny]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["title", "anime_custom", "description",
+                     "author__display_name"]
+    ordering_fields = ["created_at", "published_at",
+                       "estimated_time_minutes", "title"]
+    ordering = "-created_at"
+    summary_serializer_class = None
+    detail_serializer_class = None
+
+    def get_serializer_class(self):
+        """Use summary serializer for list and expanded serializer for detail.
+        """
+        if self.action == "retrieve" and self.detail_serializer_class:
+            return self.detail_serializer_class
+        elif self.summary_serializer_class:
+            return self.summary_serializer_class
+        return super().get_serializer_class()
+
+    def get_queryset(self):  # type: ignore[override]
+        """Optimize queries for detail endpoint with nested objects."""
+        queryset = Recipe.objects.all().order_by("-created_at")
+
+        if self.action == "retrieve":
+            # Detail endpoint: optimize for expanded nested data
+            queryset = queryset.select_related(
+                "author", "difficulty", "status"
+            )
+            queryset = queryset.prefetch_related(
+                "steps",
+                "ingredients__ingredient__allowed_unit_kinds",
+                "ingredients__unit__kind",
+            )
+
+        return queryset
 
 
 class RecipeModelViewSet(BaseRecipeViewSet):
     """
     API endpoint that allows recipes to be viewed or edited.
+
+    List endpoint returns summary serializer (compact, fast).
+    Detail endpoint returns expanded serializer (nested full objects).
     """
-    serializer_class = RecipeModelSerializer
+    # serializer_class = RecipeSummarySerializer
+    summary_serializer_class = RecipeSummarySerializer
+    detail_serializer_class = RecipeExpandedSerializer
 
 
 class RecipeHyperlinkedViewSet(BaseRecipeViewSet):
     """
     API endpoint that allows recipes to be viewed or edited.
+    Uses URL references instead of UUIDs.
     """
-    serializer_class = RecipeHyperlinkedSerializer
+    # serializer_class = RecipeSummaryHyperlinkedSerializer
+    summary_serializer_class = RecipeSummaryHyperlinkedSerializer
+    detail_serializer_class = RecipeExpandedSerializer
 
 
 class BaseSavedRecipeViewSet(viewsets.ModelViewSet):
     """
     Shared behavior for saved recipe viewsets.
+    GET /saved-recipes/ - List with summaries
+    GET /saved-recipes/<id>/ - Detail with nested full objects
     """
-    queryset = SavedRecipe.objects.all().order_by("-saved_at")
+    queryset = SavedRecipe.objects.all()
     permission_classes = [permissions.AllowAny]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["title", "anime_custom", "description",
+                     "saver__display_name", "original_author__display_name"]
+    ordering_fields = ["saved_at", "created_at", "published_at", "title"]
+    ordering = "saved_at"
+    summary_serializer_class = None
+    detail_serializer_class = None
+
+    def get_serializer_class(self):
+        """Use summary serializer for list and expanded serializer for detail.
+        """
+        if self.action == "retrieve" and self.detail_serializer_class:
+            return self.detail_serializer_class
+        elif self.summary_serializer_class:
+            return self.summary_serializer_class
+        return super().get_serializer_class()
+
+    def get_queryset(self):  # type: ignore[override]
+        """Optimize queries for detail endpoint with nested objects."""
+        queryset = SavedRecipe.objects.all().order_by("-saved_at")
+        if self.action == "retrieve":
+            # Detail endpoint: optimize for expanded nested data
+            queryset = queryset.select_related("saver", "original_author",
+                                               "difficulty", "status")
+            queryset = queryset.prefetch_related("steps")
+
+        return queryset
 
 
 class SavedRecipeModelViewSet(BaseSavedRecipeViewSet):
     """
     API endpoint that allows saved recipes to be viewed or edited.
+
+    List endpoint returns summary serializer (compact).
+    Detail endpoint returns expanded serializer (nested full objects).
     """
-    serializer_class = SavedRecipeModelSerializer
+    # serializer_class = SavedRecipeSummarySerializer
+    summary_serializer_class = SavedRecipeSummarySerializer
+    detail_serializer_class = SavedRecipeExpandedSerializer
 
 
 class SavedRecipeHyperlinkedViewSet(BaseSavedRecipeViewSet):
     """
     API endpoint that allows recipe ingredients to be viewed or edited.
+    Uses URL references instead of scalar IDs.
     """
-    serializer_class = SavedRecipeHyperlinkedSerializer
+    # serializer_class = SavedRecipeSummaryHyperlinkedSerializer
+    summary_serializer_class = SavedRecipeSummaryHyperlinkedSerializer
+    detail_serializer_class = SavedRecipeExpandedSerializer
 
 
 class BaseDifficultyViewSet(viewsets.ModelViewSet):

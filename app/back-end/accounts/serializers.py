@@ -115,3 +115,16 @@ class ProfileModelSerializer(serializers.ModelSerializer,
                              BaseProfileSerializer):
     class Meta(BaseProfileSerializer.Meta):
         pass
+
+
+class ProfileSummarySerializer(serializers.ModelSerializer,
+                               BaseProfileSerializer):
+    class Meta(BaseProfileSerializer.Meta):
+        model = Profile
+        fields = (
+            # "id",
+            "display_name",
+            # "favorite_anime_custom",
+            # "favorite_meal",
+            # "location",
+        )

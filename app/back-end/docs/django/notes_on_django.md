@@ -197,7 +197,6 @@ post_save.connect(post_save_receiver, sender=settings.AUTH_USER_MODEL)
 
 ## Django models and validation of fields/attributes
 
-
 ## Django choices
 
 In Django `choices` is always an iterable of 2‑tuples: `(value_stored_in_DB, human_readable_label)`.
@@ -268,6 +267,115 @@ The DRF uses serializers, urls, and viewsets (instead of regular Django views).
 <!-- TODO: Describe how to use url_patterns taking advantage of the DRF Router extension -->
 #### Viewsets
 <!-- TODO: Describe how to use views taking advantage of DRF viewsets extensions -->
+
+## CORS (Cros-Origin Resource Sharing)
+
+Requests from other origins are blocked by default for security.
+However, we need to allow the front-end application to query the API.
+For this, we need to setup CORS headers.
+
+### CORS installation for django [^django-cors-freecodecamp]
+
+To install the dependency:
+
+```bash
+uv add django-cors-headers
+```
+
+The app also needs to be installed into django:
+
+```python
+INSTALLED_APPS = [
+    ...
+    'corsheaders',
+]
+```
+
+and its middleware added:
+
+```python
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+]
+```
+
+### CORS allowed origins
+
+We need to include a list of allowed origins that will pass CORS.
+
+```python
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+]
+```
+
+The list should not be hardcoded though, it should be kept in the environment.
+
+### CORS credentials
+
+When using authentication credentials such as tokens or cookies, we also need:
+
+```python
+CORS_ALLOW_CREDENTIALS = True
+```
+
+## CSRF (Cross-Site Request Forgery)
+
+It is a type of vulnerability that is addressed with their own tokens.
+When implemented, the server also needs to have a list of origins that are trusted to perform requests.
+
+```python
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+]
+```
+
+The list should not be hardcoded though, it should be kept in the environment.
+
+## Further topics to research
+
+### Checks
+
+`django`'s management utility has a `check` command, research what it is for.
+
+```bash
+uv run manage.py checks
+```
+
+## Search/Filtering
+
+Se can implement search/fitering on the backend by offering query-parameter--based requests to the front-end.
+The DRF facilitates this by supplying the filters module, which offers several filtering "backends" and it's implemented by just adding them to the viewsets.
+It should be noted that these query-parameters--augmentation of endpoints is only applied to list endpoints (`/recipes/`), not to details endpoints (`/recipes/{recipe_id}`).
+
+`SearchFilter` and `SortingFilter` are two common filters.
+
+`SearchFilter` offers text-based search to the viewset.
+The corresponding viewset field `search_fields` sets the fields of the view on which text search will be applied.
+
+`OrderingFilter` offers results sorting (ordering).
+The corresponding viewset field `ordering_fields` set the fields of the view according to which the results will be ordered and `ordering`  allows to set the default ordering field.
+
+An example implementation:
+
+```python
+class RecipeViewSet(rest_framework.viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["title", "anime"]
+    ordering_fields = ["published_at", "estimated_time_minutes"]
+    ordering = "published_at"
+```
+
+```python
+    search_fields = ["ingredient__name", "recipe__title", "unit__name"]
+    ordering_fields = ["created_at", "updated_at", "recipe__published_at"]
+    ordering = "created_at"
+```
+
 ## References
 
 [^django-custom-user-model]: Django documentation - Customizing User
@@ -282,5 +390,7 @@ The DRF uses serializers, urls, and viewsets (instead of regular Django views).
 [^djangoproject-postgres]: Django documentation - postgresql notes
     [docs.djangoproject.com/en/6.0/ref/databases/#postgresql-notes](https://docs.djangoproject.com/en/6.0/ref/databases/#postgresql-notes)
 
+[^django-cors-freecodecamp]: Django CORS policy - freeCodeCamp
+    [freecodecamp.org/news/how-to-enable-cors-in-django/](https://www.freecodecamp.org/news/how-to-enable-cors-in-django/)
 <!-- [^django-user-signal]: Django documentation - signals
     [docs.djangoproject.com/en/6.0/topics/signals/](https://docs.djangoproject.com/en/6.0/topics/signals/) -->
