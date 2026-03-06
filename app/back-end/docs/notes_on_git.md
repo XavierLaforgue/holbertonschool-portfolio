@@ -65,6 +65,20 @@ To change the name of a branch we do
 git branch -m <new-branch-name>
 ```
 
+## Deleting branches
+
+To delete a branch we need to be checking out a different branch, e.g., `dev`:
+
+```bash
+git switch dev
+# to delete local branch:
+git branch -d <branch-name>
+# to force-delete the local branch even if it has unmerged changes:
+git branch -D <branch-name>
+# to delete a remote branch:
+git push origin -d <branch-name>  # --delete === -d
+```
+
 ## Merging
 
 In collaborative projects we would always use pull requests and never merges (upwards).
