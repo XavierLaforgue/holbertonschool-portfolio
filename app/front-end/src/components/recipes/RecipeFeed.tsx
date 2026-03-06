@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/api'
-import RecipeCard from '@/components/RecipeCard'
+import RecipeCard from '@/components/recipes/RecipeCard'
 import type { Recipe, Difficulty } from '@/types'
 
 export default function RecipeFeed() {

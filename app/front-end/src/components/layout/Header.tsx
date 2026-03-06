@@ -1,7 +1,7 @@
-import SiteLogo from '@/components/SiteLogo.tsx'
-import NavBar from '@/components/NavBar.tsx'
-import UserMenu from '@/components/UserMenu.tsx'
-import ThemeToggle from '@/components/ThemeToggle.tsx'
+import SiteLogo from '@/components/branding/SiteLogo.tsx'
+import NavBar from '@/components/navigation/NavBar.tsx'
+import UserMenu from '@/components/auth/UserMenu.tsx'
+import ThemeToggle from '@/components/navigation/ThemeToggle.tsx'
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 

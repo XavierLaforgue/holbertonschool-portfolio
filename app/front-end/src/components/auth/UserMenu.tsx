@@ -35,7 +35,7 @@ export default function UserMenu() {
 			</button>
 
 			{open && (
-				<div className="absolute right-0 mt-2 w-48 rounded-md border border-input bg-surface py-1 shadow-lg">
+				<div className="absolute right-0 mt-2 w-48 rounded-md border border-input bg-surface py-1 shadow-lg z-10">
 					<button
 						onClick={() => {
 							logout()

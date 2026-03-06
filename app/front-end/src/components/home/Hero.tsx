@@ -1,4 +1,4 @@
-import Itadakimasu from '@/components/Itadakimasu.tsx'
+import Itadakimasu from '@/components/branding/Itadakimasu.tsx'
 
 export default function Hero() {
 	return (
