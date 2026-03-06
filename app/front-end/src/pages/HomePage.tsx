@@ -1,5 +1,5 @@
-import Hero from '@/components/Hero'
-import RecipeFeed from '@/components/RecipeFeed'
+import Hero from '@/components/home/Hero'
+import RecipeFeed from '@/components/recipes/RecipeFeed'
 
 export default function HomePage() {
 	return (
