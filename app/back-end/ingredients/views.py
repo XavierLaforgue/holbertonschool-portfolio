@@ -1,9 +1,11 @@
 from rest_framework import viewsets, permissions
-from .models import Ingredient, RecipeIngredient
+from .models import Ingredient, RecipeIngredient, SavedRecipeIngredient
 from .serializers import (IngredientModelSerializer,
                           IngredientHyperlinkedSerializer,
                           RecipeIngredientModelSerializer,
-                          RecipeIngredientHyperlinkedSerializer)
+                          RecipeIngredientHyperlinkedSerializer,
+                          SavedRecipeIngredientModelSerializer,
+                          SavedRecipeIngredientHyperlinkedSerializer)
 
 
 class IngredientModelViewSet(viewsets.ModelViewSet):
@@ -40,3 +42,17 @@ class RecipeIngredientHyperlinkedViewSet(viewsets.ModelViewSet):
     queryset = RecipeIngredient.objects.all().order_by("-recipe__published_at")
     serializer_class = RecipeIngredientHyperlinkedSerializer
     permission_classes = [permissions.AllowAny]
+
+
+class BaseSavedRecipeIngredientViewSet(viewsets.ModelViewSet):
+    queryset = SavedRecipeIngredient.objects.all()
+    permission_classes = [permissions.AllowAny]
+
+
+class SavedRecipeIngredientModelViewSet(BaseSavedRecipeIngredientViewSet):
+    serializer_class = SavedRecipeIngredientModelSerializer
+
+
+class SavedRecipeIngredientHyperlinkedViewSet(
+        BaseSavedRecipeIngredientViewSet):
+    serializer_class = SavedRecipeIngredientHyperlinkedSerializer

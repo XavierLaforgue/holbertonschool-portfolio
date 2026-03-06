@@ -7,7 +7,11 @@ from .views import (DifficultyModelViewSet,
                     SavedRecipeModelViewSet,
                     SavedRecipeHyperlinkedViewSet,
                     RecipeStatusModelViewSet,
-                    RecipeStatusHyperlinkedViewSet)
+                    RecipeStatusHyperlinkedViewSet,
+                    StepModelViewSet,
+                    StepHyperlinkedViewSet,
+                    SavedStepModelViewSet,
+                    SavedStepHyperlinkedViewSet)
 
 router = routers.DefaultRouter()
 router.register(r"recipe_models", RecipeModelViewSet,
@@ -26,6 +30,14 @@ router.register(r"recipestatus_models", RecipeStatusModelViewSet,
                 basename="recipestatus_model")
 router.register(r"recipestatus_hyperlinks", RecipeStatusHyperlinkedViewSet,
                 basename="recipestatus")
+router.register(r"step_models", StepModelViewSet,
+                basename="step_model")
+router.register(r"step_hyperlinks", StepHyperlinkedViewSet,
+                basename="step")
+router.register(r"savedstep_models", SavedStepModelViewSet,
+                basename="savedstep_model")
+router.register(r"savedstep_hyperlinks", SavedStepHyperlinkedViewSet,
+                basename="savedstep")
 
 urlpatterns = [
     path("", include(router.urls))

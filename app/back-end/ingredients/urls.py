@@ -3,7 +3,9 @@ from rest_framework import routers
 from .views import (IngredientModelViewSet,
                     IngredientHyperlinkedViewSet,
                     RecipeIngredientModelViewSet,
-                    RecipeIngredientHyperlinkedViewSet)
+                    RecipeIngredientHyperlinkedViewSet,
+                    SavedRecipeIngredientModelViewSet,
+                    SavedRecipeIngredientHyperlinkedViewSet)
 
 router = routers.DefaultRouter()
 router.register(r"ingredient_models", IngredientModelViewSet,
@@ -15,6 +17,12 @@ router.register(r"recipeingredient_models", RecipeIngredientModelViewSet,
 router.register(r"recipeingredient_hyperlinks",
                 RecipeIngredientHyperlinkedViewSet,
                 basename="recipeingredient")
+router.register(r"savedrecipeingredient_models",
+                SavedRecipeIngredientModelViewSet,
+                basename="savedrecipeingredient_model")
+router.register(r"savedrecipeingredient_hyperlinks",
+                SavedRecipeIngredientHyperlinkedViewSet,
+                basename="savedrecipeingredient")
 
 urlpatterns = [
     path("", include(router.urls))
