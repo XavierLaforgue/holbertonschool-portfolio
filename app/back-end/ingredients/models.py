@@ -1,6 +1,6 @@
 from django.db import models
 from core.models import UUIDModel
-from recipes.models import Recipe
+from recipes.models import Recipe, SavedRecipe
 # Create your models here.
 
 
@@ -40,32 +40,25 @@ class Ingredient(UUIDModel):
         return f"{self.name}"
 
 
-class RecipeIngredient(UUIDModel):
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name="ingredients",  # to access the ingredient via
-        # recipe.ingredients
-        blank=False, null=False
-    )
+class RecipeIngredientBase(UUIDModel):
     ingredient = models.ForeignKey(
         Ingredient,
-        on_delete=models.CASCADE,
-        related_name="in_recipe",
+        on_delete=models.PROTECT,
+        related_name="%(class)s_entries",
         blank=False, null=False
     )
     quantity = models.FloatField(blank=False, null=False)
     unit = models.ForeignKey(
         Unit,
         on_delete=models.PROTECT,
-        related_name="recipe_ingredients",
+        related_name="%(class)s_entries",
         blank=False, null=False
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"{self.quantity} {self.unit} of {self.ingredient}"
+    class Meta(UUIDModel.Meta):
+        abstract = True
 
     def clean(self):
         """Ensure the chosen unit kind is allowed for this ingredient."""
@@ -83,3 +76,29 @@ class RecipeIngredient(UUIDModel):
                     {"unit": "This unit kind is not allowed for the selected "
                         "ingredient."}
                 )
+
+
+class RecipeIngredient(RecipeIngredientBase):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="ingredients",  # to access the ingredient via
+        # recipe.ingredients
+        blank=False, null=False
+    )
+
+    def __str__(self):
+        return f"{self.quantity}{self.unit} of {self.ingredient}"
+
+
+class SavedRecipeIngredient(RecipeIngredientBase):
+    recipe = models.ForeignKey(
+        SavedRecipe,
+        on_delete=models.CASCADE,
+        related_name="savedingredients",  # to access the ingredient via
+        # recipe.ingredients
+        blank=False, null=False
+    )
+
+    def __str__(self):
+        return f"{self.quantity}{self.unit} of {self.ingredient}"

@@ -1,4 +1,4 @@
-from .models import Ingredient, RecipeIngredient
+from .models import Ingredient, RecipeIngredient, SavedRecipeIngredient
 from rest_framework import serializers
 
 
@@ -38,4 +38,24 @@ class RecipeIngredientModelSerializer(
         BaseRecipeIngredientSerializer,
         serializers.ModelSerializer):
     class Meta(BaseRecipeIngredientSerializer.Meta):
+        pass
+
+
+class BaseSavedRecipeIngredientSerializer:
+    class Meta:
+        model = SavedRecipeIngredient
+        fields = "__all__"
+
+
+class SavedRecipeIngredientModelSerializer(
+        BaseSavedRecipeIngredientSerializer,
+        serializers.ModelSerializer):
+    class Meta(BaseSavedRecipeIngredientSerializer.Meta):
+        pass
+
+
+class SavedRecipeIngredientHyperlinkedSerializer(
+        BaseSavedRecipeIngredientSerializer,
+        serializers.HyperlinkedModelSerializer):
+    class Meta(BaseSavedRecipeIngredientSerializer.Meta):
         pass

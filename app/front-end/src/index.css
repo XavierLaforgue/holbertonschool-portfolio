@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * === Semantic color tokens ===
+ *
+ * Define raw values on :root (light) and .dark, then expose
+ * them through @theme so Tailwind generates utilities like
+ * bg-surface, text-muted, border-border, etc.
+ */
+
+/*
+ * "Shokugeki" theme — passionate, appetizing, high-energy.
+ * Crimson red + golden amber + deep magenta on warm cream / burgundy-black.
+ */
+
+:root {
+  --c-background: #fff8f0;
+  --c-foreground: #2d1b14;
+  --c-surface: #ffffff;
+  --c-surface-hover: #f5ebe0;
+  --c-primary: #d4423b;
+  --c-primary-hover: #b83530;
+  --c-primary-fg: #ffffff;
+  --c-secondary: #e8960c;
+  --c-secondary-hover: #d08508;
+  --c-secondary-fg: #ffffff;
+  --c-subtle: #5c3d30;
+  --c-muted: #7a5c50;
+  --c-accent: #8b2252;
+  --c-accent-hover: #a02860;
+  --c-border: #e8d5c8;
+  --c-input: #d4c0b0;
+}
+
+.dark {
+  --c-background: #1a1018;
+  --c-foreground: #f5ede8;
+  --c-surface: #2a1f28;
+  --c-surface-hover: #3d2e38;
+  --c-primary: #e85750;
+  --c-primary-hover: #f06860;
+  --c-primary-fg: #ffffff;
+  --c-secondary: #f0a830;
+  --c-secondary-hover: #f5b840;
+  --c-secondary-fg: #1a1018;
+  --c-subtle: #c0a8a0;
+  --c-muted: #a8908a;
+  --c-accent: #c44b8b;
+  --c-accent-hover: #d45898;
+  --c-border: #3d2e38;
+  --c-input: #4a3840;
+}
+
+@theme {
+  --color-background: var(--c-background);
+  --color-foreground: var(--c-foreground);
+  --color-surface: var(--c-surface);
+  --color-surface-hover: var(--c-surface-hover);
+  --color-primary: var(--c-primary);
+  --color-primary-hover: var(--c-primary-hover);
+  --color-primary-fg: var(--c-primary-fg);
+  --color-secondary: var(--c-secondary);
+  --color-secondary-hover: var(--c-secondary-hover);
+  --color-secondary-fg: var(--c-secondary-fg);
+  --color-subtle: var(--c-subtle);
+  --color-muted: var(--c-muted);
+  --color-accent: var(--c-accent);
+  --color-accent-hover: var(--c-accent-hover);
+  --color-border: var(--c-border);
+  --color-input: var(--c-input);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+}
+
+/*
+ * === Base layer ===
+ * Global resets and defaults that apply to bare HTML elements.
+ */
+
+@layer base {
+  html {
+    @apply scroll-smooth antialiased;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground;
+  }
+}

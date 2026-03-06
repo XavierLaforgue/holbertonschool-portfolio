@@ -60,15 +60,15 @@ class RecipeBase(UUIDModel):
     )
     portions = models.PositiveSmallIntegerField(null=False, blank=False,
                                                 default=1)
-    preparation_time_minutes = models.PositiveSmallIntegerField(null=False,
-                                                                blank=False)
+    estimated_time_minutes = models.PositiveSmallIntegerField(null=False,
+                                                              blank=False)
     status = models.ForeignKey(
         RecipeStatus,
         on_delete=models.PROTECT,
         # Use a dynamic related_name so each concrete subclass
         # gets its own reverse accessor on RecipeStatus
         related_name="%(class)s_recipes",
-        null=True
+        # null=True
     )
     published_at = models.DateTimeField(blank=True, null=True,
                                         default=None)
@@ -115,3 +115,57 @@ class SavedRecipe(RecipeBase):
         editable=False
     )
     saved_at = models.DateTimeField(auto_now_add=True)
+
+
+class StepBase(UUIDModel):
+    order = models.PositiveSmallIntegerField(blank=False, null=False)
+    description = models.TextField(blank=False, null=False, max_length=500)
+    duration = models.DurationField(blank=True, null=True, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta(UUIDModel.Meta):
+        abstract = True
+        ordering = ["order"]
+
+
+class Step(StepBase):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="steps",   # → recipe.steps.all()
+    )
+
+    class Meta(StepBase.Meta):
+        verbose_name = "Step"
+        verbose_name_plural = "Steps"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["recipe", "order"],
+                name="unique_step_order_per_recipe",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.recipe.title}: step {self.order}"
+
+
+class SavedStep(StepBase):
+    recipe = models.ForeignKey(
+        SavedRecipe,
+        on_delete=models.CASCADE,
+        related_name="steps",   # → recipe.steps.all()
+    )
+
+    class Meta(StepBase.Meta):
+        verbose_name = "Saved step"
+        verbose_name_plural = "Saved steps"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["recipe", "order"],
+                name="unique_savedstep_order_per_savedrecipe",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.recipe.title}: step {self.order}"

@@ -1,4 +1,5 @@
-from .models import Difficulty, Recipe, SavedRecipe, RecipeStatus
+from .models import (Difficulty, Recipe, SavedRecipe, RecipeStatus,
+                     Step, SavedStep)
 from rest_framework import serializers
 
 
@@ -72,4 +73,40 @@ class RecipeStatusHyperlinkedSerializer(
         BaseRecipeStatusSerializer,
         serializers.HyperlinkedModelSerializer):
     class Meta(BaseRecipeStatusSerializer.Meta):
+        pass
+
+
+class BaseStepSerializer:
+    class Meta:
+        model = Step
+        fields = "__all__"
+
+
+class StepModelSerializer(BaseStepSerializer,
+                          serializers.ModelSerializer):
+    class Meta(BaseStepSerializer.Meta):
+        pass
+
+
+class StepHyperlinkedSerializer(BaseStepSerializer,
+                                serializers.HyperlinkedModelSerializer):
+    class Meta(BaseStepSerializer.Meta):
+        pass
+
+
+class BaseSavedStepSerializer:
+    class Meta:
+        model = SavedStep
+        fields = "__all__"
+
+
+class SavedStepModelSerializer(BaseSavedStepSerializer,
+                               serializers.ModelSerializer):
+    class Meta(BaseSavedStepSerializer.Meta):
+        pass
+
+
+class SavedStepHyperlinkedSerializer(BaseSavedStepSerializer,
+                                     serializers.HyperlinkedModelSerializer):
+    class Meta(BaseSavedStepSerializer.Meta):
         pass

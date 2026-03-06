@@ -40,6 +40,10 @@ class BaseCustomUserSerializer(serializers.ModelSerializer):
                 "write_only": True,
                 "style": {"input_type": "password"},
             },
+            "username": {
+                "required": False,
+                "allow_blank": True,
+            },
         }
 
     def create(self, validated_data: dict[str, str]) -> CustomUser:
@@ -47,14 +51,19 @@ class BaseCustomUserSerializer(serializers.ModelSerializer):
 
         DRF's default ModelSerializer.create would store the raw password.
         """
-        password = validated_data.pop("password", None)
+        password = validated_data.pop("password", "")
         if not password:
             # Enforce that new users can only be created when a password
             # is provided, even if the field were made non-required.
             raise serializers.ValidationError({
                 "password": "A password is required to create a user.",
             })
-
+        email = validated_data.get("email", "")
+        if not email:
+            raise serializers.ValidationError({
+                "email": "An email is required to create a user.",
+            })
+        validated_data["username"] = email
         user: CustomUser = super().create(validated_data)
         user.set_password(password)
         user.save(update_fields=["password"])
