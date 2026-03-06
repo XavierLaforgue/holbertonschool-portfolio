@@ -36,11 +36,20 @@ SECRET_KEY = environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 # choose between DEBUG (dev) mode or not (for production)
 DEBUG = environ.get('DJANGO_DEBUG', "False").lower() == "true"
+
+
+def _split_env_list(env_name: str, default: str = "") -> list[str]:
+    """Read comma-separated env var values and drop empty entries."""
+    return [item.strip() for item in environ.get(env_name, default).split(",")
+            if item.strip()]
+
+
 # keep list of allowed hosts in the environment (only localhost for dev)
-ALLOWED_HOSTS = environ.get('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
+ALLOWED_HOSTS = _split_env_list('DJANGO_ALLOWED_HOSTS', 'localhost')
 
 # Application definition
-
+# TODO: install drf-spectacular and implement automatic openapi schemas and
+# typescript interfaces
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -50,6 +59,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     # 'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
     'core',
     'accounts',
     'recipes',
@@ -99,7 +109,20 @@ SIMPLE_JWT = {
     "CHECK_USER_IS_ACTIVE": True,  # default: True
 }
 
+CORS_ALLOWED_ORIGINS = _split_env_list(
+    'DJANGO_CORS_ALLOWED_ORIGINS',
+    'http://localhost:5173,http://127.0.0.1:5173',
+)
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = _split_env_list(
+    'DJANGO_CSRF_TRUSTED_ORIGINS',
+    'http://localhost:5173,http://127.0.0.1:5173',
+)
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
