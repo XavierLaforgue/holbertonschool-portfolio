@@ -114,3 +114,88 @@ git stash pop
 git stash apply
 # which applies the changes to the worktree without deleting them from the stash
 ```
+
+## Atomizing messy branch
+
+**Situation:** I have made many changes into a branch, which do not correspond to the purpose of that branch.
+
+**Chosen fix:** The messy feature branch being up to date with `dev` I:
+
+<!-- markdownlint-disable MD029 -->
+1. commit the changes, to "save" them in the messy branch, without pushing to `remote`;
+
+```bash
+# checking messy branch
+git add .
+git commit -m "Local savepoint. DO NOT PUSH"
+```
+
+2. create a backup branch to keep changes safely on the side before any other operation;
+
+```bash
+git branch backup/<messy-branch>
+```
+
+3. update the local `dev`;
+
+```bash
+git switch dev
+git pull --ff-only
+# --ff-only is a safety feature: it only updates the branch if it can be done cleanly by only fast-forwarding the commits
+```
+
+4. get back to the savepoint branch and recover the messy changes from it (NOT the backup);
+
+```bash
+git switch <messy-branch>
+# git reset undoes commits
+# --soft undoes them, brings them back to the workspace, but keeps them staged
+# --mixed undoes them and brings them back to workspace unstaged, it is the default
+# [DANGER!]: --hard undoes them and the changes ARE LOST definitively
+# git reset --mixed HEAD~<number-of-savepoint-commits>
+# or the perhaps safer option:
+git reset --mixed dev
+# this resets the messy branch to the state of dev
+# to check what would that difference actually look like we can do 
+# `git log dev..HEAD` and/or `git diff --stat dev` and/or `git diff dev` 
+```
+
+5. choose a meaningful set of related changes;
+6. create a GitHub issue for their related feature;
+7. create a branch for the issue, from `dev`;
+
+```bash
+git switch -c <new-feature> dev
+```
+
+8. make atomic commits to the new feature branch, using keywords and issue identifiers if applicable (`execute order 'close #66'`);
+
+```bash
+git add file1 file2 file3
+git commit -m "Clean commit about new feature"
+```
+
+9. push to that branch;
+
+```bash
+git push -u origin <new-feature>
+```
+
+10. make and accept a PR from the new branch to `dev` (deleting the now-merged branch);
+11. switch to `dev` and pull changes;
+
+```bash
+git switch dev
+git pull --ff-only
+```
+
+12. cycle back to steps 5 through 10 until all changes have been merged into `dev`;
+
+```bash
+git switch -c <another-new-feature> dev
+```
+
+13. verify that `dev` is up-to-date with the savepoint branch;
+14. delete messy branch
+15. resume `GitHub Projects` workflow: create issue -> create related feature branch (`feature/feature-name`) -> commit to it until closing the issue -> PR to `dev` -> delete feature branch after accepting the PR -> restart.
+<!-- markdownlint-disable MD029 -->

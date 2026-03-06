@@ -3,7 +3,7 @@ import type { User } from '@/types'
 import { AuthContext, TOKEN_KEY } from '@/contexts/AuthContext'
 
 /**
- * AuthProvider — wrap your app with this so any component can call useAuth().
+ * AuthProvider — wrap app so any component can call useAuth().
  *
  * How it works:
  * 1. On mount, checks localStorage for a saved JWT token.
@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			return
 		}
 
-		// TODO: Replace with your real API call
+		// TODO: Replace with real API call
 		// Example: GET /api/auth/me with the token in the Authorization header
 		fetchCurrentUser(token)
 			.then((user) => setUser(user))
