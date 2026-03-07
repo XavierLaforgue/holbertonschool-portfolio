@@ -13,96 +13,85 @@ from .serializers import (IngredientModelSerializer,
                           SavedRecipeIngredientHyperlinkedSerializer)
 
 
-class UnitKindModelViewSet(viewsets.ModelViewSet):
-    queryset = UnitKind.objects.all().order_by("descriptive_name")
+class UnitKindBaseViewSet(viewsets.ModelViewSet):
+    queryset = UnitKind.objects.all()
+    permission_classes = [permissions.AllowAny]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["label", "descriptive_name"]
+    ordering_fields = ["label", "descriptive_name"]
+    ordering = "label"
+
+
+class UnitKindModelViewSet(UnitKindBaseViewSet):
     serializer_class = UnitKindModelSerializer
-    permission_classes = [permissions.AllowAny]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["label", "descriptive_name"]
-    ordering_fields = ["label", "descriptive_name"]
-    ordering = "label"
 
 
-class UnitKindHyperlinkedViewSet(viewsets.ModelViewSet):
-    queryset = UnitKind.objects.all().order_by("descriptive_name")
+class UnitKindHyperlinkedViewSet(UnitKindBaseViewSet):
     serializer_class = UnitKindHyperlinkedSerializer
-    permission_classes = [permissions.AllowAny]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["label", "descriptive_name"]
-    ordering_fields = ["label", "descriptive_name"]
-    ordering = "label"
 
 
-class UnitModelViewSet(viewsets.ModelViewSet):
-    queryset = Unit.objects.select_related("kind").all().order_by("name")
-    serializer_class = UnitModelSerializer
+class UnitBaseViewSet(viewsets.ModelViewSet):
+    # sectec_related perfomrs a JOIN with the related table
+    queryset = Unit.objects.select_related("kind").all()
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "symbol", "kind__label", "kind__descriptive_name"]
     ordering_fields = ["name", "symbol", "kind__descriptive_name"]
     ordering = "name"
+
+
+class UnitModelViewSet(UnitBaseViewSet):
+    serializer_class = UnitModelSerializer
 
 
 class UnitHyperlinkedViewSet(viewsets.ModelViewSet):
-    queryset = Unit.objects.select_related("kind").all().order_by("name")
     serializer_class = UnitHyperlinkedSerializer
+
+
+class IngredientBaseViewSet(viewsets.ModelViewSet):
+    queryset = Ingredient.objects.all()
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["name", "symbol", "kind__label", "kind__descriptive_name"]
-    ordering_fields = ["name", "symbol", "kind__descriptive_name"]
+    search_fields = ["name"]
+    ordering_fields = ["name"]
     ordering = "name"
 
 
-class IngredientModelViewSet(viewsets.ModelViewSet):
+class IngredientModelViewSet(IngredientBaseViewSet):
     """
     API endpoint that allows ingredients to be viewed or edited.
     """
-    queryset = Ingredient.objects.all().order_by("name")
     serializer_class = IngredientModelSerializer
-    permission_classes = [permissions.AllowAny]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["name"]
-    ordering_fields = ["name"]
-    ordering = "name"
 
 
-class IngredientHyperlinkedViewSet(viewsets.ModelViewSet):
+class IngredientHyperlinkedViewSet(IngredientBaseViewSet):
     """
     API endpoint that allows ingredients to be viewed or edited.
     """
-    queryset = Ingredient.objects.all().order_by("name")
     serializer_class = IngredientHyperlinkedSerializer
-    permission_classes = [permissions.AllowAny]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["name"]
-    ordering_fields = ["name"]
-    ordering = "name"
 
 
-class RecipeIngredientModelViewSet(viewsets.ModelViewSet):
-    """
-    API endpoint that allows recipe ingredients to be viewed or edited.
-    """
-    queryset = RecipeIngredient.objects.all().order_by("-recipe__published_at")
-    serializer_class = RecipeIngredientModelSerializer
+class RecipeIngredientBaseViewSet(viewsets.ModelViewSet):
+    queryset = RecipeIngredient.objects.all()
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["ingredient__name", "recipe__title", "unit__name"]
     ordering_fields = ["created_at", "updated_at", "recipe__published_at"]
-    ordering = "created_at"
+    ordering = ["-recipe__published_at", "-created_at"]
+
+
+class RecipeIngredientModelViewSet(RecipeIngredientBaseViewSet):
+    """
+    API endpoint that allows recipe ingredients to be viewed or edited.
+    """
+    serializer_class = RecipeIngredientModelSerializer
 
 
 class RecipeIngredientHyperlinkedViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows recipe ingredients to be viewed or edited.
     """
-    queryset = RecipeIngredient.objects.all().order_by("-recipe__published_at")
     serializer_class = RecipeIngredientHyperlinkedSerializer
-    permission_classes = [permissions.AllowAny]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["ingredient__name", "recipe__title", "unit__name"]
-    ordering_fields = ["created_at", "updated_at", "recipe__published_at"]
-    ordering = "created_at"
 
 
 class BaseSavedRecipeIngredientViewSet(viewsets.ModelViewSet):
@@ -110,8 +99,8 @@ class BaseSavedRecipeIngredientViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["ingredient__name", "recipe__title", "unit__name"]
-    ordering_fields = ["created_at", "updated_at"]
-    ordering = "created_at"
+    ordering_fields = ["created_at", "updated_at", "recipe__saved_at"]
+    ordering = ["-recipe__saved_at", "-created_at"]
 
 
 class SavedRecipeIngredientModelViewSet(BaseSavedRecipeIngredientViewSet):
