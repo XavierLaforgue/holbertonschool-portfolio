@@ -1,6 +1,7 @@
-from rest_framework import viewsets, permissions, status, filters
+from rest_framework import viewsets, permissions, status, filters, generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from django.db import transaction
 from .models import (Recipe, RecipeStatus, SavedRecipe, Difficulty, Step,
                      SavedStep)
@@ -183,6 +184,16 @@ class BaseStepViewSet(viewsets.ModelViewSet):
     queryset = Step.objects.all()
     permission_classes = [permissions.AllowAny]
 
+    @staticmethod
+    def _swap_step_numbers(step_a, step_b):
+        """Swap two step numbers atomically without violating uniqueness."""
+        # Use a temporary value to free one slot before assigning the target.
+        with transaction.atomic():
+            number_a, number_b = step_a.number, step_b.number
+            Step.objects.filter(pk=step_a.pk).update(number=0)
+            Step.objects.filter(pk=step_b.pk).update(number=number_a)
+            Step.objects.filter(pk=step_a.pk).update(number=number_b)
+
     @action(detail=False, methods=["post"], url_path="swap")
     def swap_number(self, request):
         """
@@ -220,21 +231,93 @@ class BaseStepViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Swap using a temporary ancillary value to avoid the unique
-        # constraint violation.  order=0 is safe because valid orders
-        # start at 1 (PositiveSmallIntegerField semantics in this project).
-        with transaction.atomic():
-            number_a, number_b = step_a.number, step_b.number
-            # Move step_a to a temporary order (0) to free its slot
-            Step.objects.filter(pk=step_a.pk).update(number=0)
-            # Move step_b into step_a's old slot
-            Step.objects.filter(pk=step_b.pk).update(number=number_a)
-            # Move step_a into step_b's old slot
-            Step.objects.filter(pk=step_a.pk).update(number=number_b)
+        self._swap_step_numbers(step_a, step_b)
 
         steps = Step.objects.filter(recipe=step_a.recipe).order_by("number")
         serializer = StepModelSerializer(steps, many=True)
         return Response(serializer.data)
+
+
+class RecipeStepListCreateSwapAPIView(generics.ListCreateAPIView):
+    """Nested step endpoint for a specific recipe collection."""
+    serializer_class = StepModelSerializer
+    permission_classes = [permissions.AllowAny]
+
+    def get_queryset(self):  # type: ignore[override]
+        recipe_id = self.kwargs["recipe_id"]
+        return Step.objects.filter(recipe_id=recipe_id).order_by("number")
+
+    def perform_create(self, serializer):
+        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
+        serializer.save(recipe=recipe)
+
+    def patch(self, request, *args, **kwargs):
+        """Swap two steps via payload: {"swap": [{"id", "number"}, ...]}."""
+        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
+        swap_payload = request.data.get("swap")
+
+        if not isinstance(swap_payload, list) or len(swap_payload) != 2:
+            return Response(
+                {"detail": "'swap' must be a list with exactly 2 entries."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        step_ids = []
+        for item in swap_payload:
+            if not isinstance(item, dict):
+                return Response(
+                    {"detail": "Each 'swap' entry must be an object."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            if "id" not in item or "number" not in item:
+                return Response(
+                    {
+                        "detail": (
+                            "Each 'swap' entry requires 'id' and 'number'."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            step_ids.append(item["id"])
+
+        if step_ids[0] == step_ids[1]:
+            return Response(
+                {"detail": "The two step IDs must be different."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        steps = list(Step.objects.filter(
+            recipe=recipe,
+            pk__in=step_ids,
+        ).order_by("number"))
+        if len(steps) != 2:
+            return Response(
+                {
+                    "detail": (
+                        "One or both steps were not found for this recipe."
+                    )
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        BaseStepViewSet._swap_step_numbers(steps[0], steps[1])
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RecipeStepDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """Nested step endpoint for a specific recipe step resource."""
+    serializer_class = StepModelSerializer
+    permission_classes = [permissions.AllowAny]
+    lookup_url_kwarg = "step_id"
+
+    def get_queryset(self):  # type: ignore[override]
+        recipe_id = self.kwargs["recipe_id"]
+        return Step.objects.filter(recipe_id=recipe_id)
+
+    def perform_update(self, serializer):
+        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
+        serializer.save(recipe=recipe)
 
 
 class StepModelViewSet(BaseStepViewSet):

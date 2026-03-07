@@ -98,11 +98,13 @@ class SavedRecipe(RecipeBase):
         Profile,
         on_delete=models.CASCADE,
         related_name="saved_recipes",  # to do profile.saved_recipes.all()
+        null=False,
+        blank=False,
     )
     original_recipe = models.ForeignKey(
         Recipe,
         on_delete=models.SET_NULL,  # author can delete; snapshot stays
-        null=False,
+        null=True,
         blank=False,
         related_name="saved_copies",
         editable=False
@@ -110,7 +112,7 @@ class SavedRecipe(RecipeBase):
     original_author = models.ForeignKey(
         Profile,
         on_delete=models.SET_NULL,
-        null=False,
+        null=True,
         blank=False,
         related_name="authored_recipes_saved",
         editable=False
