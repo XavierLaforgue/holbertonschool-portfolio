@@ -43,6 +43,7 @@ class BaseCustomUserSerializer(serializers.ModelSerializer):
             "username": {
                 "required": False,
                 "allow_blank": True,
+                "read_only": True,
             },
         }
 

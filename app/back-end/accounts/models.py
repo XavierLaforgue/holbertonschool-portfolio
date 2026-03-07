@@ -20,8 +20,17 @@ class CustomUser(
                  UUIDModel,
                  AbstractUser,
                  ):
-    # TODO: Try again using the UUIDPkMixin with a clean database and no
-    # migration files
+    class Meta(UUIDModel.Meta):
+        verbose_name = "user"
+        verbose_name_plural = "users"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["email"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_active_email"
+            )
+        ]
+
     # id = models.UUIDField(
     #     primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(unique=True, blank=False, null=False,
@@ -51,7 +60,9 @@ class CustomUser(
     # last_authenticated_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    deactivated_at = models.DateTimeField(blank=True, null=True, default=None)
+    deactivated_at = models.DateTimeField(blank=False, null=True,
+                                          default=None)
+    deleted_at = models.DateTimeField(blank=False, null=True, default=None)
 
     def __str__(self) -> str:
         return self.email
@@ -107,7 +118,7 @@ class Profile(UUIDModel):
                                            max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    cleared_at = models.DateTimeField(blank=True, null=True)
+    cleared_at = models.DateTimeField(blank=False, null=True)
 
     def __str__(self) -> str:
         return self.user.email
