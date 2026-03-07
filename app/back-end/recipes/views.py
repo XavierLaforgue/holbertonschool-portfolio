@@ -27,14 +27,14 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
     GET /recipes/<id>/ - Detail with nested full objects
     """
     # TODO: filter published recipes and order by publication date
-    queryset = Recipe.objects.all()
+    queryset = Recipe.objects.filter(author__user__deleted_at__isnull=True)
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["title", "anime_custom", "description",
                      "author__display_name"]
     ordering_fields = ["created_at", "published_at",
                        "estimated_time_minutes", "title"]
-    ordering = "-created_at"
+    ordering = ["-published_at", "-created_at"]
     summary_serializer_class = None
     detail_serializer_class = None
 
@@ -116,9 +116,16 @@ class BaseSavedRecipeViewSet(viewsets.ModelViewSet):
         """Optimize queries for detail endpoint with nested objects."""
         queryset = SavedRecipe.objects.all().order_by("-saved_at")
         if self.action == "retrieve":
-            # Detail endpoint: optimize for expanded nested data
+            # Detail endpoint: optimize for expanded nested data.
+            # select_related: SQL JOIN (1 query) -> ForeignKey/OneToOne
+            # prefetch_related: Separate queries + Python join
+            # -> ManyToMany/reverse ForeignKey
             queryset = queryset.select_related("saver", "original_author",
-                                               "difficulty", "status")
+                                               "difficulty", "status",
+                                               "original_recipe")
+            # prefetch_related() optimizes queries for reverse foreign key
+            # relationships and many-to-many fields by performing a separate
+            # query and joining results
             queryset = queryset.prefetch_related("steps")
 
         return queryset
@@ -173,11 +180,11 @@ class RecipeStatusHyperlinkedViewSet(BaseRecipeStatusViewSet):
 
 
 class BaseStepViewSet(viewsets.ModelViewSet):
-    queryset = Step.objects.all().order_by("order")
+    queryset = Step.objects.all()
     permission_classes = [permissions.AllowAny]
 
     @action(detail=False, methods=["post"], url_path="swap")
-    def swap_order(self, request):
+    def swap_number(self, request):
         """
         Swap the order of two steps belonging to the same recipe.
 
@@ -213,19 +220,19 @@ class BaseStepViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Swap using a temporary sentinel value to avoid the unique
+        # Swap using a temporary ancillary value to avoid the unique
         # constraint violation.  order=0 is safe because valid orders
         # start at 1 (PositiveSmallIntegerField semantics in this project).
         with transaction.atomic():
-            order_a, order_b = step_a.order, step_b.order
+            number_a, number_b = step_a.number, step_b.number
             # Move step_a to a temporary order (0) to free its slot
-            Step.objects.filter(pk=step_a.pk).update(order=0)
+            Step.objects.filter(pk=step_a.pk).update(number=0)
             # Move step_b into step_a's old slot
-            Step.objects.filter(pk=step_b.pk).update(order=order_a)
+            Step.objects.filter(pk=step_b.pk).update(number=number_a)
             # Move step_a into step_b's old slot
-            Step.objects.filter(pk=step_a.pk).update(order=order_b)
+            Step.objects.filter(pk=step_a.pk).update(number=number_b)
 
-        steps = Step.objects.filter(recipe=step_a.recipe).order_by("order")
+        steps = Step.objects.filter(recipe=step_a.recipe).order_by("number")
         serializer = StepModelSerializer(steps, many=True)
         return Response(serializer.data)
 
@@ -239,7 +246,7 @@ class StepHyperlinkedViewSet(BaseStepViewSet):
 
 
 class BaseSavedStepViewSet(viewsets.ModelViewSet):
-    queryset = SavedStep.objects.all().order_by("order")
+    queryset = SavedStep.objects.all()
     permission_classes = [permissions.AllowAny]
 
 

@@ -86,7 +86,7 @@ class Recipe(RecipeBase):
         Profile,
         on_delete=models.CASCADE,
         related_name="authored_recipes",  # for profile.authored_recipes.all()
-        null=True
+        # null=True
     )
 
     def __str__(self) -> str:
@@ -102,15 +102,16 @@ class SavedRecipe(RecipeBase):
     original_recipe = models.ForeignKey(
         Recipe,
         on_delete=models.SET_NULL,  # author can delete; snapshot stays
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         related_name="saved_copies",
+        editable=False
     )
     original_author = models.ForeignKey(
         Profile,
         on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
         related_name="authored_recipes_saved",
         editable=False
     )
@@ -118,7 +119,7 @@ class SavedRecipe(RecipeBase):
 
 
 class StepBase(UUIDModel):
-    order = models.PositiveSmallIntegerField(blank=False, null=False)
+    number = models.PositiveSmallIntegerField(blank=False, null=False)
     description = models.TextField(blank=False, null=False, max_length=500)
     duration = models.DurationField(blank=True, null=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -126,7 +127,9 @@ class StepBase(UUIDModel):
 
     class Meta(UUIDModel.Meta):
         abstract = True
-        ordering = ["order"]
+        # default order_by() for all querysets: order with respect to recipe
+        # and then to the step order
+        ordering = ["recipe", "number"]
 
 
 class Step(StepBase):
@@ -141,13 +144,13 @@ class Step(StepBase):
         verbose_name_plural = "Steps"
         constraints = [
             models.UniqueConstraint(
-                fields=["recipe", "order"],
-                name="unique_step_order_per_recipe",
+                fields=["recipe", "number"],
+                name="unique_step_number_per_recipe",
             )
         ]
 
     def __str__(self):
-        return f"{self.recipe.title}: step {self.order}"
+        return f"{self.recipe.title}: step {self.number}"
 
 
 class SavedStep(StepBase):
@@ -162,10 +165,10 @@ class SavedStep(StepBase):
         verbose_name_plural = "Saved steps"
         constraints = [
             models.UniqueConstraint(
-                fields=["recipe", "order"],
+                fields=["recipe", "number"],
                 name="unique_savedstep_order_per_savedrecipe",
             )
         ]
 
     def __str__(self):
-        return f"{self.recipe.title}: step {self.order}"
+        return f"{self.recipe.title}: step {self.number}"

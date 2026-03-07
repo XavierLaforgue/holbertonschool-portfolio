@@ -124,7 +124,7 @@ class SavedStepHyperlinkedSerializer(BaseSavedStepSerializer,
 class UnitKindSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = UnitKind
-        fields = ("id", "label", "descriptive_name")
+        fields = "__all__"  # ("id", "label", "descriptive_name")
 
 
 class UnitSummarySerializer(serializers.ModelSerializer):
@@ -132,7 +132,7 @@ class UnitSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unit
-        fields = ("id", "name", "symbol", "kind")
+        fields = "__all__"  # ("id", "name", "symbol", "kind")
 
 
 class IngredientSummarySerializer(serializers.ModelSerializer):
@@ -140,7 +140,7 @@ class IngredientSummarySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ingredient
-        fields = ("id", "name", "allowed_unit_kinds")
+        fields = "__all__"  # ("id", "name", "allowed_unit_kinds")
 
 
 class RecipeIngredientExpandedSerializer(serializers.ModelSerializer):
@@ -149,14 +149,14 @@ class RecipeIngredientExpandedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecipeIngredient
-        fields = (
-            "id",
-            "ingredient",
-            "quantity",
-            "unit",
-            "created_at",
-            "updated_at",
-        )
+        fields = "__all__"  # (
+        #     "id",
+        #     "ingredient",
+        #     "quantity",
+        #     "unit",
+        #     "created_at",
+        #     "updated_at",
+        # )
 
 
 class RecipeExpandedSerializer(serializers.ModelSerializer):
