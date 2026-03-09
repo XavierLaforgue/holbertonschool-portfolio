@@ -1,10 +1,15 @@
+import uuid
+
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 from core.models import UUIDModel
 from accounts.models import Profile
+from recipes.validators import (validate_image_file_size,
+                                validate_image_file_type)
 # TODO: Create Anime model in the anime app
 # from animes.models import Anime
 # from django.utils import timezone
-# Create your models here.
 
 
 class Difficulty(UUIDModel):
@@ -74,8 +79,6 @@ class RecipeBase(UUIDModel):
                                         default=None)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # TODO: add RecipePhoto model
 
     class Meta(UUIDModel.Meta):
         abstract = True
@@ -174,3 +177,59 @@ class SavedStep(StepBase):
 
     def __str__(self):
         return f"{self.recipe.title}: step {self.number}"
+
+
+def recipe_photo_upload_path(instance, filename):
+    """Build upload path: recipes/<recipe_uuid>/<random_uuid>.<ext>
+
+    Uses UUIDs for both directory and filename to:
+    - avoid issues from user-provided names
+    - keep a clean structure that maps directly to S3 key prefixes
+    """
+    import os
+    ext = os.path.splitext(filename)[1].lower()
+    # As it is not stored in the database the uuid of reference must be
+    # created manually.
+    return f"recipes/{instance.recipe_id}/{uuid.uuid4()}{ext}"
+
+
+class RecipePhoto(UUIDModel):
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="photos",
+    )
+    image = models.ImageField(
+        upload_to=recipe_photo_upload_path,
+        validators=[validate_image_file_size, validate_image_file_type],
+    )
+    position = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)],
+        help_text="1 = main image shown on card/feed; 2-5 = gallery images.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta(UUIDModel.Meta):
+        ordering = ["recipe", "position"]
+        verbose_name = "Recipe photo"
+        verbose_name_plural = "Recipe photos"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["recipe", "position"],
+                name="unique_photo_position_per_recipe",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(position__gte=1, position__lte=5),
+                name="photo_position_between_1_and_5",
+            ),
+        ]
+
+    # @property
+    # def is_main(self):
+    #     return self.position == 1
+
+    def __str__(self):
+        # label = "main" if self.is_main else f"#{self.position}"
+        label = "main" if self.position == 1 else f"#{self.position}"
+        return f"{self.recipe.title}: photo {label}"

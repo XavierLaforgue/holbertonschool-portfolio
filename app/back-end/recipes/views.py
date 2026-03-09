@@ -1,20 +1,23 @@
 from rest_framework import viewsets, permissions, status, filters, generics
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
+from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from .models import (Recipe, RecipeStatus, SavedRecipe, Difficulty, Step,
-                     SavedStep)
+from .models import (Recipe, RecipePhoto, RecipeStatus, SavedRecipe,
+                     Difficulty, Step, SavedStep)
 from .serializers import (RecipeSummarySerializer,
                           RecipeSummaryHyperlinkedSerializer,
-                          RecipeExpandedSerializer,
+                          RecipeDetailsSerializer,
                           SavedRecipeSummarySerializer,
                           SavedRecipeSummaryHyperlinkedSerializer,
-                          SavedRecipeExpandedSerializer,
+                          SavedRecipeDetailsSerializer,
                           DifficultyModelSerializer,
                           DifficultyHyperlinkedSerializer,
                           RecipeStatusModelSerializer,
                           RecipeStatusHyperlinkedSerializer,
+                          RecipePhotoModelSerializer,
                           StepModelSerializer,
                           StepHyperlinkedSerializer,
                           SavedStepModelSerializer,
@@ -59,8 +62,17 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
             )
             queryset = queryset.prefetch_related(
                 "steps",
+                "photos",
                 "ingredients__ingredient__allowed_unit_kinds",
                 "ingredients__unit__kind",
+            )
+        else:
+            # List endpoint: only prefetch main photo for summary
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    "photos",
+                    queryset=RecipePhoto.objects.filter(position=1),
+                ),
             )
 
         return queryset
@@ -75,7 +87,7 @@ class RecipeModelViewSet(BaseRecipeViewSet):
     """
     # serializer_class = RecipeSummarySerializer
     summary_serializer_class = RecipeSummarySerializer
-    detail_serializer_class = RecipeExpandedSerializer
+    detail_serializer_class = RecipeDetailsSerializer
 
 
 class RecipeHyperlinkedViewSet(BaseRecipeViewSet):
@@ -85,7 +97,7 @@ class RecipeHyperlinkedViewSet(BaseRecipeViewSet):
     """
     # serializer_class = RecipeSummaryHyperlinkedSerializer
     summary_serializer_class = RecipeSummaryHyperlinkedSerializer
-    detail_serializer_class = RecipeExpandedSerializer
+    detail_serializer_class = RecipeDetailsSerializer
 
 
 class BaseSavedRecipeViewSet(viewsets.ModelViewSet):
@@ -141,7 +153,7 @@ class SavedRecipeModelViewSet(BaseSavedRecipeViewSet):
     """
     # serializer_class = SavedRecipeSummarySerializer
     summary_serializer_class = SavedRecipeSummarySerializer
-    detail_serializer_class = SavedRecipeExpandedSerializer
+    detail_serializer_class = SavedRecipeDetailsSerializer
 
 
 class SavedRecipeHyperlinkedViewSet(BaseSavedRecipeViewSet):
@@ -151,19 +163,19 @@ class SavedRecipeHyperlinkedViewSet(BaseSavedRecipeViewSet):
     """
     # serializer_class = SavedRecipeSummaryHyperlinkedSerializer
     summary_serializer_class = SavedRecipeSummaryHyperlinkedSerializer
-    detail_serializer_class = SavedRecipeExpandedSerializer
+    detail_serializer_class = SavedRecipeDetailsSerializer
 
 
-class BaseDifficultyViewSet(viewsets.ModelViewSet):
+class DifficultyBaseViewSet(viewsets.ModelViewSet):
     queryset = Difficulty.objects.all().order_by("value")
     permission_classes = [permissions.AllowAny]
 
 
-class DifficultyModelViewSet(BaseDifficultyViewSet):
+class DifficultyModelViewSet(DifficultyBaseViewSet):
     serializer_class = DifficultyModelSerializer
 
 
-class DifficultyHyperlinkedViewSet(BaseDifficultyViewSet):
+class DifficultyHyperlinkedViewSet(DifficultyBaseViewSet):
     serializer_class = DifficultyHyperlinkedSerializer
 
 
@@ -339,3 +351,54 @@ class SavedStepModelViewSet(BaseSavedStepViewSet):
 
 class SavedStepHyperlinkedViewSet(BaseSavedStepViewSet):
     serializer_class = SavedStepHyperlinkedSerializer
+
+
+MAX_PHOTOS_PER_RECIPE = 5
+
+
+class RecipePhotoListCreateAPIView(generics.ListCreateAPIView):
+    """Nested photo endpoint for a specific recipe's photo collection."""
+    serializer_class = RecipePhotoModelSerializer
+    permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
+
+    # MultiPartParser: Parses multipart/form-data requests (standard HTML form
+    # for file uploads). Handles the image file in the request body and makes
+    # it available as request.data['image'].
+    # FormParser: Parses application/x-www-form-urlencoded requests (standard
+    # HTML form submissions without files). Included as a fallback so text
+    # fields like position can be submitted either way (which would be useful
+    # to swap position of photos).
+
+    def get_queryset(self):  # type: ignore[override]
+        recipe_id = self.kwargs["recipe_id"]
+        return RecipePhoto.objects.filter(
+            recipe_id=recipe_id
+        ).order_by("position")
+
+    def perform_create(self, serializer):
+        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
+        current_count = RecipePhoto.objects.filter(recipe=recipe).count()
+        if current_count >= MAX_PHOTOS_PER_RECIPE:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError(
+                {"detail": f"A recipe can have at most "
+                 f"{MAX_PHOTOS_PER_RECIPE} photos."}
+            )
+        serializer.save(recipe=recipe)
+
+
+class RecipePhotoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """Nested endpoint for a specific recipe photo resource."""
+    serializer_class = RecipePhotoModelSerializer
+    permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
+    lookup_url_kwarg = "photo_id"
+
+    def get_queryset(self):  # type: ignore[override]
+        recipe_id = self.kwargs["recipe_id"]
+        return RecipePhoto.objects.filter(recipe_id=recipe_id)
+
+    def perform_update(self, serializer):
+        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
+        serializer.save(recipe=recipe)

@@ -1,7 +1,7 @@
 [project]
 name = "back-end"
-version = "0.1.0"
-description = "This is the back-end for the `animize_eat` project, a platform to share anime-inspired recipes."
+version = "0.2.0"
+description = "This is the back-end for the `animize_eat` project, a platform to share anime-inspired recipes. Note on dependencies: `faker` and `requests` are only necessary for the data seeding of the application via the API and some associated testing."
 readme = "README.md"
 requires-python = ">=3.13.3"
 dependencies = [
@@ -9,6 +9,9 @@ dependencies = [
     "django-cors-headers>=4.9.0",
     "djangorestframework>=3.16.1",
     "djangorestframework-simplejwt>=5.5.1",
+    "faker>=40.8.0",
+    "pillow>=12.1.1",
     "psycopg>=3.3.2",
     "python-dotenv>=1.2.1",
+    "requests>=2.32.5",
 ]
