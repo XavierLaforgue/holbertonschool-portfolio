@@ -69,7 +69,7 @@ class CustomUser(
 
 
 def default_display_name():
-    n = Profile.objects.count() + 1
+    n = 1
     while True:
         display_name = f"unnamed_user_{n}"
         if not Profile.objects.filter(display_name=display_name).first():

@@ -87,14 +87,16 @@ if DEBUG:
         "rest_framework.renderers.BrowsableAPIRenderer",
     ]
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
-        "rest_framework.authentication.SessionAuthentication",
+        "accounts.authentication.CookieJWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ]
 else:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
         "rest_framework.renderers.JSONRenderer",
     ]
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
+        "accounts.authentication.CookieJWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ]
 
@@ -120,6 +122,14 @@ CSRF_TRUSTED_ORIGINS = _split_env_list(
     'DJANGO_CSRF_TRUSTED_ORIGINS',
     'http://localhost:5173,http://127.0.0.1:5173',
 )
+
+# Auth cookie behavior can be overridden per environment. This is useful for
+# temporary pseudo-production deployments without HTTPS.
+AUTH_COOKIE_SECURE = environ.get(
+    'DJANGO_AUTH_COOKIE_SECURE',
+    str(not DEBUG),
+).lower() == "true"
+AUTH_COOKIE_SAMESITE = environ.get('DJANGO_AUTH_COOKIE_SAMESITE', 'Lax')
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -219,3 +229,31 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files (user-uploaded content)
+# https://docs.djangoproject.com/en/6.0/topics/files/
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Instructions to migrate to S3 made by AI:
+# --- Production file storage (S3) ---
+# To switch from local filesystem to S3:
+#   1. uv add django-storages[s3]
+#   2. Add 'storages' to INSTALLED_APPS
+#   3. Uncomment the block below and configure env vars:
+#
+# STORAGES = {
+#     "default": {
+#         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+#     },
+#     "staticfiles": {
+#         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+#     },
+# }
+# AWS_STORAGE_BUCKET_NAME = environ.get('AWS_STORAGE_BUCKET_NAME')
+# AWS_S3_REGION_NAME = environ.get('AWS_S3_REGION_NAME')
+# AWS_ACCESS_KEY_ID = environ.get('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY')
+# AWS_S3_CUSTOM_DOMAIN = environ.get('AWS_S3_CUSTOM_DOMAIN')  # e.g. CDN
+# AWS_QUERYSTRING_AUTH = False  # public-read bucket

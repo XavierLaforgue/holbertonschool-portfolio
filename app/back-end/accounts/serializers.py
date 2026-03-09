@@ -24,6 +24,14 @@ class BaseCustomUserSerializer(serializers.ModelSerializer):
             "date_joined",
             "deactivated_at",
             "last_login",
+            # TODO: an expanded serializer may be necessary for the account
+            # management page. For now I exclude:
+            "username",
+            "first_name",
+            "last_name",
+            "created_at",
+            "updated_at",
+            "deleted_at",
         )
         read_only_fields = (
             "last_login",
@@ -90,8 +98,14 @@ class CustomUserHyperlinkedSerializer(
 class CustomUserModelSerializer(
         BaseCustomUserSerializer,
         serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+
     class Meta(BaseCustomUserSerializer.Meta):
         pass
+
+    def get_display_name(self, obj):
+        profile = getattr(obj, "profile", None)
+        return getattr(profile, "display_name", None)
 
 
 class BaseProfileSerializer:
@@ -103,7 +117,7 @@ class BaseProfileSerializer:
 
     class Meta:
         model = Profile
-        exclude = ("cleared_at",)
+        fields = "__all__"
 
 
 class ProfileHyperlinkedSerializer(serializers.HyperlinkedModelSerializer,
@@ -120,12 +134,9 @@ class ProfileModelSerializer(serializers.ModelSerializer,
 
 class ProfileSummarySerializer(serializers.ModelSerializer,
                                BaseProfileSerializer):
+    """Compact profile representation for nested usage in other serializers."""
     class Meta(BaseProfileSerializer.Meta):
-        model = Profile
         fields = (
-            # "id",
+            "id",
             "display_name",
-            # "favorite_anime_custom",
-            # "favorite_meal",
-            # "location",
         )
