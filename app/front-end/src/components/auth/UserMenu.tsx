@@ -24,7 +24,9 @@ export default function UserMenu() {
 
 	// TODO: change this to use actual displayName from the profile
 	// (once the ProfileUpdatePage will be in service)
-	const displayName = user.email
+	const displayName = (
+		user.display_name?.startsWith("unnamed_user_")
+		) ? user.email : user.display_name;
 
 	return (
 		// use `position: relative` so that the child dropdown menu can
