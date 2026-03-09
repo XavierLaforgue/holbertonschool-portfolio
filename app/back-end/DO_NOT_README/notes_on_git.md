@@ -117,7 +117,7 @@ when we made some changes but we do not want to commit them and we want to clean
 git stash -u -m "WIP put on the side"
 ```
 
-where the `-u` includes the untracked files (it doesn't, by default) and `m` gives a name/label to the stash.
+where the `-u` includes the untracked files (it doesn't, by default) and `-m` gives a name/label to the stash.
 
 When we are ready to bring forth the stashed changes we can do
 
@@ -129,7 +129,13 @@ git stash apply
 # which applies the changes to the worktree without deleting them from the stash
 ```
 
-## Atomizing messy branch
+## Adding line by line
+
+
+
+## Unusual workflows to circunvent a bad practice
+
+### Atomizing messy branch
 
 **Situation:** I have made many changes into a branch, which do not correspond to the purpose of that branch.
 
@@ -212,4 +218,4 @@ git switch -c <another-new-feature> dev
 13. verify that `dev` is up-to-date with the savepoint branch;
 14. delete messy branch
 15. resume `GitHub Projects` workflow: create issue -> create related feature branch (`feature/feature-name`) -> commit to it until closing the issue -> PR to `dev` -> delete feature branch after accepting the PR -> restart.
-<!-- markdownlint-disable MD029 -->
+<!-- markdownlint-enable MD029 -->
