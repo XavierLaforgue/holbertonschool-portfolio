@@ -43,7 +43,8 @@ class RecipeStatus(UUIDModel):
 
 
 class RecipeBase(UUIDModel):
-    title = models.CharField(blank=False, null=False, max_length=150)
+    title = models.CharField(blank=True, null=False, max_length=150,
+                             default="")
     # TODO: create Anime model (in the Animes app)
     # anime = models.ForeignKey(
     #     Anime,
@@ -53,7 +54,8 @@ class RecipeBase(UUIDModel):
     #     null=False,
     #     blank=False
     # )
-    anime_custom = models.CharField(blank=False, null=False, max_length=150)
+    anime_custom = models.CharField(blank=True, null=False, max_length=150,
+                                    default="")
     description = models.TextField(blank=True, null=True, max_length=500)
     difficulty = models.ForeignKey(
         Difficulty,
@@ -66,7 +68,8 @@ class RecipeBase(UUIDModel):
     portions = models.PositiveSmallIntegerField(null=False, blank=False,
                                                 default=1)
     estimated_time_minutes = models.PositiveSmallIntegerField(null=False,
-                                                              blank=False)
+                                                              blank=False,
+                                                              default=0)
     status = models.ForeignKey(
         RecipeStatus,
         on_delete=models.PROTECT,

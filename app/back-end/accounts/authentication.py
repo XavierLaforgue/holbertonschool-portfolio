@@ -1,7 +1,7 @@
 """Cookie-based JWT authentication for DRF.
 
 Reads the access token from the `access_token` cookie instead of the
-`Authorization` header. 
+`Authorization` header.
 The browser handles the token transport automatically via `credentials:
 'include'`, keeping the frontend free of any token manipulation and
 facilitating migration to httpOnly.

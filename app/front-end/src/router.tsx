@@ -5,6 +5,7 @@ import NotFoundPage from '@/pages/NotFoundPage'
 import ErrorPage from '@/pages/ErrorPage'
 import LoginPage from '@/pages/LoginPage'
 import SignUpPage from '@/pages/SignUpPage'
+import RecipeDetailPage from '@/pages/RecipeDetailPage'
 
 /**
  * Application router.
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
 			{ index: true, element: <HomePage /> },
 			{ path: 'login', element: <LoginPage /> },
 			{ path: 'signup', element: <SignUpPage /> },
+			{ path: 'recipes/:id', element: <RecipeDetailPage /> },
 			{ path: '*', element: <NotFoundPage /> },
 		],
 	},

@@ -9,7 +9,7 @@ class DifficultyBaseSerializer:
     class Meta:
         abstract = True
         model = Difficulty
-        fields = ("label",)
+        fields = ("id", "label")
 
 
 class DifficultyModelSerializer(DifficultyBaseSerializer,
@@ -126,11 +126,11 @@ class BaseRecipeSerializer:
 
 class RecipeSummarySerializer(BaseRecipeSerializer,
                               serializers.ModelSerializer):
-    """Compact recipe response with scalar references to related objects."""
+    """Compact recipe response with nested author/difficulty/status objects."""
     main_photo = serializers.SerializerMethodField()
-    # SerializerMethodField allows the declaration of a method
-    # get_attribute_name that receives the object and returns what should be
-    # the output of the serializer.
+    author = ProfileSummarySerializer(read_only=True)
+    difficulty = DifficultyModelSerializer(read_only=True)
+    status = RecipeStatusModelSerializer(read_only=True)
 
     class Meta(BaseRecipeSerializer.Meta):
         pass
