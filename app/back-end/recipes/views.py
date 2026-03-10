@@ -1,10 +1,12 @@
 from rest_framework import viewsets, permissions, status, filters, generics
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.utils import timezone
 from .models import (Recipe, RecipePhoto, RecipeStatus, SavedRecipe,
                      Difficulty, Step, SavedStep)
 from .serializers import (RecipeSummarySerializer,
@@ -24,15 +26,21 @@ from .serializers import (RecipeSummarySerializer,
                           SavedStepHyperlinkedSerializer)
 
 
+class IsAuthenticatedOrReadOnly(permissions.BasePermission):
+    """Allow read to anyone; write only to authenticated users."""
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user and request.user.is_authenticated
+
+
 class BaseRecipeViewSet(viewsets.ModelViewSet):
     """
     Shared behavior for recipe viewsets.
-    GET /recipes/ - List with summaries
-    GET /recipes/<id>/ - Detail with nested full objects
+    GET /recipes/ - List with summaries (Published only)
+    GET /recipes/<id>/ - Detail (author sees all statuses; others see Published)
     """
-    # TODO: filter published recipes and order by publication date
-    queryset = Recipe.objects.filter(author__user__deleted_at__isnull=True)
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["title", "anime_custom", "description",
                      "author__display_name"]
@@ -45,37 +53,130 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Use summary serializer for list and expanded serializer for detail.
         """
-        if self.action == "retrieve" and self.detail_serializer_class:
+        if self.action in ("retrieve", "status") \
+                and self.detail_serializer_class:
             return self.detail_serializer_class
         elif self.summary_serializer_class:
             return self.summary_serializer_class
         return super().get_serializer_class()
 
-    def get_queryset(self):  # type: ignore[override]
-        """Optimize queries for detail endpoint with nested objects."""
-        queryset = Recipe.objects.all().order_by("-created_at")
+    def _get_base_queryset(self):
+        return Recipe.objects.filter(author__user__deleted_at__isnull=True)
 
-        if self.action == "retrieve":
-            # Detail endpoint: optimize for expanded nested data
-            queryset = queryset.select_related(
-                "author", "difficulty", "status"
-            )
-            queryset = queryset.prefetch_related(
-                "steps",
-                "photos",
-                "ingredients__ingredient__allowed_unit_kinds",
-                "ingredients__unit__kind",
-            )
-        else:
-            # List endpoint: only prefetch main photo for summary
+    def get_queryset(self):  # type: ignore[override]
+        """Filter by status depending on the action and requester."""
+        if self.action == "list":
+            # Public feed: Published only
+            queryset = self._get_base_queryset().filter(
+                status__value="Published"
+            ).order_by("-published_at", "-created_at")
             queryset = queryset.prefetch_related(
                 Prefetch(
                     "photos",
                     queryset=RecipePhoto.objects.filter(position=1),
                 ),
             )
+            return queryset
 
-        return queryset
+        if self.action == "retrieve":
+            # Detail: author can see their own drafts/ready; others only Published
+            queryset = self._get_base_queryset()
+            # user can see details of published recipes and their own recipes 
+            if self.request.user.is_authenticated:
+                queryset = queryset.filter(
+                    status__value="Published"
+                ) | self._get_base_queryset().filter(  # Union of querysets 
+                # for: published status and authenticated user is the owner 
+                    author__user=self.request.user
+                )
+                # De-duplicate
+                queryset = queryset.distinct()
+            else:
+                queryset = queryset.filter(status__value="Published")
+            queryset = queryset.select_related(
+                "author", "difficulty", "status"
+            ).prefetch_related(
+                "steps",
+                "photos",
+                "ingredients__ingredient__allowed_unit_kinds",
+                "ingredients__unit__kind",
+            )
+            return queryset
+
+        # For update, partial_update, destroy, status action: unfiltered
+        return self._get_base_queryset().select_related(
+            "author", "difficulty", "status"
+        )
+
+    def _require_author(self, recipe):
+        """Raise 403 if the current user is not the recipe's author."""
+        if recipe.author.user != self.request.user:
+            raise PermissionDenied(
+                "You do not have permission to modify this recipe."
+            )
+
+    @action(detail=True, methods=["patch"], url_path="status",
+            permission_classes=[permissions.IsAuthenticated])
+    def set_status(self, request, pk=None):
+        """
+        PATCH /api/recipes/recipe_models/{id}/status/
+        Body: { "value": "Draft" | "Ready" | "Published" }
+
+        Transitions:
+          any -> Draft   : always allowed for author
+          any -> Ready   : always allowed for author
+          Ready -> Published : requires non-empty title, anime_custom,
+                               >=1 ingredient, >=1 step
+          Published -> Ready : clears published_at (retract)
+        """
+        recipe = get_object_or_404(Recipe, pk=pk)
+        self._require_author(recipe)
+
+        new_value = request.data.get("value")
+        if new_value not in ("Draft", "Ready", "Published"):
+            return Response(
+                {"detail": "Invalid status value. Use Draft, Ready, or Published."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        current_value = recipe.status.value
+
+        # Validate publish transition
+        if new_value == "Published":
+            if current_value != "Ready":
+                return Response(
+                    {"detail": "Only a Ready recipe can be published."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            errors = []
+            if not recipe.title.strip():
+                errors.append("Recipe must have a title.")
+            if not recipe.anime_custom.strip():
+                errors.append("Recipe must have an anime source.")
+            if not recipe.ingredients.exists():
+                errors.append("Recipe must have at least one ingredient.")
+            if not recipe.steps.exists():
+                errors.append("Recipe must have at least one step.")
+            if errors:
+                return Response(
+                    {"detail": errors},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        new_status = get_object_or_404(RecipeStatus, value=new_value)
+        recipe.status = new_status
+
+        if new_value == "Published":
+            recipe.published_at = timezone.now()
+        elif current_value == "Published" and new_value != "Published":
+            # Retract: clear published_at
+            recipe.published_at = None
+
+        recipe.save(update_fields=["status", "published_at"])
+
+        serializer = self.get_serializer(recipe)  # serializer chosen by view/
+                                                  # action
+        return Response(serializer.data)
 
 
 class RecipeModelViewSet(BaseRecipeViewSet):
@@ -85,9 +186,26 @@ class RecipeModelViewSet(BaseRecipeViewSet):
     List endpoint returns summary serializer (compact, fast).
     Detail endpoint returns expanded serializer (nested full objects).
     """
-    # serializer_class = RecipeSummarySerializer
     summary_serializer_class = RecipeSummarySerializer
     detail_serializer_class = RecipeDetailsSerializer
+
+    def perform_create(self, serializer):
+        """Create a blank draft recipe owned by the current user."""
+        draft_status = get_object_or_404(RecipeStatus, value="Draft")
+        serializer.save(
+            author=self.request.user.profile,
+            status=draft_status,
+        )
+
+    def perform_update(self, serializer):
+        """Only the author may update their recipe."""
+        self._require_author(serializer.instance)
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        """Only the author may delete their recipe."""
+        self._require_author(instance)
+        instance.delete()
 
 
 class RecipeHyperlinkedViewSet(BaseRecipeViewSet):
@@ -95,7 +213,6 @@ class RecipeHyperlinkedViewSet(BaseRecipeViewSet):
     API endpoint that allows recipes to be viewed or edited.
     Uses URL references instead of UUIDs.
     """
-    # serializer_class = RecipeSummaryHyperlinkedSerializer
     summary_serializer_class = RecipeSummaryHyperlinkedSerializer
     detail_serializer_class = RecipeDetailsSerializer
 
@@ -151,7 +268,6 @@ class SavedRecipeModelViewSet(BaseSavedRecipeViewSet):
     List endpoint returns summary serializer (compact).
     Detail endpoint returns expanded serializer (nested full objects).
     """
-    # serializer_class = SavedRecipeSummarySerializer
     summary_serializer_class = SavedRecipeSummarySerializer
     detail_serializer_class = SavedRecipeDetailsSerializer
 
@@ -161,7 +277,6 @@ class SavedRecipeHyperlinkedViewSet(BaseSavedRecipeViewSet):
     API endpoint that allows recipe ingredients to be viewed or edited.
     Uses URL references instead of scalar IDs.
     """
-    # serializer_class = SavedRecipeSummaryHyperlinkedSerializer
     summary_serializer_class = SavedRecipeSummaryHyperlinkedSerializer
     detail_serializer_class = SavedRecipeDetailsSerializer
 
@@ -253,7 +368,11 @@ class BaseStepViewSet(viewsets.ModelViewSet):
 class RecipeStepListCreateSwapAPIView(generics.ListCreateAPIView):
     """Nested step endpoint for a specific recipe collection."""
     serializer_class = StepModelSerializer
-    permission_classes = [permissions.AllowAny]
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):  # type: ignore[override]
         recipe_id = self.kwargs["recipe_id"]
@@ -320,8 +439,12 @@ class RecipeStepListCreateSwapAPIView(generics.ListCreateAPIView):
 class RecipeStepDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """Nested step endpoint for a specific recipe step resource."""
     serializer_class = StepModelSerializer
-    permission_classes = [permissions.AllowAny]
     lookup_url_kwarg = "step_id"
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):  # type: ignore[override]
         recipe_id = self.kwargs["recipe_id"]
@@ -359,7 +482,6 @@ MAX_PHOTOS_PER_RECIPE = 5
 class RecipePhotoListCreateAPIView(generics.ListCreateAPIView):
     """Nested photo endpoint for a specific recipe's photo collection."""
     serializer_class = RecipePhotoModelSerializer
-    permission_classes = [permissions.AllowAny]
     parser_classes = [MultiPartParser, FormParser]
 
     # MultiPartParser: Parses multipart/form-data requests (standard HTML form
@@ -369,6 +491,11 @@ class RecipePhotoListCreateAPIView(generics.ListCreateAPIView):
     # HTML form submissions without files). Included as a fallback so text
     # fields like position can be submitted either way (which would be useful
     # to swap position of photos).
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):  # type: ignore[override]
         recipe_id = self.kwargs["recipe_id"]
@@ -391,9 +518,13 @@ class RecipePhotoListCreateAPIView(generics.ListCreateAPIView):
 class RecipePhotoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """Nested endpoint for a specific recipe photo resource."""
     serializer_class = RecipePhotoModelSerializer
-    permission_classes = [permissions.AllowAny]
     parser_classes = [MultiPartParser, FormParser]
     lookup_url_kwarg = "photo_id"
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):  # type: ignore[override]
         recipe_id = self.kwargs["recipe_id"]
