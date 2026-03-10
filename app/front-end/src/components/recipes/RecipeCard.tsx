@@ -1,12 +1,14 @@
-import type { Recipe, Difficulty } from '@/types'
+import { Link } from 'react-router-dom'
+import type { Recipe } from '@/types'
 
-/* ── Difficulty badge ──────────────────────────────────── */
+// ------- Difficulty badge---------------------------------
 
 const DIFFICULTY_COLORS: Record<string, string> = {
 	easy: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
 	medium:
 		'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
 	hard: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+	expert: 'bg-gray-900 text-gray-100 dark:bg-gray-700 dark:text-gray-100',
 }
 
 function difficultyBadge(label: string) {
@@ -21,7 +23,7 @@ function difficultyBadge(label: string) {
 	)
 }
 
-/* ── Time formatter ───────────────────────────────────── */
+// ------------ Time formatter ---------------------------------
 
 function formatTime(mins: number): string {
 	if (mins < 60) return `${mins} min`
@@ -30,26 +32,63 @@ function formatTime(mins: number): string {
 	return m ? `${h}h ${m}min` : `${h}h`
 }
 
-/* ── Main card ────────────────────────────────────────── */
+// --------- Placeholder image--------------------------
+
+function PlaceholderImage() {
+	return (
+		<div className="flex h-full w-full items-center justify-center bg-linear-to-br from-primary/20 to-accent/20">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				width="24"
+				height="24"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				strokeWidth="2"
+				strokeLinecap="round"
+				strokeLinejoin="round"
+				className="lucide lucide-cooking-pot h-10 w-10 text-muted/40"
+			>
+				<path d="M2 12h20"/>
+				<path d="M20 12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/>
+				<path d="m4 8 16-4"/>
+				<path d="m8.86 6.78-.45-1.81a2 2 0 0 1 1.45-2.43l1.94-.48a2 2 0 0 1 2.43 1.46l.45 1.8"/>
+			</svg>
+		</div>
+	)
+}
+
+// ----------- Card ---------------------------------
 
 interface RecipeCardProps {
 	recipe: Recipe
-	difficulty?: Difficulty
 }
 
-export default function RecipeCard({ recipe, difficulty }: RecipeCardProps) {
-	const publishedDate = new Date(recipe.published_at).toLocaleDateString(
-		undefined,
-		{ year: 'numeric', month: 'short', day: 'numeric' },
-	)
+export default function RecipeCard({ recipe }: RecipeCardProps) {
+	const publishedDate = recipe.published_at
+		? new Date(recipe.published_at).toLocaleDateString(undefined, {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+		  })
+		: null
 
 	return (
-		<article className="group flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm transition-shadow hover:shadow-md">
-			{/* Colored header bar — uses anime_custom initial as a placeholder */}
-			<div className="relative flex h-40 items-center justify-center bg-linear-to-br from-primary/80 to-accent/70">
-				<span className="text-5xl font-black text-white/90 drop-shadow-lg select-none">
-					{recipe.title.charAt(0)}
-				</span>
+		<Link
+			to={`/recipes/${recipe.id}`}
+			className="group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-sm transition-shadow hover:shadow-md"
+		>
+			{/* Image area */}
+			<div className="relative h-40 overflow-hidden">
+				{recipe.main_photo ? (
+					<img
+						src={recipe.main_photo}
+						alt={recipe.title}
+						className="h-full w-full object-cover transition-transform group-hover:scale-105"
+					/>
+				) : (
+					<PlaceholderImage />
+				)}
 
 				{/* Anime source tag */}
 				{recipe.anime_custom && (
@@ -59,40 +98,43 @@ export default function RecipeCard({ recipe, difficulty }: RecipeCardProps) {
 				)}
 			</div>
 
-			<div className="flex flex-1 flex-col gap-2 p-4">
+			<div className="flex flex-1 flex-col gap-1.5 p-4">
 				{/* Title */}
 				<h3 className="text-lg font-bold leading-tight text-foreground group-hover:text-primary transition-colors line-clamp-2">
-					{recipe.title}
+					{recipe.title || <span className="italic text-muted">Untitled</span>}
 				</h3>
 
+				{/* Author */}
+				<p className="text-xs text-muted">by {recipe.author.display_name}</p>
+
 				{/* Description */}
-				<p className="flex-1 text-sm leading-relaxed text-muted line-clamp-3">
+				<p className="flex-1 text-sm leading-relaxed text-muted line-clamp-3 mt-0.5">
 					{recipe.description}
 				</p>
 
 				{/* Meta row */}
 				<div className="mt-auto flex flex-wrap items-center gap-3 pt-3 border-t border-border text-xs text-muted">
 					{/* Prep time */}
-					<span className="flex items-center gap-1" title="Preparation time">
-						{/* Clock icon */}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							className="h-3.5 w-3.5"
-						>
-							<path
-								fillRule="evenodd"
-								d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z"
-								clipRule="evenodd"
-							/>
-						</svg>
-						{formatTime(recipe.preparation_time_minutes)}
-					</span>
+					{recipe.estimated_time_minutes > 0 && (
+						<span className="flex items-center gap-1" title="Preparation time">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 20 20"
+								fill="currentColor"
+								className="h-3.5 w-3.5"
+							>
+								<path
+									fillRule="evenodd"
+									d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z"
+									clipRule="evenodd"
+								/>
+							</svg>
+							{formatTime(recipe.estimated_time_minutes)}
+						</span>
+					)}
 
 					{/* Portions */}
 					<span className="flex items-center gap-1" title="Portions">
-						{/* Users icon */}
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 20 20"
@@ -105,14 +147,16 @@ export default function RecipeCard({ recipe, difficulty }: RecipeCardProps) {
 					</span>
 
 					{/* Difficulty badge */}
-					{difficulty && difficultyBadge(difficulty.label)}
+					{recipe.difficulty && difficultyBadge(recipe.difficulty.label)}
 
 					{/* Published date — pushed to the right */}
-					<time className="ml-auto" dateTime={recipe.published_at}>
-						{publishedDate}
-					</time>
+					{publishedDate && (
+						<time className="ml-auto" dateTime={recipe.published_at ?? ''}>
+							{publishedDate}
+						</time>
+					)}
 				</div>
 			</div>
-		</article>
+		</Link>
 	)
 }
