@@ -1,6 +1,5 @@
 from django.core.validators import RegexValidator
 
-
 person_name_validator = RegexValidator(
     regex=r"^[A-Za-zÀ-ÖØ-öø-ÿ' -.]+$",
     message=(

@@ -6,7 +6,7 @@ class BaseCustomUserSerializer(serializers.ModelSerializer):
     """Shared config + password handling for CustomUser serializers.
 
     This mixin relies on DRF's auto-generated model field for `password`,
-    but tweaks its behaviour via `extra_kwargs` and hashes passwords in
+    but tweaks its behavior via `extra_kwargs` and hashes passwords in
     create/update.
     """
 

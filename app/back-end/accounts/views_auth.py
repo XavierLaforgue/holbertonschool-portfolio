@@ -44,7 +44,7 @@ class MeView(RetrieveAPIView):
         return self.request.user
 
 
-# ── Cookie configuration ────────────────────────────────────
+# --- Cookie configuration --------------------------------------
 
 ACCESS_COOKIE = "access_token"
 REFRESH_COOKIE = "refresh_token"

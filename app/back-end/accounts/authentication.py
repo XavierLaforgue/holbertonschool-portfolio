@@ -11,9 +11,11 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 class CookieJWTAuthentication(JWTAuthentication):
-    """Authenticate using the ``access_token`` cookie."""
+    """Authenticate using the `access_token` cookie."""
 
     def authenticate(self, request):
+        """Returns None if no token in cookies, returns tuple with user and
+        token otherwise"""
         raw_token = request.COOKIES.get("access_token")
         if raw_token is None:
             return None

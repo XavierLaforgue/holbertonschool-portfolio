@@ -16,7 +16,6 @@ from .validators import person_name_validator
 
 
 class CustomUser(
-                 # UUIDPkMixin,
                  UUIDModel,
                  AbstractUser,
                  ):
@@ -31,8 +30,6 @@ class CustomUser(
             )
         ]
 
-    # id = models.UUIDField(
-    #     primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(unique=True, blank=False, null=False,
                                 max_length=150)
     email = models.EmailField(unique=True, blank=False, null=False,
@@ -52,12 +49,6 @@ class CustomUser(
         null=True,
         validators=[person_name_validator],
     )
-    # TODO: make sure this is updated each time the user requests an
-    # authentication token, e.g.,
-    #     user.last_auth_time = timezone.now()
-    #     user.save(update_fields=["last_auth_time"])
-    # Unnecessary with SIMPLE_JWT = {"UPDATE_LAST_LOGIN": True}:
-    # last_authenticated_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deactivated_at = models.DateTimeField(blank=False, null=True,
@@ -78,17 +69,13 @@ def default_display_name():
 
 
 class Profile(UUIDModel):
-    # TODO: make it so it is created when the associated user is created. This
-    # will be included in the user creation logic.
-    # id = models.UUIDField(primary_key=True, default=uuid.uuid4,
-    #                      editable=False)
-    # TODO: add automatic numbering to unnamed users display names and add
-    # unique constraint.
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
                                 null=False,
                                 blank=False)
     birth_date = models.DateField(blank=True, null=True, default=None)
+    # TODO: make `display_name` nullable and let front-end replace other
+    # user's `display_name` for `unnamed` and own's `display_name` for `email`
     display_name = models.CharField(blank=False, null=False,
                                     default=default_display_name,
                                     max_length=150,
@@ -124,6 +111,8 @@ class Profile(UUIDModel):
         return self.user.email
 
 
+# receive signals of events of `CustomUser` instance being saved and create a
+# profile for that new user
 @receiver(post_save, sender=CustomUser)
 def create_profile_for_new_user(sender, instance, created, **kwargs):
     if created:
