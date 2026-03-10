@@ -11,8 +11,16 @@ export default function LoginPage() {
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState<string | null>(null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
-
-	const from = (location.state as { from?: string })?.from ?? '/'
+	// We arrive here from a page that set their location in the state
+	// as the value with key `from`.
+	// We recover that state at the authentication-related pages (login/signup)
+	const authState = location.state as { from?: string } | null
+	// extract `from` value safely from the state
+	const requestedFrom = authState?.from
+	// store it into `from` variable safely and if it doesn't involve
+	// `/login` or `/signup` paths, otherwise default to the home
+	// page
+	const from = requestedFrom && !['/login', '/signup'].includes(requestedFrom) ? requestedFrom : '/'
 
 	const handleSubmit = async (e: SubmitEvent) => {
 		e.preventDefault()
@@ -81,7 +89,12 @@ export default function LoginPage() {
 
 			<p className="mt-4 text-center text-sm text-muted">
 				Don&apos;t have an account yet?{' '}
-				<Link to="/signup" className="font-medium text-accent hover:text-accent-hover">
+				<Link
+					to="/signup"
+					// pass `from` value to the state of the`signup` page
+					state={{ from }}
+					className="font-medium text-accent hover:text-accent-hover"
+				>
 					Sign up
 				</Link>
 			</p>
