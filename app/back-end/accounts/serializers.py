@@ -99,6 +99,7 @@ class CustomUserModelSerializer(
         BaseCustomUserSerializer,
         serializers.ModelSerializer):
     display_name = serializers.SerializerMethodField()
+    profile_id = serializers.SerializerMethodField()
 
     class Meta(BaseCustomUserSerializer.Meta):
         pass
@@ -106,6 +107,12 @@ class CustomUserModelSerializer(
     def get_display_name(self, obj):
         profile = getattr(obj, "profile", None)
         return getattr(profile, "display_name", None)
+
+    def get_profile_id(self, obj):
+        profile = getattr(obj, "profile", None)
+        if profile is None:
+            return None
+        return str(profile.id)
 
 
 class BaseProfileSerializer:
