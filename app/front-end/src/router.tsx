@@ -4,6 +4,7 @@ import HomePage from '@/pages/HomePage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import ErrorPage from '@/pages/ErrorPage'
 import LoginPage from '@/pages/LoginPage'
+import SignUpPage from '@/pages/SignUpPage'
 
 /**
  * Application router.
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
 		children: [
 			{ index: true, element: <HomePage /> },
 			{ path: 'login', element: <LoginPage /> },
+			{ path: 'signup', element: <SignUpPage /> },
 			{ path: '*', element: <NotFoundPage /> },
 		],
 	},
