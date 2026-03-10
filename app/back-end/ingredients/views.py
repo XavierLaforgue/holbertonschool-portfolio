@@ -50,11 +50,15 @@ class UnitHyperlinkedViewSet(viewsets.ModelViewSet):
 
 class IngredientBaseViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
-    permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name"]
     ordering_fields = ["name"]
     ordering = "name"
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
 
 class IngredientModelViewSet(IngredientBaseViewSet):
@@ -73,11 +77,15 @@ class IngredientHyperlinkedViewSet(IngredientBaseViewSet):
 
 class RecipeIngredientBaseViewSet(viewsets.ModelViewSet):
     queryset = RecipeIngredient.objects.all()
-    permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["ingredient__name", "recipe__title", "unit__name"]
     ordering_fields = ["created_at", "updated_at", "recipe__published_at"]
     ordering = ["-recipe__published_at", "-created_at"]
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
 
 class RecipeIngredientModelViewSet(RecipeIngredientBaseViewSet):
