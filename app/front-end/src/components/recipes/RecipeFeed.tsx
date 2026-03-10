@@ -1,50 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { apiFetch } from '@/lib/api'
 import RecipeCard from '@/components/recipes/RecipeCard'
-import type { Recipe, Difficulty } from '@/types'
+import type { Recipe } from '@/types'
 
 export default function RecipeFeed() {
 	const [recipes, setRecipes] = useState<Recipe[]>([])
-	const [difficulties, setDifficulties] = useState<Map<string, Difficulty>>(
-		new Map(),
-	)
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 
-	// To load recipes on click I could declare it directly and assign
-	// it to onClick event.
-	// To run on mount (first render) of the component I need to
-	// declare it in a
-	// useEffect. I could declare it inside it and not need to declare
-	// it as a dependency, but then it would not be available for the
-	// onClick. Declared directly on the component I need to declare it
-	// as a dependency to use it in the useEffect.
-	// Declared as a dependency, useEffect will run on mount of the
-	// component and on every "change" of loadRecipes. A new
-	// reference/version of loadRecipes is created everytime the
-	// component renders (mount + all subsequent re-renders), which triggers useEffect to
-	// execute loadRecipes which triggers a re-render, which triggers a
-	// new loadRecipes reference, ... ad infinitum.
-	// To create a reference to loadRecipes only once, at mount, and
-	// not at every render, we define it as a useCallback without
-	// dependencies.
-	// Without dependencies useCallback never changes after it is created.
-	// With dependencies it would change when those dependencies changed.
 	const loadRecipes = useCallback(async () => {
 		setIsLoading(true)
 		setError(null)
-
 		try {
-			const [recipesData, diffData] = await Promise.all([
-				apiFetch<Recipe[]>('/api/recipes/recipe_models/'),
-				apiFetch<Difficulty[]>('/api/recipes/difficulty_models/'),
-			])
-
-			setRecipes(recipesData)
-
-			const map = new Map<string, Difficulty>()
-			for (const d of diffData) map.set(d.id, d)
-			setDifficulties(map)
+			const data = await apiFetch<Recipe[]>('/api/recipes/recipe_models/')
+			setRecipes(data)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to load recipes')
 		} finally {
@@ -76,7 +45,6 @@ export default function RecipeFeed() {
 					className="flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-muted transition-colors hover:bg-surface-hover hover:text-foreground disabled:opacity-50"
 					aria-label="Refresh recipes"
 				>
-					{/* Refresh icon */}
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="0 0 20 20"
@@ -104,6 +72,7 @@ export default function RecipeFeed() {
 							<div className="h-40 rounded-t-xl bg-surface-hover" />
 							<div className="space-y-3 p-4">
 								<div className="h-5 w-3/4 rounded bg-surface-hover" />
+								<div className="h-3 w-1/4 rounded bg-surface-hover" />
 								<div className="h-4 w-full rounded bg-surface-hover" />
 								<div className="h-4 w-5/6 rounded bg-surface-hover" />
 								<div className="flex gap-3 pt-2">
@@ -141,11 +110,7 @@ export default function RecipeFeed() {
 			{!isLoading && !error && recipes.length > 0 && (
 				<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 					{recipes.map((recipe) => (
-						<RecipeCard
-							key={recipe.id}
-							recipe={recipe}
-							difficulty={difficulties.get(recipe.difficulty)}
-						/>
+						<RecipeCard key={recipe.id} recipe={recipe} />
 					))}
 				</div>
 			)}
