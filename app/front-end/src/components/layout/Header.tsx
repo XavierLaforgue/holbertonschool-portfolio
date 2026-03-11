@@ -18,7 +18,7 @@ export default function Header() {
 	const from = existingState?.from ?? currentPath
 
 	return (
-		<header className="flex items-center justify-between border-b border-border px-6 py-3">
+		<div className="flex items-center justify-between border-b border-border px-6 py-3">
 			<SiteLogo />
 
 			<div className="flex items-center gap-6">
@@ -29,7 +29,7 @@ export default function Header() {
 				) : (
 					<Link
 						to="/login"
-						// set the state
+						// set the location state
 						state={{ from }}
 						className="shrink-0 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary-hover transition-colors"
 					>
@@ -37,6 +37,6 @@ export default function Header() {
 					</Link>
 				)}
 			</div>
-		</header>
+		</div>
 	)
 }

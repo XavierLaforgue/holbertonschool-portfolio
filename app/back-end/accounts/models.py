@@ -105,7 +105,7 @@ class Profile(UUIDModel):
                                            max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    cleared_at = models.DateTimeField(blank=False, null=True)
+    cleared_at = models.DateTimeField(blank=False, null=True, default=None)
 
     def __str__(self) -> str:
         return self.user.email

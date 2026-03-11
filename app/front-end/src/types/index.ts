@@ -12,6 +12,7 @@ export interface User {
 	email: string
 	avatarUrl?: string
 	display_name?: string
+	profile_id: string | null   // Profile UUID — used to detect authorship
 	first_name: string
 	last_name: string
 }
@@ -30,16 +31,26 @@ export interface Recipe {
 	id: string
 	title: string
 	anime_custom: string
-	description: string
+	description: string | null
 	portions: number
 	estimated_time_minutes: number
-	published_at: string
+	published_at: string | null
 	created_at: string
 	updated_at: string
-	difficulty: string   // UUID → Difficulty
-	status: string       // UUID → RecipeStatus
-	author: string       // UUID → Profile
+	difficulty: { id: string; label: string } | null
+	status: { id: string; value: string }
+	author: ProfileSummary
 	main_photo: string | null
+}
+
+/** Payload for creating/updating a recipe's basic info. */
+export interface RecipeWrite {
+	title?: string
+	anime_custom?: string
+	description?: string
+	difficulty?: string   // UUID
+	portions?: number
+	estimated_time_minutes?: number
 }
 
 /** Shape returned by /api/recipes/difficulty_models/ */
@@ -113,14 +124,14 @@ export interface RecipeDetail {
 	id: string
 	title: string
 	anime_custom: string
-	description: string
+	description: string | null
 	portions: number
 	estimated_time_minutes: number
-	published_at: string
+	published_at: string | null
 	created_at: string
 	updated_at: string
 	author: ProfileSummary
-	difficulty: { label: string }
+	difficulty: { id: string; label: string } | null
 	status: RecipeStatus
 	steps: Step[]
 	ingredients: RecipeIngredient[]
@@ -149,9 +160,9 @@ export interface AuthContextType {
 	logout: () => Promise<void>
 }
 
-/* --- Styling --- */
+// --- Styling ------------------------
 
-export interface ItadakimasuProps {
-	whichMargin?: string
-	repCount?: number
-}
+// export interface ItadakimasuProps {
+// 	whichMargin?: string
+// 	repCount?: number
+// }

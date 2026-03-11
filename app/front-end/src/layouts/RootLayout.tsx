@@ -1,15 +1,19 @@
 import { Outlet } from 'react-router-dom'
 import Header from '@/components/layout/Header.tsx'
 import Footer from '@/components/layout/Footer.tsx'
+import useScrollToHash from '@/hooks/useScrollToHash'
 
 /**
  * Root layout — wraps every route.
  * <Outlet /> renders the matched child route.
  */
 export default function RootLayout() {
+	useScrollToHash()
 	return (
 		<div className="flex min-h-screen flex-col">
-			<Header />
+			<header>
+				<Header />
+			</header>
 
 			<main className="flex-1">
 				<Outlet />

@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status, filters, generics
+from rest_framework.views import APIView
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from django.db.models import Prefetch
@@ -38,7 +39,8 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
     """
     Shared behavior for recipe viewsets.
     GET /recipes/ - List with summaries (Published only)
-    GET /recipes/<id>/ - Detail (author sees all statuses; others see Published)
+    GET /recipes/<id>/ - Detail (author sees all statuses; others see
+    Published)
     """
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
@@ -79,18 +81,19 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
             return queryset
 
         if self.action == "retrieve":
-            # Detail: author can see their own drafts/ready; others only Published
+            # Detail: author can see their own drafts/ready; others only
+            # Published
             queryset = self._get_base_queryset()
-            # user can see details of published recipes and their own recipes 
+            # Authenticated users see: all Published recipes + their own
+            # recipes (any status). The "|" is a queryset union; distinct()
+            # removes duplicates when an author views their own published
+            # recipe.
             if self.request.user.is_authenticated:
-                queryset = queryset.filter(
-                    status__value="Published"
-                ) | self._get_base_queryset().filter(  # Union of querysets 
-                # for: published status and authenticated user is the owner 
+                published = queryset.filter(status__value="Published")
+                own = self._get_base_queryset().filter(
                     author__user=self.request.user
                 )
-                # De-duplicate
-                queryset = queryset.distinct()
+                queryset = (published | own).distinct()
             else:
                 queryset = queryset.filter(status__value="Published")
             queryset = queryset.select_related(
@@ -135,7 +138,8 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
         new_value = request.data.get("value")
         if new_value not in ("Draft", "Ready", "Published"):
             return Response(
-                {"detail": "Invalid status value. Use Draft, Ready, or Published."},
+                {"detail": "Invalid status value. Use Draft, Ready, or "
+                    "Published."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -175,7 +179,7 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
         recipe.save(update_fields=["status", "published_at"])
 
         serializer = self.get_serializer(recipe)  # serializer chosen by view/
-                                                  # action
+        # action
         return Response(serializer.data)
 
 
@@ -519,6 +523,67 @@ class RecipePhotoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """Nested endpoint for a specific recipe photo resource."""
     serializer_class = RecipePhotoModelSerializer
     parser_classes = [MultiPartParser, FormParser]
+
+
+class MyRecipesGroupedAPIView(APIView):
+    """Return the current user's recipes grouped by status + saved recipes."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    @staticmethod
+    def _with_summary_relations(queryset):
+        return queryset.select_related(
+            "author",
+            "difficulty",
+            "status",
+        ).prefetch_related(
+            Prefetch(
+                "photos",
+                queryset=RecipePhoto.objects.filter(position=1),
+            ),
+        )
+
+    def get(self, request):
+        profile = request.user.profile
+
+        authored_base = self._with_summary_relations(
+            Recipe.objects.filter(author=profile)
+        )
+
+        saved_base = self._with_summary_relations(
+            Recipe.objects.filter(
+                saved_copies__saver=profile,
+                author__user__deleted_at__isnull=True,
+                status__value="Published",
+            ).distinct()
+        )
+
+        data = {
+            "draft": RecipeSummarySerializer(
+                authored_base.filter(status__value="Draft")
+                .order_by("-updated_at", "-created_at"),
+                many=True,
+                context={"request": request},
+            ).data,
+            "ready": RecipeSummarySerializer(
+                authored_base.filter(status__value="Ready")
+                .order_by("-updated_at", "-created_at"),
+                many=True,
+                context={"request": request},
+            ).data,
+            "published": RecipeSummarySerializer(
+                authored_base.filter(status__value="Published")
+                .order_by("-published_at", "-created_at"),
+                many=True,
+                context={"request": request},
+            ).data,
+            "saved": RecipeSummarySerializer(
+                saved_base.order_by("-published_at", "-created_at"),
+                many=True,
+                context={"request": request},
+            ).data,
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
     lookup_url_kwarg = "photo_id"
 
     def get_permissions(self):

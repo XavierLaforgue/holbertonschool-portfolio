@@ -34,6 +34,7 @@ from accounts.views_auth import (
     LogoutView,
     MeView,
 )
+from recipes.views import MyRecipesGroupedAPIView
 
 
 @api_view(["GET"])
@@ -79,6 +80,8 @@ urlpatterns = [
     ),
     # Current-user shortcut:
     path('api/accounts/me/', MeView.as_view(), name='me'),
+    path('api/me/recipes/', MyRecipesGroupedAPIView.as_view(),
+         name='me-recipes'),
 ]
 
 # To serve static media files via Django we would typically do:
