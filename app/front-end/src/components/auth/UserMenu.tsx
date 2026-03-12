@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import avatarIcon from '@/assets/icon.svg'
+import UserMenuButton from '@/components/auth/UserMenuButton'
+import UserMenuDropdown from '@/components/auth/UserMenuDropdown'
 const POINTER_CHOICE = 'pointer'  // options: pointer or mouse
 
 export default function UserMenu() {
@@ -25,26 +26,25 @@ export default function UserMenu() {
 
 	// TODO: change this to use actual displayName from the profile
 	// (once the ProfileUpdatePage will be in service)
-	const displayName = (
-		user.display_name?.startsWith("unnamed_user_")
-		) ? user.email : user.display_name;
+	const displayName =
+		user.display_name && !user.display_name.startsWith('unnamed_user_')
+			? user.display_name
+			: user.email
+
+	async function handleLogout() {
+		await logout()
+		setOpen(false)
+	}
 
 	return (
 		// use `position: relative` so that the child dropdown menu can
 		// be positioned with respect to it using `position: absolute`
 		<div className="relative" ref={menuRef}>
-			<button
-				// toggle open/closed on click of the button
+			<UserMenuButton
+				displayName={displayName}
+				avatarSrc={user.avatarUrl || avatarIcon}
 				onClick={() => setOpen((prev) => !prev)}
-				className="flex items-center gap-2 rounded-full p-1 hover:bg-surface-hover hover:cursor-pointer transition-colors"
-			>
-				<img
-					src={user.avatarUrl || avatarIcon}
-					alt={`${displayName}'s avatar`}
-					className="h-8 w-8 rounded-full object-cover"
-				/>
-				<span className="text-sm font-medium">{displayName}</span>
-			</button>
+			/>
 
 			{open && (
 				// give dropdown `position: absolute` so it is out of
@@ -57,23 +57,7 @@ export default function UserMenu() {
 				// `right: 0`, however, sets its right border position
 				// to match the right border position of the parent
 				// `div` with `relative` positioning. 
-				<div className="absolute flex flex-col right-0 mt-2 w-48 rounded-md border border-input bg-surface py-1 shadow-lg z-1">
-					{/* TODO: add icons to the dropdown menu items */}
-					<Link to="/recipes" 
-						className="w-full px-4 py-2 text-left text-sm text-subtle hover:bg-surface-hover hover:cursor-pointer transition-colors"
-						>
-						My recipes
-					</Link>
-					<button
-						onClick={async () => {
-							await logout()
-							setOpen(false)
-						}}
-						className="w-full px-4 py-2 text-left text-sm text-subtle hover:bg-surface-hover hover:cursor-pointer transition-colors"
-					>
-						Log out
-					</button>
-				</div>
+				<UserMenuDropdown onLogout={handleLogout} />
 			)}
 		</div>
 	)

@@ -157,9 +157,9 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
                 errors.append("Recipe must have a title.")
             if not recipe.anime_custom.strip():
                 errors.append("Recipe must have an anime source.")
-            if not recipe.ingredients.exists():
+            if not recipe.ingredients.exists():  # type: ignore
                 errors.append("Recipe must have at least one ingredient.")
-            if not recipe.steps.exists():
+            if not recipe.steps.exists():  # type: ignore
                 errors.append("Recipe must have at least one step.")
             if errors:
                 return Response(
