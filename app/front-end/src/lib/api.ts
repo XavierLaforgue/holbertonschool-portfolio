@@ -11,7 +11,7 @@
  * On a 401 the wrapper tries to refresh the access token once via
  * POST /api/token/refresh/ and retries the original request.
  */
-import type { User } from '@/types'
+import type { User, Recipe, RecipeDetail, RecipeWrite, Step } from '@/types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string
 
@@ -179,9 +179,153 @@ export async function apiLogout(): Promise<void> {
 
 // -------------Recipe helpers--------------------
 
+/** Create a blank draft recipe owned by the current user. */
+export async function apiCreateRecipe(): Promise<Recipe> {
+	return apiFetch<Recipe>('/api/recipes/recipe_models/', { method: 'POST' })
+}
+
+/** Partial-update the recipe's basic info fields. */
+export async function apiUpdateRecipe(
+	id: string,
+	data: RecipeWrite,
+): Promise<RecipeDetail> {
+	return apiFetch<RecipeDetail>(`/api/recipes/recipe_models/${id}/`, {
+		method: 'PATCH',
+		body: JSON.stringify(data),
+	})
+}
+
+/** Fetch full recipe detail. */
+export async function apiFetchRecipe(id: string): Promise<RecipeDetail> {
+	return apiFetch<RecipeDetail>(`/api/recipes/recipe_models/${id}/`)
+}
+
+/**
+ * Change the recipe status.
+ * value: "Draft" | "Ready" | "Published"
+ */
+export async function apiSetRecipeStatus(
+	id: string,
+	value: string,
+): Promise<RecipeDetail> {
+	return apiFetch<RecipeDetail>(`/api/recipes/recipe_models/${id}/status/`, {
+		method: 'PATCH',
+		body: JSON.stringify({ value }),
+	})
+}
+
+/** Save a copy of a published recipe (non-author). */
 export async function apiSaveRecipe(data: Record<string, unknown>): Promise<unknown> {
 	return apiFetch('/api/recipes/savedrecipe_models/', {
 		method: 'POST',
 		body: JSON.stringify(data),
+	})
+}
+
+// -------------Step helpers--------------------
+
+export async function apiCreateStep(
+	recipeId: string,
+	data: { number: number; description: string; duration?: string },
+): Promise<Step> {
+	return apiFetch<Step>(`/api/recipes/${recipeId}/steps/`, {
+		method: 'POST',
+		body: JSON.stringify(data),
+	})
+}
+
+export async function apiUpdateStep(
+	recipeId: string,
+	stepId: string,
+	data: Partial<{ description: string; duration: string | null }>,
+): Promise<Step> {
+	return apiFetch<Step>(`/api/recipes/${recipeId}/steps/${stepId}/`, {
+		method: 'PATCH',
+		body: JSON.stringify(data),
+	})
+}
+
+export async function apiDeleteStep(
+	recipeId: string,
+	stepId: string,
+): Promise<void> {
+	return apiFetch<void>(`/api/recipes/${recipeId}/steps/${stepId}/`, {
+		method: 'DELETE',
+	})
+}
+
+export async function apiSwapSteps(
+	recipeId: string,
+	stepA: { id: string; number: number },
+	stepB: { id: string; number: number },
+): Promise<Step[]> {
+	return apiFetch<Step[]>(`/api/recipes/${recipeId}/steps/`, {
+		method: 'PATCH',
+		body: JSON.stringify({ swap: [stepA, stepB] }),
+	})
+}
+
+// -------------Ingredient helpers--------------------
+
+export async function apiCreateIngredient(name: string): Promise<{ id: string; name: string }> {
+	return apiFetch<{ id: string; name: string }>('/api/ingredients/ingredient_models/', {
+		method: 'POST',
+		body: JSON.stringify({ name }),
+	})
+}
+
+export async function apiAddRecipeIngredient(data: {
+	recipe: string
+	ingredient: string
+	unit: string
+	quantity: number
+}): Promise<unknown> {
+	return apiFetch('/api/ingredients/recipeingredient_models/', {
+		method: 'POST',
+		body: JSON.stringify(data),
+	})
+}
+
+export async function apiDeleteRecipeIngredient(id: string): Promise<void> {
+	return apiFetch<void>(`/api/ingredients/recipeingredient_models/${id}/`, {
+		method: 'DELETE',
+	})
+}
+
+// -------------Photo helpers--------------------
+
+/**
+ * Upload a photo for a recipe.
+ * Uses FormData so the browser sets multipart/form-data content-type automatically.
+ */
+export async function apiUploadPhoto(
+	recipeId: string,
+	file: File,
+	position: number,
+): Promise<unknown> {
+	const form = new FormData()
+	form.append('image', file)
+	form.append('position', String(position))
+
+	const url = `${API_BASE_URL}/api/recipes/${recipeId}/photos/`
+	const res = await fetch(url, {
+		method: 'POST',
+		credentials: 'include',
+		body: form,
+		// Do NOT set Content-Type — browser sets it with the multipart boundary
+	})
+	if (!res.ok) {
+		const body = await res.text().catch(() => '')
+		throw new ApiError(res.status, res.statusText, url, body)
+	}
+	return res.json()
+}
+
+export async function apiDeletePhoto(
+	recipeId: string,
+	photoId: string,
+): Promise<void> {
+	return apiFetch<void>(`/api/recipes/${recipeId}/photos/${photoId}/`, {
+		method: 'DELETE',
 	})
 }

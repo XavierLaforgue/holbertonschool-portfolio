@@ -9,12 +9,12 @@ export default function LoginPage() {
 	const location = useLocation()
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
-	const [error, setError] = useState<string | null>(null)
+	const authState = location.state as { from?: string; error?: string } | null
+	const [error, setError] = useState<string | null>(authState?.error ?? null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	// We arrive here from a page that set their location in the state
 	// as the value with key `from`.
 	// We recover that state at the authentication-related pages (login/signup)
-	const authState = location.state as { from?: string } | null
 	// extract `from` value safely from the state
 	const requestedFrom = authState?.from
 	// store it into `from` variable safely and if it doesn't involve

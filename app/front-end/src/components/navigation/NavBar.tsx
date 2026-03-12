@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
+import { apiCreateRecipe } from '@/lib/api'
 
-const links = [
+const navLinks = [
 	{ to: '/#featured-recipes', label: 'Explore' },
-	{ to: '/create', label: 'Create' },
-	{ to: '/experience', label: 'Experience' },
+	// { to: '/experience', label: 'Experience' },
 ]
 
 const linkClasses =
@@ -12,16 +13,52 @@ const linkClasses =
 
 export default function NavBar() {
 	const [open, setOpen] = useState(false)
+	const [creating, setCreating] = useState(false)
+	const { user } = useAuth()
+	const navigate = useNavigate()
+	const location = useLocation()
+
+	async function handleCreate() {
+		if (!user) {
+			const from = `${location.pathname}${location.search}${location.hash}`
+			navigate('/login', {
+				state: { from, error: 'Please log in to create recipes.' },
+			})
+			return
+		}
+		setCreating(true)
+		try {
+			const recipe = await apiCreateRecipe()
+			navigate(`/recipes/${recipe.id}/edit`)
+		} finally {
+			setCreating(false)
+		}
+	}
+
+	const CreateButton = ({ mobile }: { mobile?: boolean }) => (
+		<button
+			onClick={() => { setOpen(false); handleCreate() }}
+			disabled={creating}
+			className={
+				mobile
+					? 'block w-full text-left px-4 py-2 text-sm text-subtle hover:bg-surface-hover transition-colors disabled:opacity-50 cursor-pointer z-10'
+					: `${linkClasses} cursor-pointer disabled:opacity-50`
+			}
+		>
+			{creating ? 'Creating…' : 'Create'}
+		</button>
+	)
 
 	return (
 		<>
 			{/* Desktop nav */}
 			<nav className="hidden md:flex items-center gap-4">
-				{links.map((l) => (
-					<Link key={l.to} to={l.to} className={linkClasses}>
-						{l.label}
+				{navLinks.map((link) => (
+					<Link key={link.to} to={link.to} className={linkClasses}>
+						{link.label}
 					</Link>
 				))}
+				<CreateButton />
 			</nav>
 
 			{/* Mobile hamburger */}
@@ -43,17 +80,18 @@ export default function NavBar() {
 				</button>
 
 				{open && (
-					<nav className="absolute right-0 mt-2 w-44 rounded-md border border-input bg-surface py-1 shadow-lg">
-						{links.map((l) => (
+					<nav className="absolute right-0 mt-2 w-44 rounded-md border border-input bg-surface py-1 shadow-lg z-1000">
+						{navLinks.map((link) => (
 							<Link
-								key={l.to}
-								to={l.to}
+								key={link.to}
+								to={link.to}
 								onClick={() => setOpen(false)}
 								className="block px-4 py-2 text-sm text-subtle hover:bg-surface-hover transition-colors"
 							>
-								{l.label}
+								{link.label}
 							</Link>
 						))}
+						<CreateButton mobile />
 					</nav>
 				)}
 			</div>
