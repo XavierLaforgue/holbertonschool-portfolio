@@ -589,11 +589,10 @@ class MyRecipesGroupedAPIView(APIView):
         return Response(data, status=status.HTTP_200_OK)
     lookup_url_kwarg = "photo_id"
 
-    def get_permissions(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
-
+    # def get_permissions(self):
+    #     if self.request.method in permissions.SAFE_METHODS:
+    #         return [permissions.AllowAny()]
+    #     return [permissions.IsAuthenticated()]
     def get_queryset(self):  # type: ignore[override]
         recipe_id = self.kwargs["recipe_id"]
         return RecipePhoto.objects.filter(recipe_id=recipe_id)
