@@ -23,4 +23,6 @@ Password may not be provided since they need to be input when prompted anyway.
 ```python
 uv run manage.py create_difficulties
 uv run manage.py create_recipe_statuses
+uv run manage.py create_unit_kinds
+uv run manage.py create_units
 ```
