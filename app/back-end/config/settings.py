@@ -87,17 +87,25 @@ if DEBUG:
         "rest_framework.renderers.BrowsableAPIRenderer",
     ]
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
+        # read token from cookies and write it into them (good for browser
+        # SPAs):
         "accounts.authentication.CookieJWTAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
+        # read cookies from the header (Authorization Bearer token), useful
+        # for mobile apps:
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # "rest_framework.authentication.SessionAuthentication",
     ]
 else:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
         "rest_framework.renderers.JSONRenderer",
     ]
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
+        # read token from cookies and write it into them (good for browser
+        # SPAs):
         "accounts.authentication.CookieJWTAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # read cookies from the header (Authorization Bearer token), useful
+        # for mobile apps:
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
     ]
 
 SIMPLE_JWT = {
