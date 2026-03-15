@@ -16,9 +16,16 @@ class CookieJWTAuthentication(JWTAuthentication):
     def authenticate(self, request):
         """Returns None if no token in cookies, returns tuple with user and
         token otherwise"""
-        raw_token = request.COOKIES.get("access_token")
-        if raw_token is None:
+        if "HTTP_AUTHORIZATION" in request.META:
+            return None  # DRF treats `None` as "no authentication was done" 
+        token = request.COOKIES.get("access_token")
+        if token is None:
             return None
-
-        validated_token = self.get_validated_token(raw_token)
-        return self.get_user(validated_token), validated_token
+        # partially use logic from the parent class:
+        # validated_token = self.get_validated_token(token)
+        # user = self.get_user(validated_token)
+        # return (user, validated_token)
+        # ---------------------------------------
+        # fully use logic from parent class:
+        request.META["HTTP_AUTHORIZATION"] = f"Bearer {token}"
+        return super().authenticate(request)
