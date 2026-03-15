@@ -3,7 +3,9 @@ from django.db import models
 from core.models import UUIDModel
 # from core.models import UUIDPkMixin
 # to create a CustomUser with UUID4 as identifier instead of an int:
-from django.contrib.auth.models import AbstractUser
+from typing import Any
+
+from django.contrib.auth.models import AbstractUser, UserManager
 # to link models to the model used for authentication:
 from django.conf import settings
 from django.db.models.signals import post_save
@@ -11,8 +13,42 @@ from django.dispatch import receiver
 from .validators import person_name_validator
 
 
-# TODO: build a customuser manager to enforce constraints at all levels
-# (admin, API, shell)
+class CustomUserManager(UserManager):
+    def create_user(
+        self,
+        username: str | None = None,
+        email: str | None = None,
+        password: str | None = None,
+        **extra_fields: Any,
+    ):
+        if not email:
+            raise ValueError("An email address is required")
+        email = self.normalize_email(email)
+        extra_fields.setdefault("username", username or email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(
+        self,
+        username: str | None = None,
+        email: str | None = None,
+        password: str | None = None,
+        **extra_fields: Any,
+    ):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
+        return self.create_user(
+            username=username,
+            email=email,
+            password=password,
+            **extra_fields,
+        )
 
 
 class CustomUser(
@@ -36,6 +72,7 @@ class CustomUser(
                               max_length=150)
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []  # for createsuperuser: only email + password
+    objects = CustomUserManager()
     # Optional, but when provided must look like a person name.
     first_name = models.CharField(
         max_length=150,
