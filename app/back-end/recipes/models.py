@@ -14,9 +14,9 @@ from recipes.validators import (validate_image_file_size,
 
 class Difficulty(UUIDModel):
     label = models.CharField(blank=False, null=False, unique=True,
-                             max_length=25)
+                             max_length=25, default="Easy")
     value = models.PositiveSmallIntegerField(blank=False, null=False,
-                                             unique=True)
+                                             unique=True, default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -43,8 +43,8 @@ class RecipeStatus(UUIDModel):
 
 
 class RecipeBase(UUIDModel):
-    title = models.CharField(blank=True, null=False, max_length=150,
-                             default="")
+    title = models.CharField(blank=False, null=False, max_length=150,
+                             default="Untitled recipe")
     # TODO: create Anime model (in the Animes app)
     # anime = models.ForeignKey(
     #     Anime,
@@ -54,8 +54,8 @@ class RecipeBase(UUIDModel):
     #     null=False,
     #     blank=False
     # )
-    anime_custom = models.CharField(blank=True, null=False, max_length=150,
-                                    default="")
+    anime_custom = models.CharField(blank=False, null=False, max_length=150,
+                                    default="Undeclared anime")
     description = models.TextField(blank=True, null=True, max_length=500)
     difficulty = models.ForeignKey(
         Difficulty,
@@ -63,20 +63,20 @@ class RecipeBase(UUIDModel):
         # Use a dynamic related_name so each concrete subclass
         # gets its own reverse accessor on Difficulty
         related_name="%(class)s_recipes",
-        null=True,
+        null=False,
     )
     portions = models.PositiveSmallIntegerField(null=False, blank=False,
                                                 default=1)
-    estimated_time_minutes = models.PositiveSmallIntegerField(null=False,
+    estimated_time_minutes = models.PositiveSmallIntegerField(null=True,
                                                               blank=False,
-                                                              default=0)
+                                                              default=None)
     status = models.ForeignKey(
         RecipeStatus,
         on_delete=models.PROTECT,
         # Use a dynamic related_name so each concrete subclass
         # gets its own reverse accessor on RecipeStatus
         related_name="%(class)s_recipes",
-        # null=True
+        null=False
     )
     published_at = models.DateTimeField(blank=True, null=True,
                                         default=None)
@@ -92,7 +92,7 @@ class Recipe(RecipeBase):
         Profile,
         on_delete=models.CASCADE,
         related_name="authored_recipes",  # for profile.authored_recipes.all()
-        # null=True
+        null=False
     )
 
     def __str__(self) -> str:
