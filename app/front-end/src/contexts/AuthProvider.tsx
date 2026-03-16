@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	// the /me endpoint
 	useEffect(() => {
 		apiFetchMe()
-			.then(setUser)
+			.then(res => setUser(res))
 			.catch(() => {
 				// Not logged in or token expired.
 				// Empty so the "error" response is treating as
@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				// TODO: improve by defining the expected "error"
 				// status codes of the response instead of considering
 				// every error code as expected/OK.
+				setUser(null)
 			})
 			.finally(() => setIsLoading(false))
 	}, [])
@@ -64,6 +65,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		[login],
 	)
 
+	const verifyAuth = useCallback(async () => {
+		try {
+			const me = await apiFetchMe()
+			setUser(me)
+			return me
+		} catch {
+			setUser(null)
+			return null
+		}
+	}, [])
+
 	const logout = useCallback(async () => {
 		try {
 			await apiLogout()  // backend clears cookies: pattern pre-migration 
@@ -77,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	}, [])
 
 	return (
-		<AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
+		<AuthContext.Provider value={{ user, isLoading, login, signup, verifyAuth, logout }}>
 			{children}
 		</AuthContext.Provider>
 	)

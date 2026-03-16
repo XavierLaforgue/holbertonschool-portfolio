@@ -8,26 +8,24 @@ const navLinks = [
 	// { to: '/experience', label: 'Experience' },
 ]
 
-const linkClasses =
-	'text-sm font-medium text-subtle hover:text-foreground transition-colors'
-
 export default function NavBar() {
 	const [open, setOpen] = useState(false)
 	const [creating, setCreating] = useState(false)
-	const { user } = useAuth()
+	const { verifyAuth } = useAuth()
 	const navigate = useNavigate()
 	const location = useLocation()
 
 	async function handleCreate() {
-		if (!user) {
-			const from = `${location.pathname}${location.search}${location.hash}`
-			navigate('/login', {
-				state: { from, error: 'Please log in to create recipes.' },
-			})
-			return
-		}
 		setCreating(true)
 		try {
+			const me = await verifyAuth()
+			if (!me) {
+				const from = `${location.pathname}${location.search}${location.hash}`
+				navigate('/login', {
+					state: { from, error: 'Please log in to create recipes.' },
+				})
+				return
+			}
 			const recipe = await apiCreateRecipe()
 			navigate(`/recipes/${recipe.id}/edit`)
 		} finally {
@@ -35,6 +33,9 @@ export default function NavBar() {
 		}
 	}
 
+	const linkClasses =
+	'text-sm font-medium text-subtle hover:text-foreground transition-colors'
+	
 	const CreateButton = ({ mobile }: { mobile?: boolean }) => (
 		<button
 			onClick={() => { setOpen(false); handleCreate() }}

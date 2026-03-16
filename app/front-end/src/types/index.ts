@@ -33,7 +33,7 @@ export interface Recipe {
 	anime_custom: string
 	description: string | null
 	portions: number
-	estimated_time_minutes: number
+	estimated_time_minutes: number | null
 	published_at: string | null
 	created_at: string
 	updated_at: string
@@ -153,6 +153,9 @@ export interface AuthContextType {
 		firstName?: string,
 		lastName?: string,
 	) => Promise<void>
+	// Verify auth by calling /me. Refreshes token on 401 (via apiFetch).
+	// Updates context user and returns it, or null if not authenticated.
+	verifyAuth: () => Promise<User | null>
 	// requests backend to remove cookies and cleares them if backend
 	// call fails
 	// TODO: update logout to not try to touch the cookies when they
