@@ -1,10 +1,11 @@
 from rest_framework import viewsets, permissions, status, filters, generics
 from rest_framework.views import APIView
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from django.db.models import Prefetch
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.utils import timezone
@@ -71,7 +72,7 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
             # Public feed: Published only
             queryset = self._get_base_queryset().filter(
                 status__value="Published"
-            ).order_by("-published_at", "-created_at")
+            ).order_by("-published_at", "-updated_at")
             queryset = queryset.prefetch_related(
                 Prefetch(
                     "photos",
@@ -110,6 +111,21 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
         return self._get_base_queryset().select_related(
             "author", "difficulty", "status"
         )
+
+    def get_object(self):  # type: ignore[override]
+        try:
+            return super().get_object()
+        except Http404:
+            # If the request looks like it *should* be authenticated (cookies 
+            # present), return 401 so the frontend can refresh + retry instead
+            # of showing 404.
+            if (self.action == "retrieve"
+                    and not self.request.user.is_authenticated):
+                if (self.request.COOKIES.get("access_token")
+                        or self.request.COOKIES.get("refresh_token")):
+                    # throw 401 instead of the caught 404
+                    raise NotAuthenticated("Authentication expired.")
+            raise  # throw original 404
 
     def _require_author(self, recipe):
         """Raise 403 if the current user is not the recipe's author."""
