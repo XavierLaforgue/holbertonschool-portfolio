@@ -13,8 +13,8 @@ export interface User {
 	avatarUrl?: string
 	display_name?: string
 	profile_id: string | null   // Profile UUID — used to detect authorship
-	first_name: string
-	last_name: string
+	first_name?: string
+	last_name?: string
 }
 
 // -------------- Profiles------------------------
