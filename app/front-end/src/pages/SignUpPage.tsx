@@ -1,6 +1,7 @@
 import { useState, type SubmitEvent } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { ApiError } from '../lib/api'
 
 export default function SignUpPage() {
 	const { signup } = useAuth()
@@ -10,12 +11,12 @@ export default function SignUpPage() {
 	const [lastName, setLastName] = useState('')
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
-	const [error, setError] = useState<string | null>(null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	// We arrive here from a page that set their location in the state
 	// as the value with key `from`.
 	// We recover that state at the authentication-related pages (login/signup)
-	const authState = location.state as { from?: string } | null
+	const authState = location.state as { from?: string; error?: string } | null
+	const [error, setError] = useState<string | null>(authState?.error ?? null)
 	// extract `from` value safely from the state
 	const requestedFrom = authState?.from
 	// store it into `from` variable safely and if it doesn't involve
@@ -32,9 +33,13 @@ export default function SignUpPage() {
 				lastName || undefined)
 			navigate(from, { replace: true })
 		} catch (err) {
-			setError(
-				err instanceof Error ? err.message : 'Sign-up failed.',
-			)
+			if (err instanceof ApiError && err.status === 401) {
+				setError('Invalid email, password, or name(s).')
+			} else {
+				setError(
+					err instanceof Error ? err.message : 'Sign-up failed.',
+				)
+			}
 		} finally {
 			setIsSubmitting(false)
 		}
