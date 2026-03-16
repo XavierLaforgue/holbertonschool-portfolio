@@ -79,7 +79,7 @@ urlpatterns = [
         ])
     ),
     # Current-user shortcut:
-    path('api/accounts/me/', MeView.as_view(), name='me'),
+    path('api/me/', MeView.as_view(), name='me'),
     path('api/me/recipes/', MyRecipesGroupedAPIView.as_view(),
          name='me-recipes'),
 ]
