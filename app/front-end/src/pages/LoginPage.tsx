@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from 'react'
+import { useState, useEffect, type SubmitEvent } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { ApiError } from '../lib/api'
@@ -12,6 +12,11 @@ export default function LoginPage() {
 	const authState = location.state as { from?: string; error?: string } | null
 	const [error, setError] = useState<string | null>(authState?.error ?? null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
+
+	// Update error state when location.state changes (e.g., redirected to /login again)
+	useEffect(() => {
+		setError(authState?.error ?? null)
+	}, [authState?.error])
 	// We arrive here from a page that set their location in the state
 	// as the value with key `from`.
 	// We recover that state at the authentication-related pages (login/signup)
