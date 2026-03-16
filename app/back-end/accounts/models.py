@@ -51,6 +51,15 @@ class CustomUserManager(UserManager):
         )
 
 
+def _default_display_name():
+    n = 1
+    while True:
+        display_name = f"unnamed_user_{n}"
+        if not Profile.objects.filter(display_name=display_name).first():
+            return display_name
+        n += 1
+
+
 class Profile(UUIDModel):
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
@@ -59,17 +68,8 @@ class Profile(UUIDModel):
     birth_date = models.DateField(blank=True, null=True, default=None)
     # TODO: make `display_name` nullable and let front-end replace other
     # user's `display_name` for `unnamed` and own's `display_name` for `email`
-
-    @staticmethod
-    def default_display_name():
-        n = 1
-        while True:
-            display_name = f"unnamed_user_{n}"
-            if not Profile.objects.filter(display_name=display_name).first():
-                return display_name
-            n += 1
     display_name = models.CharField(blank=False, null=False,
-                                    default=default_display_name,
+                                    default=_default_display_name,
                                     max_length=150,
                                     unique=True
                                     )
