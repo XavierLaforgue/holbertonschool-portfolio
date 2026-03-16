@@ -197,11 +197,13 @@ class RecipeModelViewSet(BaseRecipeViewSet):
         """Create a blank draft recipe owned by the current user."""
         from accounts.models import CustomUser
         draft_status = get_object_or_404(RecipeStatus, value="Draft")
+        easy_difficulty = get_object_or_404(Difficulty, label="Easy")
         if not isinstance(self.request.user, CustomUser):
             raise PermissionDenied("User must be a CustomUser instance.")
         serializer.save(
             author=self.request.user.profile,
             status=draft_status,
+            difficulty=easy_difficulty
         )
 
     def perform_update(self, serializer):
