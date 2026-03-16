@@ -20,7 +20,7 @@ export default function UserMenuButton({
 				alt={`${displayName}'s avatar`}
 				className="h-8 w-8 rounded-full object-cover"
 			/>
-			<span className="text-sm font-medium">{displayName}</span>
+			<span className="hidden md:inline text-sm font-medium">{displayName}</span>
 		</button>
 	)
 }
