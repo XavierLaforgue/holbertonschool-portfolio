@@ -1,7 +1,7 @@
 import { useState, type SubmitEvent } from 'react'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '../hooks/useAuth'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
-import { ApiError } from '@/lib/api'
+import { ApiError } from '../lib/api'
 
 export default function LoginPage() {
 	const { login } = useAuth()

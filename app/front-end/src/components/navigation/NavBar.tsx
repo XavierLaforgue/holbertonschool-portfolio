@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
-import { apiCreateRecipe } from '@/lib/api'
+import { useAuth } from '../../hooks/useAuth'
+import { apiCreateRecipe } from '../../lib/api-recipes'
 
 const navLinks = [
 	{ to: '/#featured-recipes', label: 'Explore' },

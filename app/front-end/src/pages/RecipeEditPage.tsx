@@ -1,25 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
-import {
-	apiFetchRecipe,
-	apiUpdateRecipe,
-	apiCreateStep,
-	apiUpdateStep,
-	apiDeleteStep,
-	apiSwapSteps,
-	apiCreateIngredient,
-	apiAddRecipeIngredient,
-	apiDeleteRecipeIngredient,
-	apiUploadPhoto,
-	apiDeletePhoto,
-	apiFetch,
-} from '@/lib/api'
-import type { RecipeDetail, Step, RecipeIngredient, RecipePhoto, Difficulty } from '@/types'
-import BasicInfoForm from '@/components/recipes/edit/BasicInfoForm'
-import IngredientList from '@/components/recipes/edit/IngredientList'
-import StepList from '@/components/recipes/edit/StepList'
-import PhotoGrid from '@/components/recipes/edit/PhotoGrid'
+import { useAuth } from '../hooks/useAuth'
+import { apiFetch } from '../lib/api'
+import { apiFetchRecipe, apiUpdateRecipe } from '../lib/api-recipes'
+import { apiCreateStep, apiUpdateStep, apiDeleteStep, apiSwapSteps } from '../lib/api-steps'
+import { apiCreateIngredient, apiAddRecipeIngredient, apiDeleteRecipeIngredient } from '../lib/api-ingredients'
+import { apiUploadPhoto, apiDeletePhoto } from '../lib/api-photos'
+import type { RecipeDetail, Step, RecipeIngredient, RecipePhoto, Difficulty } from '../types'
+import BasicInfoForm from '../components/recipes/edit/BasicInfoForm'
+import IngredientList from '../components/recipes/edit/IngredientList'
+import StepList from '../components/recipes/edit/StepList'
+import PhotoGrid from '../components/recipes/edit/PhotoGrid'
 
 interface Unit { id: string; name: string; symbol: string }
 
