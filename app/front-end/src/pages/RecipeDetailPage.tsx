@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { apiFetch, apiSaveRecipe, apiSetRecipeStatus } from '@/lib/api'
-import { useAuth } from '@/hooks/useAuth'
+import { DIFF_COLORS, formatTime } from '../utils/recipe'
 import RecipeDetailActions from '@/components/recipes/recipedetail/RecipeDetailActions'
 import RecipeDetailBanner from '@/components/recipes/recipedetail/RecipeDetailBanner'
 import RecipeDetailDescription from '@/components/recipes/recipedetail/RecipeDetailDescription'
