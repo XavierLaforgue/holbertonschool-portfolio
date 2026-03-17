@@ -254,6 +254,8 @@ class BaseSavedRecipeSerializer:
     class Meta:
         model = SavedRecipe
         fields = "__all__"
+        read_only_fields = ("saver", "original_recipe", "original_author",
+                            "saved_at", "status")
 
 
 class SavedRecipeSummarySerializer(BaseSavedRecipeSerializer,
