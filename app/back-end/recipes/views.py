@@ -277,6 +277,24 @@ class BaseSavedRecipeViewSet(viewsets.ModelViewSet):
             return self.summary_serializer_class
         return super().get_serializer_class()
 
+    def perform_create(self, serializer):
+        """Set saver, original_recipe, original_author, and status
+        server-side.
+        """
+        from accounts.models import CustomUser
+        if not isinstance(self.request.user, CustomUser):
+            raise NotAuthenticated("Authentication required to save a recipe.")
+        original_recipe_id = getattr(self.request, "data")\
+            .get("original_recipe")
+        original_recipe = get_object_or_404(Recipe, pk=original_recipe_id)
+        saved_status, _ = RecipeStatus.objects.get_or_create(value="Saved")
+        serializer.save(
+            saver=self.request.user.profile,
+            original_recipe=original_recipe,
+            original_author=original_recipe.author,
+            status=saved_status,
+        )
+
     def get_queryset(self):  # type: ignore[override]
         """Optimize queries for detail endpoint with nested objects."""
         queryset = SavedRecipe.objects.all().order_by("-saved_at")
