@@ -56,7 +56,7 @@ export default function IngredientList({
 							<input
 								type="number"
 								min={0}
-								step="0.1"
+								step="1"
 								value={row.quantity}
 								onChange={(e) => updateRow(i, { quantity: Number(e.target.value) })}
 								className={`w-20 ${inputClass}`}

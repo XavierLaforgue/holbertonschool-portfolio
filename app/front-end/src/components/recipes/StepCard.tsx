@@ -20,7 +20,7 @@ export default function StepCard({ step, done, onToggle }: StepCardProps) {
 			<button
 				type="button"
 				onClick={() => onToggle(step.id)}
-				className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+				className={`cursor-pointer mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
 					done
 						? 'border-green-500 bg-green-500 text-white dark:border-green-400 dark:bg-green-400 dark:text-green-950'
 						: 'border-border hover:border-muted'

@@ -132,12 +132,22 @@ class RecipeIngredientWriteSerializer(serializers.Serializer):
     unit = serializers.PrimaryKeyRelatedField(queryset=Unit.objects.all())
 
 
+class StepWriteSerializer(serializers.Serializer):
+    """Flat step entry accepted inside a recipe write payload."""
+    number = serializers.IntegerField(min_value=1)
+    description = serializers.CharField(max_length=500)
+    duration = serializers.DurationField(required=False, allow_null=True)
+
+
 class RecipeWriteSerializer(serializers.ModelSerializer):
     """Accepts PKs for related fields; used for create/update."""
     difficulty = serializers.PrimaryKeyRelatedField(
         queryset=Difficulty.objects.all()
     )
     ingredients = RecipeIngredientWriteSerializer(
+        many=True, required=False, write_only=True
+    )
+    steps = StepWriteSerializer(
         many=True, required=False, write_only=True
     )
 
@@ -148,6 +158,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop("ingredients", None)
+        steps_data = validated_data.pop("steps", None)
         instance = super().update(instance, validated_data)
 
         if ingredients_data is not None:
@@ -162,6 +173,17 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                     ingredient=ingredient,
                     quantity=item["quantity"],
                     unit=item["unit"],
+                )
+
+        if steps_data is not None:
+            # Replace all existing steps with the new set
+            instance.steps.all().delete()
+            for item in steps_data:
+                Step.objects.create(
+                    recipe=instance,
+                    number=item["number"],
+                    description=item["description"],
+                    duration=item.get("duration"),
                 )
 
         return instance

@@ -50,6 +50,13 @@ export interface IngredientWrite {
 	unit: string   // UUID
 }
 
+/** Single step entry in a recipe write payload. */
+export interface StepWrite {
+	number: number
+	description: string
+	duration: string | null   // "HH:MM:SS" or null
+}
+
 /** Payload for creating/updating a recipe's basic info. */
 export interface RecipeWrite {
 	title?: string
@@ -59,6 +66,7 @@ export interface RecipeWrite {
 	portions?: number
 	estimated_time_minutes?: number
 	ingredients?: IngredientWrite[]
+	steps?: StepWrite[]
 }
 
 /** Shape returned by /api/recipes/difficulty_models/ */

@@ -3,9 +3,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { apiFetch } from '../lib/api'
 import { apiFetchRecipe, apiUpdateRecipe } from '../lib/api-recipes'
-import { apiCreateStep, apiUpdateStep, apiDeleteStep, apiSwapSteps } from '../lib/api-steps'
 import { apiUploadPhoto, apiDeletePhoto } from '../lib/api-photos'
-import type { RecipeDetail, Step, RecipePhoto, Difficulty, IngredientWrite } from '../types'
+import type { RecipeDetail, RecipePhoto, Difficulty, IngredientWrite, StepWrite } from '../types'
 import BasicInfoForm from '../components/recipes/edit/BasicInfoForm'
 import IngredientList from '../components/recipes/edit/IngredientList'
 import StepList from '../components/recipes/edit/StepList'
@@ -45,6 +44,7 @@ export default function RecipeEditPage() {
 	const [portions, setPortions] = useState(1)
 	const [estimatedTime, setEstimatedTime] = useState<number>(0)
 	const [ingredients, setIngredients] = useState<IngredientWrite[]>([])
+	const [steps, setSteps] = useState<StepWrite[]>([])
 	const [saving, setSaving] = useState(false)
 	const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -90,6 +90,15 @@ export default function RecipeEditPage() {
 				quantity: recipe_ingredient.quantity,
 				unit: recipe_ingredient.unit.id,
 			})))
+			setSteps(
+				[...data.steps]
+					.sort((a, b) => a.number - b.number)
+					.map((s) => ({
+						number: s.number,
+						description: s.description,
+						duration: s.duration,
+					})),
+			)
 			setDifficulties(difficultyList)
 			setUnits(unitList)
 		} catch (err) {
@@ -133,6 +142,7 @@ export default function RecipeEditPage() {
 				difficulty: difficultyId,
 				portions, estimated_time_minutes: estimatedTime,
 				ingredients: ingredients.filter((i) => i.ingredient_name.trim()),
+				steps: steps.filter((s) => s.description.trim()),
 			})
 			navigate(`/recipes/${recipe.id}`)
 		} catch (err) {
@@ -140,29 +150,6 @@ export default function RecipeEditPage() {
 		} finally {
 			setSaving(false)
 		}
-	}
-
-	async function handleAddStep(desc: string, duration: string) {
-		if (!recipe) return
-		const nextNumber = recipe.steps.length > 0 ? Math.max(...recipe.steps.map((s) => s.number)) + 1 : 1
-		await apiCreateStep(recipe.id, { number: nextNumber, description: desc, ...(duration ? { duration } : {}) })
-		await loadRecipe()
-	}
-
-	function handleDeleteStep(step: Step) {
-		apiDeleteStep(recipe!.id, step.id)
-		setRecipe((prev) => prev ? { ...prev, steps: prev.steps.filter((s) => s.id !== step.id) } : prev)
-	}
-
-	async function handleSwapSteps(stepA: Step, stepB: Step) {
-		if (!recipe) return
-		const updated = await apiSwapSteps(recipe.id, { id: stepA.id, number: stepA.number }, { id: stepB.id, number: stepB.number })
-		setRecipe((prev) => (prev ? { ...prev, steps: updated } : prev))
-	}
-
-	function handleStepBlur(step: Step, field: 'description' | 'duration', value: string) {
-		if (!recipe) return
-		apiUpdateStep(recipe.id, step.id, field === 'duration' ? { duration: value || null } : { description: value })
 	}
 
 	async function handlePhotoUpload(file: File, position: number) {
@@ -238,8 +225,8 @@ export default function RecipeEditPage() {
 
 			{/* Steps */}
 			<StepList
-				steps={recipe.steps} onAdd={handleAddStep} onDelete={handleDeleteStep}
-				onSwap={handleSwapSteps} onBlur={handleStepBlur}
+				steps={steps}
+				onChange={setSteps}
 			/>
 
 			<hr className="my-8 border-border" />
