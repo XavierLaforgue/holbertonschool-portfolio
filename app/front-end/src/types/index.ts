@@ -37,10 +37,17 @@ export interface Recipe {
 	published_at: string | null
 	created_at: string
 	updated_at: string
-	difficulty: { id: string; label: string } | null
+	difficulty: { id: string; label: string }
 	status: { id: string; value: string }
 	author: ProfileSummary
 	main_photo: string | null
+}
+
+/** Single ingredient entry in a recipe write payload. */
+export interface IngredientWrite {
+	ingredient_name: string
+	quantity: number
+	unit: string   // UUID
 }
 
 /** Payload for creating/updating a recipe's basic info. */
@@ -51,6 +58,7 @@ export interface RecipeWrite {
 	difficulty?: string   // UUID
 	portions?: number
 	estimated_time_minutes?: number
+	ingredients?: IngredientWrite[]
 }
 
 /** Shape returned by /api/recipes/difficulty_models/ */
@@ -131,7 +139,7 @@ export interface RecipeDetail {
 	created_at: string
 	updated_at: string
 	author: ProfileSummary
-	difficulty: { id: string; label: string } | null
+	difficulty: { id: string; label: string }
 	status: RecipeStatus
 	steps: Step[]
 	ingredients: RecipeIngredient[]
