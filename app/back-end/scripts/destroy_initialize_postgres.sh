@@ -50,4 +50,10 @@ export $(grep '^ADMIN_EMAIL=' .env.dev)
 # Create a superuser (admin user) for the django server
 echo "Creating superuser '$ADMIN_USER' with email '${ADMIN_EMAIL}'..."
 echo "Password for the new superuser will be requested:" 
-uv run manage.py createsuperuser --username=$ADMIN_USER --email=$ADMIN_EMAIL
+# uv run manage.py createsuperuser --username=$ADMIN_USER
+# --email=$ADMIN_EMAIL
+uv run manage.py createsuperuser --email=$ADMIN_EMAIL
+uv run manage.py create_difficulties
+uv run manage.py create_recipe_statuses
+uv run manage.py create_unit_kinds
+uv run manage.py create_units

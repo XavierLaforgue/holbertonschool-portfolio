@@ -23,6 +23,14 @@ class Unit(UUIDModel):
         # (an instance of UnitKind) if any children exist
         related_name="units")
 
+    class Meta(UUIDModel.Meta):
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "kind"],
+                name="unique_unit_per_kind"
+            )
+        ]
+
     def __str__(self):
         return f"{self.name}"
 

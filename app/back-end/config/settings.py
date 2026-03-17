@@ -36,11 +36,20 @@ SECRET_KEY = environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 # choose between DEBUG (dev) mode or not (for production)
 DEBUG = environ.get('DJANGO_DEBUG', "False").lower() == "true"
+
+
+def _split_env_list(env_name: str, default: str = "") -> list[str]:
+    """Read comma-separated env var values and drop empty entries."""
+    return [item.strip() for item in environ.get(env_name, default).split(",")
+            if item.strip()]
+
+
 # keep list of allowed hosts in the environment (only localhost for dev)
-ALLOWED_HOSTS = environ.get('DJANGO_ALLOWED_HOSTS', 'localhost').split(',')
+ALLOWED_HOSTS = _split_env_list('DJANGO_ALLOWED_HOSTS', 'localhost')
 
 # Application definition
-
+# TODO: install drf-spectacular and implement automatic openapi schemas and
+# typescript interfaces
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -50,6 +59,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     # 'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
     'core',
     'accounts',
     'recipes',
@@ -77,15 +87,25 @@ if DEBUG:
         "rest_framework.renderers.BrowsableAPIRenderer",
     ]
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # read token from cookies and write it into them (good for browser
+        # SPAs):
+        "accounts.authentication.CookieJWTAuthentication",
+        # read cookies from the header (Authorization Bearer token), useful
+        # for mobile apps:
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # "rest_framework.authentication.SessionAuthentication",
     ]
 else:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
         "rest_framework.renderers.JSONRenderer",
     ]
     REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] = [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # read token from cookies and write it into them (good for browser
+        # SPAs):
+        "accounts.authentication.CookieJWTAuthentication",
+        # read cookies from the header (Authorization Bearer token), useful
+        # for mobile apps:
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
     ]
 
 SIMPLE_JWT = {
@@ -99,7 +119,28 @@ SIMPLE_JWT = {
     "CHECK_USER_IS_ACTIVE": True,  # default: True
 }
 
+CORS_ALLOWED_ORIGINS = _split_env_list(
+    'DJANGO_CORS_ALLOWED_ORIGINS',
+    'http://localhost:5173,http://127.0.0.1:5173',
+)
+
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = _split_env_list(
+    'DJANGO_CSRF_TRUSTED_ORIGINS',
+    'http://localhost:5173,http://127.0.0.1:5173',
+)
+
+# Auth cookie behavior can be overridden per environment. This is useful for
+# temporary pseudo-production deployments without HTTPS.
+AUTH_COOKIE_SECURE = environ.get(
+    'DJANGO_AUTH_COOKIE_SECURE',
+    str(not DEBUG),
+).lower() == "true"
+AUTH_COOKIE_SAMESITE = environ.get('DJANGO_AUTH_COOKIE_SAMESITE', 'Lax')
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -196,3 +237,31 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Media files (user-uploaded content)
+# https://docs.djangoproject.com/en/6.0/topics/files/
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# Instructions to migrate to S3 made by AI:
+# --- Production file storage (S3) ---
+# To switch from local filesystem to S3:
+#   1. uv add django-storages[s3]
+#   2. Add 'storages' to INSTALLED_APPS
+#   3. Uncomment the block below and configure env vars:
+#
+# STORAGES = {
+#     "default": {
+#         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+#     },
+#     "staticfiles": {
+#         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+#     },
+# }
+# AWS_STORAGE_BUCKET_NAME = environ.get('AWS_STORAGE_BUCKET_NAME')
+# AWS_S3_REGION_NAME = environ.get('AWS_S3_REGION_NAME')
+# AWS_ACCESS_KEY_ID = environ.get('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY')
+# AWS_S3_CUSTOM_DOMAIN = environ.get('AWS_S3_CUSTOM_DOMAIN')  # e.g. CDN
+# AWS_QUERYSTRING_AUTH = False  # public-read bucket

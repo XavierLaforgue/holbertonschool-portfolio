@@ -1,0 +1,64 @@
+import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '@/hooks/useAuth'
+import avatarIcon from '@/assets/icon.svg'
+import UserMenuButton from '@/components/auth/UserMenuButton'
+import UserMenuDropdown from '@/components/auth/UserMenuDropdown'
+const POINTER_CHOICE = 'pointer'  // options: pointer or mouse
+
+export default function UserMenu() {
+	const { user, logout } = useAuth()
+	const [open, setOpen] = useState(false)
+	const menuRef = useRef<HTMLDivElement>(null)
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		function handleClickOutside(e: MouseEvent) {
+			if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+				setOpen(false)
+			}
+		}
+		document.addEventListener(`${POINTER_CHOICE}down`, handleClickOutside)
+		return () => document.removeEventListener(`${POINTER_CHOICE}down`,
+			handleClickOutside)
+	}, [])
+	// show no user menu if the user is not logged-in (no `user` in the
+	// AuthContext)
+	if (!user) return null
+
+	// TODO: change this to use actual displayName from the profile
+	// (once the ProfileUpdatePage will be in service)
+	const displayName =
+		user.display_name && !user.display_name.startsWith('unnamed_user_')
+			? user.display_name
+			: user.email
+
+	async function handleLogout() {
+		await logout()
+		setOpen(false)
+	}
+
+	return (
+		// use `position: relative` so that the child dropdown menu can
+		// be positioned with respect to it using `position: absolute`
+		<div className="relative" ref={menuRef}>
+			<UserMenuButton
+				displayName={displayName}
+				avatarSrc={user.avatarUrl || avatarIcon}
+				onClick={() => setOpen((prev) => !prev)}
+			/>
+
+			{open && (
+				// give dropdown `position: absolute` so it is out of
+				// the flow of the document (out of the header) and it
+				// is positioned with respect to the closest ancestor
+				// with non-default (non-static) `position`.
+				// As the button is in normal flow, it takes vertical
+				// space and, as the dropdown down't declare a `top`
+				// property it respects its vertical natural position.
+				// `right: 0`, however, sets its right border position
+				// to match the right border position of the parent
+				// `div` with `relative` positioning. 
+				<UserMenuDropdown onLogout={handleLogout} />
+			)}
+		</div>
+	)
+}

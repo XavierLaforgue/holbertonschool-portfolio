@@ -4,6 +4,10 @@ from .views import (DifficultyModelViewSet,
                     DifficultyHyperlinkedViewSet,
                     RecipeModelViewSet,
                     RecipeHyperlinkedViewSet,
+                    RecipePhotoListCreateAPIView,
+                    RecipePhotoDetailAPIView,
+                    RecipeStepListCreateSwapAPIView,
+                    RecipeStepDetailAPIView,
                     SavedRecipeModelViewSet,
                     SavedRecipeHyperlinkedViewSet,
                     RecipeStatusModelViewSet,
@@ -40,5 +44,15 @@ router.register(r"savedstep_hyperlinks", SavedStepHyperlinkedViewSet,
                 basename="savedstep")
 
 urlpatterns = [
+    path("<uuid:recipe_id>/steps/", RecipeStepListCreateSwapAPIView.as_view(),
+         name="recipe-steps-list"),
+    path("<uuid:recipe_id>/steps/<uuid:step_id>/",
+         RecipeStepDetailAPIView.as_view(), name="recipe-steps-detail"),
+    path("<uuid:recipe_id>/photos/",
+         RecipePhotoListCreateAPIView.as_view(),
+         name="recipe-photos-list"),
+    path("<uuid:recipe_id>/photos/<uuid:photo_id>/",
+         RecipePhotoDetailAPIView.as_view(),
+         name="recipe-photos-detail"),
     path("", include(router.urls))
 ]

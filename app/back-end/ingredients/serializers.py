@@ -1,5 +1,44 @@
-from .models import Ingredient, RecipeIngredient, SavedRecipeIngredient
+from .models import (Ingredient, RecipeIngredient, SavedRecipeIngredient,
+                     Unit, UnitKind)
 from rest_framework import serializers
+
+
+class BaseUnitKindSerializer:
+    class Meta:
+        model = UnitKind
+        fields = "__all__"
+
+
+class UnitKindModelSerializer(BaseUnitKindSerializer,
+                              serializers.ModelSerializer):
+    class Meta(BaseUnitKindSerializer.Meta):
+        pass
+
+
+class UnitKindHyperlinkedSerializer(
+        BaseUnitKindSerializer,
+        serializers.HyperlinkedModelSerializer):
+    class Meta(BaseUnitKindSerializer.Meta):
+        pass
+
+
+class BaseUnitSerializer:
+    class Meta:
+        model = Unit
+        fields = "__all__"
+
+
+class UnitModelSerializer(BaseUnitSerializer,
+                          serializers.ModelSerializer):
+    class Meta(BaseUnitSerializer.Meta):
+        pass
+
+
+class UnitHyperlinkedSerializer(
+        BaseUnitSerializer,
+        serializers.HyperlinkedModelSerializer):
+    class Meta(BaseUnitSerializer.Meta):
+        pass
 
 
 class BaseIngredientSerializer:

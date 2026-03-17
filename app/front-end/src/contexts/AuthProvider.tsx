@@ -1,79 +1,96 @@
-import { useState, useEffect, type ReactNode } from 'react'
-import type { User } from '@/types'
-import { AuthContext, TOKEN_KEY } from '@/contexts/AuthContext'
+import { useState, useEffect, useCallback, type ReactNode } from 'react'
+import type { User } from '../types'
+import { AuthContext } from '../contexts/AuthContext'
+import { clearTokensFallback } from '../lib/api'
+import { apiLogin, apiSignup, apiFetchMe, apiLogout } from '../lib/api-auth'
 
 /**
- * AuthProvider — wrap app so any component can call useAuth().
+ * AuthProvider: wrap app so any component can call `useAuth()`.
  *
  * How it works:
- * 1. On mount, checks localStorage for a saved JWT token.
- * 2. If found, calls your API to fetch the user profile.
- * 3. If the token is invalid/expired, clears it silently.
- * 4. login() / logout() update both state and localStorage.
+ * 1. On mount, does GET /api/accounts/me/ (with cookies).
+ * 2. If the cookie is valid, sets the user. Otherwise, user stays null.
+ * 3. login() / signup() / logout() update state and let the backend
+ *    manage cookies via Set-Cookie headers.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null)
-	const [isLoading, setIsLoading] = useState(() => {
-        // Initialize loading state based on whether a token exists
-        return !!localStorage.getItem(TOKEN_KEY)
-    })
+	const [isLoading, setIsLoading] = useState(true)
 
-	// On app load: check if we have a saved token and fetch user
+	// On page load: check if we have valid tokens in the cookies vie
+	// the /me endpoint
 	useEffect(() => {
-		const token = localStorage.getItem(TOKEN_KEY)
-
-		if (!token) {
-			return
-		}
-
-		// TODO: Replace with real API call
-		// Example: GET /api/auth/me with the token in the Authorization header
-		fetchCurrentUser(token)
-			.then((user) => setUser(user))
-			.catch(() => localStorage.removeItem(TOKEN_KEY)) // token expired/invalid
+		apiFetchMe()
+			.then(res => setUser(res))
+			.catch(() => {
+				// Not logged in or token expired.
+				// Empty so the "error" response is treating as
+				// expected/ok and not an actual error.
+				// TODO: improve by defining the expected "error"
+				// status codes of the response instead of considering
+				// every error code as expected/OK.
+				setUser(null)
+			})
 			.finally(() => setIsLoading(false))
 	}, [])
 
-	const login = (token: string, user: User) => {
-		localStorage.setItem(TOKEN_KEY, token)
-		setUser(user)
-	}
+	// Usage of useCallback(): We need login(), logout(), and signup()
+	// to have stable function references across re-renders. Otherwise,
+	// each time something in the context changes, e.g., `isLoading` and
+	// `user` states, the three functions would be recreated.
+	// This recreation would trigger re-renders of every component with
+	// useEffect(()=>{}, [login, logout, or signup]). Basically, every
+	// time some property of the context changes, all of them get new
+	// references and every component consuming the context would be
+	// re-rendered.
+	
+	const login = useCallback(async (email: string, password: string) => {
+		await apiLogin(email, password)      // backend sets cookies
+		const me = await apiFetchMe()        // send cookies to backend to get
+											 //  user data back (if valid token)
+		setUser(me)
+	}, [])
 
-	const logout = () => {
-		localStorage.removeItem(TOKEN_KEY)
+	const signup = useCallback(
+		async (
+			email: string,
+			password: string,
+			firstName?: string,
+			lastName?: string,
+		) => {
+			await apiSignup(email, password, firstName, lastName)
+			// automatic login after registration
+			await login(email, password)
+		},
+		[login],
+	)
+
+	const verifyAuth = useCallback(async () => {
+		try {
+			const me = await apiFetchMe()
+			setUser(me)
+			return me
+		} catch {
+			setUser(null)
+			return null
+		}
+	}, [])
+
+	const logout = useCallback(async () => {
+		try {
+			await apiLogout()  // backend clears cookies: pattern pre-migration 
+							   // to httponly cookies
+		} catch {
+			// In case of failure, clear cookies from the client.
+			// TODO: When using httpOnly cookies, remove this fallback entirely.
+			clearTokensFallback()
+		}
 		setUser(null)
-	}
+	}, [])
 
 	return (
-		<AuthContext.Provider value={{ user, isLoading, login, logout }}>
+		<AuthContext.Provider value={{ user, isLoading, login, signup, verifyAuth, logout }}>
 			{children}
 		</AuthContext.Provider>
 	)
-}
-
-/**
- * TODO: Replace this with a real API call.
- *
- * This is a placeholder that simulates fetching the current user
- * from your backend using the stored JWT token.
- *
- * Real implementation would look like:
- *
- *   async function fetchCurrentUser(token: string): Promise<User> {
- *     const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/me`, {
- *       headers: { Authorization: `Bearer ${token}` },
- *     })
- *     if (!res.ok) throw new Error('Invalid token')
- *     return res.json()
- *   }
- */
-async function fetchCurrentUser(_token: string): Promise<User> {
-	// Simulate API delay
-	await new Promise((resolve) => setTimeout(resolve, 100))
-	// For now, return a fake user so you can test the flow
-	return {
-		id: '1',
-		name: 'Xavier',
-		email: 'xavier@example.com',
-	}
 }

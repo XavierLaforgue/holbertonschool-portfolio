@@ -8,8 +8,8 @@ from .serializers import (CustomUserModelSerializer,
 
 
 class BaseCustomUserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.filter(is_active=True)\
-        .order_by("-date_joined")
+    queryset = CustomUser.objects.filter(deleted_at__isnull=True)\
+        .order_by("-created_at")
     permission_classes = [permissions.AllowAny]
 
     def perform_destroy(self, instance):
@@ -19,7 +19,10 @@ class BaseCustomUserViewSet(viewsets.ModelViewSet):
         """
         instance.is_active = False
         instance.deactivated_at = timezone.now()
-        instance.save(update_fields=["is_active", "deactivated_at"])
+        instance.deleted_at = timezone.now()
+        instance.save(update_fields=["is_active",
+                                     "deactivated_at",
+                                     "deleted_at"])
 
 
 class CustomUserModelViewSet(BaseCustomUserViewSet):
@@ -37,9 +40,11 @@ class CustomUserHyperlinkedViewSet(BaseCustomUserViewSet):
 
 
 class BaseProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.filter(user__is_active=True)\
+    queryset = Profile.objects.filter(user__deleted_at__isnull=True)\
         .order_by("-updated_at")
     permission_classes = [permissions.AllowAny]
+    # forbid post (because a profile is created automatically when the user
+    # is created):
     http_method_names = ["get", "head", "options", "put", "patch", "delete"]
 
 
