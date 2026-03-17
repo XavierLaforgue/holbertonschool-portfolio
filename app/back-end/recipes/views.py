@@ -58,7 +58,7 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         """Use summary serializer for list and expanded serializer for detail.
         """
-        if self.action in ("retrieve", "status") \
+        if self.action in ("retrieve", "set_status") \
                 and self.detail_serializer_class:
             return self.detail_serializer_class
         elif self.action in ("update", "partial_update") \
@@ -229,8 +229,12 @@ class RecipeModelViewSet(BaseRecipeViewSet):
         )
 
     def perform_update(self, serializer):
-        """Only the author may update their recipe."""
+        """Only the author may update their recipe, and not while published."""
         self._require_author(serializer.instance)
+        if serializer.instance.status.value == "Published":
+            raise PermissionDenied(
+                "Cannot edit a published recipe. Retract it first."
+            )
         serializer.save()
 
     def perform_destroy(self, instance):
