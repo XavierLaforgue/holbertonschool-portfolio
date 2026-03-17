@@ -26,7 +26,7 @@ export async function apiSignup(
 }
 
 export async function apiFetchMe(): Promise<User> {
-	return apiFetch<User>('/api/accounts/me/')
+	return apiFetch<User>('/api/me/')
 }
 
 export async function apiLogout(): Promise<void> {

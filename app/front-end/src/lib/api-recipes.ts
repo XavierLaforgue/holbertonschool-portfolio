@@ -1,5 +1,43 @@
-import type { Recipe, RecipeDetail, RecipeWrite } from '../types'
+import type { // Difficulty, 
+	Recipe, RecipeDetail, RecipeWrite } from '../types'
 import { apiFetch } from './api'
+
+/** If not set by the api (view), then dificulty (id) would have to be provided 
+ * 
+ */
+// let easyDifficultyIdPromise: Promise<string> | null = null
+
+// async function getDifficultyIdByLabel(label: string): Promise<string> {
+// 	const diffs = await apiFetch<Difficulty[]>('/api/recipes/difficulty_models/')
+// 	const wanted = label.trim().toLowerCase()
+// 	const match = diffs.find(
+// 		(difficulty) => difficulty.label.trim().toLowerCase() === wanted)
+// 	if (!match) {
+// 		throw new Error(`Difficulty "${label}" not found in /api/recipes/difficulty_models/`)
+// 	}
+// 	return match.id
+// }
+
+// async function getEasyDifficultyId(): Promise<string> {
+// 	if (!easyDifficultyIdPromise) {
+// 		easyDifficultyIdPromise = getDifficultyIdByLabel('Easy')
+// 	}
+// 	return easyDifficultyIdPromise
+// }
+
+/**
+ * Create a draft recipe owned by the current user.
+ * The backend requires some fields (including difficulty and status), so we send defaults.
+ */
+// export async function apiCreateRecipe(data: Partial<RecipeWrite> = {}): Promise<Recipe> {
+// 	const difficulty = data.difficulty ?? await getEasyDifficultyId()
+// 	return apiFetch<Recipe>('/api/recipes/recipe_models/', {
+// 		method: 'POST',
+// 		body: JSON.stringify({
+// 			difficulty,
+// 		} satisfies RecipeWrite),
+// 	})
+// }
 
 /** Create a blank draft recipe owned by the current user. */
 export async function apiCreateRecipe(): Promise<Recipe> {

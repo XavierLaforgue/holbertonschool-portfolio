@@ -4,9 +4,8 @@ import { useAuth } from '../hooks/useAuth'
 import { apiFetch } from '../lib/api'
 import { apiFetchRecipe, apiUpdateRecipe } from '../lib/api-recipes'
 import { apiCreateStep, apiUpdateStep, apiDeleteStep, apiSwapSteps } from '../lib/api-steps'
-import { apiCreateIngredient, apiAddRecipeIngredient, apiDeleteRecipeIngredient } from '../lib/api-ingredients'
 import { apiUploadPhoto, apiDeletePhoto } from '../lib/api-photos'
-import type { RecipeDetail, Step, RecipeIngredient, RecipePhoto, Difficulty } from '../types'
+import type { RecipeDetail, Step, RecipePhoto, Difficulty, IngredientWrite } from '../types'
 import BasicInfoForm from '../components/recipes/edit/BasicInfoForm'
 import IngredientList from '../components/recipes/edit/IngredientList'
 import StepList from '../components/recipes/edit/StepList'
@@ -44,7 +43,8 @@ export default function RecipeEditPage() {
 	const [description, setDescription] = useState('')
 	const [difficultyId, setDifficultyId] = useState('')
 	const [portions, setPortions] = useState(1)
-	const [estimatedTime, setEstimatedTime] = useState(0)
+	const [estimatedTime, setEstimatedTime] = useState<number>(0)
+	const [ingredients, setIngredients] = useState<IngredientWrite[]>([])
 	const [saving, setSaving] = useState(false)
 	const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -73,7 +73,7 @@ export default function RecipeEditPage() {
 		setIsLoading(true)
 		setError(null)
 		try {
-			const [data, diffs, unitList] = await Promise.all([
+			const [data, difficultyList, unitList] = await Promise.all([
 				apiFetchRecipe(id),
 				apiFetch<Difficulty[]>('/api/recipes/difficulty_models/'),
 				apiFetch<Unit[]>('/api/ingredients/unit_models/'),
@@ -82,10 +82,15 @@ export default function RecipeEditPage() {
 			setTitle(data.title)
 			setAnimeCustom(data.anime_custom)
 			setDescription(data.description ?? '')
-			setDifficultyId(data.difficulty?.id ?? '')
+			setDifficultyId(data.difficulty.id)
 			setPortions(data.portions)
 			setEstimatedTime(data.estimated_time_minutes)
-			setDifficulties(diffs)
+			setIngredients(data.ingredients.map((recipe_ingredient) => ({
+				ingredient_name: recipe_ingredient.ingredient.name,
+				quantity: recipe_ingredient.quantity,
+				unit: recipe_ingredient.unit.id,
+			})))
+			setDifficulties(difficultyList)
 			setUnits(unitList)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Failed to load recipe')
@@ -125,8 +130,9 @@ export default function RecipeEditPage() {
 		try {
 			await apiUpdateRecipe(recipe.id, {
 				title, anime_custom: animeCustom, description,
-				difficulty: difficultyId || undefined,
+				difficulty: difficultyId,
 				portions, estimated_time_minutes: estimatedTime,
+				ingredients: ingredients.filter((i) => i.ingredient_name.trim()),
 			})
 			navigate(`/recipes/${recipe.id}`)
 		} catch (err) {
@@ -134,18 +140,6 @@ export default function RecipeEditPage() {
 		} finally {
 			setSaving(false)
 		}
-	}
-
-	async function handleAddIngredient(name: string, qty: number, unitId: string) {
-		if (!recipe) return
-		const ing = await apiCreateIngredient(name)
-		await apiAddRecipeIngredient({ recipe: recipe.id, ingredient: ing.id, unit: unitId, quantity: qty })
-		await loadRecipe()
-	}
-
-	function handleDeleteIngredient(ri: RecipeIngredient) {
-		apiDeleteRecipeIngredient(ri.id)
-		setRecipe((prev) => prev ? { ...prev, ingredients: prev.ingredients.filter((i) => i.id !== ri.id) } : prev)
 	}
 
 	async function handleAddStep(desc: string, duration: string) {
@@ -236,8 +230,8 @@ export default function RecipeEditPage() {
 
 			{/* Ingredients */}
 			<IngredientList
-				ingredients={recipe.ingredients} units={units}
-				onAdd={handleAddIngredient} onDelete={handleDeleteIngredient}
+				ingredients={ingredients} units={units}
+				onChange={setIngredients}
 			/>
 
 			<hr className="my-8 border-border" />
@@ -260,12 +254,18 @@ export default function RecipeEditPage() {
 
 			{/* Save / Cancel */}
 			<div className="flex items-center justify-between gap-4">
-				<button onClick={() => navigate(`/recipes/${recipe.id}`)} className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-surface-hover transition-colors">
+				<button
+					onClick={() => navigate(`/recipes/${recipe.id}`)} 
+					className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-surface-hover transition-colors cursor-pointer">
 					Cancel
 				</button>
 				<div className="flex items-center gap-3">
-					{saveError && <p className="text-xs text-primary">{saveError}</p>}
-					<button onClick={handleSave} disabled={saving} className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-primary-fg hover:bg-primary-hover disabled:opacity-50 transition-colors">
+					{saveError && (
+						<p className="text-xs text-primary">{saveError}</p>
+					)}
+					<button 
+						onClick={handleSave} disabled={saving} 
+						className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-primary-fg hover:bg-primary-hover disabled:opacity-50 transition-colors cursor-pointer">
 						{saving ? 'Saving…' : 'Save'}
 					</button>
 				</div>

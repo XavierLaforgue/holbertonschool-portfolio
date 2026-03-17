@@ -53,7 +53,7 @@ export default function BasicInfoForm({
 			<div>
 				<label className="mb-1 block text-sm font-medium text-muted">Description</label>
 				<textarea
-					rows={3}
+					rows={5}
 					value={description}
 					onChange={(e) => onChange('description', e.target.value)}
 					placeholder="Short description (optional)"
@@ -69,9 +69,12 @@ export default function BasicInfoForm({
 						onChange={(e) => onChange('difficultyId', e.target.value)}
 						className={inputClass}
 					>
-						<option value="">— none —</option>
-						{difficulties.map((d) => (
-							<option key={d.id} value={d.id}>{d.label}</option>
+						{/* <option value="">— none —</option> */}
+						{difficulties.map((option_of_difficulty) => (
+							<option key={option_of_difficulty.id}
+								value={option_of_difficulty.id}>
+									{option_of_difficulty.label}
+							</option>
 						))}
 					</select>
 				</div>
