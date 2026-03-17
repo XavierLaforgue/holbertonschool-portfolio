@@ -17,7 +17,7 @@ export default function RecipeDetailPage() {
 	const { user } = useAuth()
 	const { recipe, setRecipe, isLoading, error } = useRecipeDetail(id)
 	const { completedSteps, toggleStep } = useStepCompletion()
-	const { saveState, handleSaveCopy } = useRecipeSaveCopy(recipe)
+	const { saveState, saveError, handleSaveCopy } = useRecipeSaveCopy(recipe)
 	const { statusLoading, statusError, handleStatusChange } = useRecipeStatus(recipe, setRecipe)
 
 	/* ------------ Loading state -------------------------------- */
@@ -90,6 +90,7 @@ export default function RecipeDetailPage() {
 				onStatusChange={handleStatusChange}
 				onEdit={() => navigate(`/recipes/${recipe.id}/edit`)}
 				saveState={saveState}
+				saveError={saveError}
 				onSaveCopy={handleSaveCopy}
 			/>
 

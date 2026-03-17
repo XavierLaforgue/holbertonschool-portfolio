@@ -10,6 +10,7 @@ type RecipeDetailActionsProps = {
 	onStatusChange: (value: string) => void
 	onEdit: () => void
 	saveState: RecipeDetailSaveState
+	saveError: string | null
 	onSaveCopy: () => void
 }
 
@@ -21,6 +22,7 @@ export default function RecipeDetailActions({
 	onStatusChange,
 	onEdit,
 	saveState,
+	saveError,
 	onSaveCopy,
 }: RecipeDetailActionsProps) {
 	return (
@@ -32,6 +34,7 @@ export default function RecipeDetailActions({
 			onStatusChange={onStatusChange}
 			onEdit={onEdit}
 			saveState={saveState}
+			saveError={saveError}
 			onSaveCopy={onSaveCopy}
 		/>
 	)
