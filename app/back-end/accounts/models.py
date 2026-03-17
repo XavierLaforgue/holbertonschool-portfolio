@@ -3,7 +3,9 @@ from django.db import models
 from core.models import UUIDModel
 # from core.models import UUIDPkMixin
 # to create a CustomUser with UUID4 as identifier instead of an int:
-from django.contrib.auth.models import AbstractUser
+from typing import Any
+
+from django.contrib.auth.models import AbstractUser, UserManager
 # to link models to the model used for authentication:
 from django.conf import settings
 from django.db.models.signals import post_save
@@ -11,54 +13,46 @@ from django.dispatch import receiver
 from .validators import person_name_validator
 
 
-# TODO: build a customuser manager to enforce constraints at all levels
-# (admin, API, shell)
+class CustomUserManager(UserManager):
+    def create_user(
+        self,
+        username: str | None = None,
+        email: str | None = None,
+        password: str | None = None,
+        **extra_fields: Any,
+    ):
+        if not email:
+            raise ValueError("An email address is required")
+        email = self.normalize_email(email)
+        extra_fields.setdefault("username", username or email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(
+        self,
+        username: str | None = None,
+        email: str | None = None,
+        password: str | None = None,
+        **extra_fields: Any,
+    ):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
+        return self.create_user(
+            username=username,
+            email=email,
+            password=password,
+            **extra_fields,
+        )
 
 
-class CustomUser(
-                 # UUIDPkMixin,
-                 UUIDModel,
-                 AbstractUser,
-                 ):
-    # TODO: Try again using the UUIDPkMixin with a clean database and no
-    # migration files
-    # id = models.UUIDField(
-    #     primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.CharField(unique=True, blank=False, null=False,
-                                max_length=150)
-    email = models.EmailField(unique=True, blank=False, null=False,
-                              max_length=150)
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []  # for createsuperuser: only email + password
-    # Optional, but when provided must look like a person name.
-    first_name = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True,
-        validators=[person_name_validator],
-    )
-    last_name = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True,
-        validators=[person_name_validator],
-    )
-    # TODO: make sure this is updated each time the user requests an
-    # authentication token, e.g.,
-    #     user.last_auth_time = timezone.now()
-    #     user.save(update_fields=["last_auth_time"])
-    # Unnecessary with SIMPLE_JWT = {"UPDATE_LAST_LOGIN": True}:
-    # last_authenticated_at = models.DateTimeField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    deactivated_at = models.DateTimeField(blank=True, null=True, default=None)
-
-    def __str__(self) -> str:
-        return self.email
-
-
-def default_display_name():
-    n = Profile.objects.count() + 1
+def _default_display_name():
+    n = 1
     while True:
         display_name = f"unnamed_user_{n}"
         if not Profile.objects.filter(display_name=display_name).first():
@@ -67,19 +61,15 @@ def default_display_name():
 
 
 class Profile(UUIDModel):
-    # TODO: make it so it is created when the associated user is created. This
-    # will be included in the user creation logic.
-    # id = models.UUIDField(primary_key=True, default=uuid.uuid4,
-    #                      editable=False)
-    # TODO: add automatic numbering to unnamed users display names and add
-    # unique constraint.
     user = models.OneToOneField(settings.AUTH_USER_MODEL,
                                 on_delete=models.CASCADE,
                                 null=False,
                                 blank=False)
     birth_date = models.DateField(blank=True, null=True, default=None)
+    # TODO: make `display_name` nullable and let front-end replace other
+    # user's `display_name` for `unnamed` and own's `display_name` for `email`
     display_name = models.CharField(blank=False, null=False,
-                                    default=default_display_name,
+                                    default=_default_display_name,
                                     max_length=150,
                                     unique=True
                                     )
@@ -107,12 +97,63 @@ class Profile(UUIDModel):
                                            max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    cleared_at = models.DateTimeField(blank=True, null=True)
+    cleared_at = models.DateTimeField(blank=False, null=True, default=None)
 
     def __str__(self) -> str:
         return self.user.email
 
 
+class CustomUser(
+                 UUIDModel,
+                 AbstractUser,
+                 ):
+    class Meta(UUIDModel.Meta):
+        verbose_name = "user"
+        verbose_name_plural = "users"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["email"],
+                condition=models.Q(deleted_at__isnull=True),
+                name="unique_active_email"
+            )
+        ]
+
+    username = models.CharField(unique=True, blank=False, null=False,
+                                max_length=150)
+    email = models.EmailField(unique=True, blank=False, null=False,
+                              max_length=150)
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []  # for createsuperuser: only email + password
+    objects = CustomUserManager()
+    # Optional, but when provided must look like a person name.
+    first_name = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        validators=[person_name_validator],
+    )
+    last_name = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+        validators=[person_name_validator],
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deactivated_at = models.DateTimeField(blank=False, null=True,
+                                          default=None)
+    deleted_at = models.DateTimeField(blank=False, null=True, default=None)
+
+    @property
+    def profile(self) -> Profile:
+        return Profile.objects.get(user=self)
+
+    def __str__(self) -> str:
+        return self.email
+
+
+# receive signals of events of `CustomUser` instance being saved and create a
+# profile for that new user
 @receiver(post_save, sender=CustomUser)
 def create_profile_for_new_user(sender, instance, created, **kwargs):
     if created:

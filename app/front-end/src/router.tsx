@@ -4,6 +4,10 @@ import HomePage from '@/pages/HomePage'
 import NotFoundPage from '@/pages/NotFoundPage'
 import ErrorPage from '@/pages/ErrorPage'
 import LoginPage from '@/pages/LoginPage'
+import SignUpPage from '@/pages/SignUpPage'
+import RecipeDetailPage from '@/pages/RecipeDetailPage'
+import RecipeEditPage from '@/pages/RecipeEditPage'
+import MyRecipesPage from '@/pages/MyRecipesPage'
 
 /**
  * Application router.
@@ -20,6 +24,11 @@ const router = createBrowserRouter([
 		children: [
 			{ index: true, element: <HomePage /> },
 			{ path: 'login', element: <LoginPage /> },
+			{ path: 'signup', element: <SignUpPage /> },
+			// Edit must come before :id to avoid ":id" matching "create"
+			{ path: 'recipes/:id/edit', element: <RecipeEditPage /> },
+			{ path: 'recipes/:id', element: <RecipeDetailPage /> },
+			{ path: 'recipes/', element: <MyRecipesPage /> },
 			{ path: '*', element: <NotFoundPage /> },
 		],
 	},
