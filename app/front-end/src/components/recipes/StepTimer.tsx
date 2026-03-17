@@ -59,13 +59,21 @@ export default function StepTimer({ duration }: StepTimerProps) {
 
 	const done = remaining === 0
 	const progress = initial > 0 ? remaining / initial : 0
+	const paused = !isRunning && !done && remaining !== initial
 
 	// Pick colors based on state
 	const barColor = done ? 'bg-green-500' : isRunning ? 'bg-primary' : 'bg-border'
 	const textColor = done ? 'text-green-500' : isRunning ? 'text-foreground' : 'text-muted'
 
 	// Button label changes based on state
-	const buttonLabel = isRunning ? 'Pause' : done ? 'Restart' : 'Start'
+	const buttonLabel = 
+		isRunning 
+		? 'Pause' 
+		: done
+			? 'Restart'
+			: paused
+				? 'Resume'
+				: 'Start'
 
 	function handleMainButton() {
 		if (done) {
@@ -103,7 +111,7 @@ export default function StepTimer({ duration }: StepTimerProps) {
 				<button
 					type="button"
 					onClick={handleMainButton}
-					className="rounded-md border border-border bg-surface px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
+					className="rounded-md border border-border bg-surface px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-surface-hover hover:text-foreground cursor-pointer"
 				>
 					{buttonLabel}
 				</button>
@@ -111,7 +119,7 @@ export default function StepTimer({ duration }: StepTimerProps) {
 					<button
 						type="button"
 						onClick={handleReset}
-						className="rounded-md border border-border bg-surface px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-surface-hover hover:text-foreground"
+						className="rounded-md border border-border bg-surface px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-surface-hover hover:text-foreground cursor-pointer"
 					>
 						Reset
 					</button>
