@@ -1,4 +1,4 @@
-import StatusActions from '@/components/recipes/StatusActions'
+import StatusActions from '../../../components/recipes/StatusActions'
 
 export type RecipeDetailSaveState = 'idle' | 'saving' | 'saved' | 'error'
 

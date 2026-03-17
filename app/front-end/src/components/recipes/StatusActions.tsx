@@ -26,7 +26,7 @@ export default function StatusActions({
 					<>
 						<button
 							onClick={onEdit}
-							className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-hover"
+							className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-hover hover:cursor-pointer"
 						>
 							Edit
 						</button>
@@ -35,7 +35,7 @@ export default function StatusActions({
 							<button
 								onClick={() => onStatusChange('Ready')}
 								disabled={statusLoading}
-								className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
+								className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors hover:cursor-pointer"
 							>
 								{statusLoading ? 'Updating…' : 'Mark as Ready'}
 							</button>
@@ -45,7 +45,7 @@ export default function StatusActions({
 							<button
 								onClick={() => onStatusChange('Published')}
 								disabled={statusLoading}
-								className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+								className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 transition-colors hover:cursor-pointer"
 							>
 								{statusLoading ? 'Publishing…' : 'Publish'}
 							</button>
@@ -55,7 +55,7 @@ export default function StatusActions({
 							<button
 								onClick={() => onStatusChange('Ready')}
 								disabled={statusLoading}
-								className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-muted hover:bg-surface-hover disabled:opacity-50 transition-colors"
+								className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-muted hover:bg-surface-hover hover:cursor-pointer disabled:opacity-50 transition-colors"
 							>
 								{statusLoading ? 'Retracting…' : 'Retract'}
 							</button>
@@ -68,7 +68,7 @@ export default function StatusActions({
 						type="button"
 						onClick={onSaveCopy}
 						disabled={saveState === 'saving' || saveState === 'saved'}
-						className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:bg-surface-hover disabled:opacity-60"
+						className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium transition-colors hover:cursor-pointer hover:bg-surface-hover disabled:opacity-60"
 					>
 						{saveState === 'saving' && 'Saving…'}
 						{saveState === 'saved' && 'Saved!'}
@@ -79,7 +79,7 @@ export default function StatusActions({
 			</div>
 
 			{statusError && (
-				<p className="mt-2 text-sm text-primary">{statusError}</p>
+				<p className="mt-2 text-sm text-primary whitespace-pre-line">{statusError}</p>
 			)}
 		</>
 	)
