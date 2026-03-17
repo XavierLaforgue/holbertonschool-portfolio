@@ -33,7 +33,8 @@ class BaseRecipeStatusSerializer:
 class RecipeStatusModelSerializer(BaseRecipeStatusSerializer,
                                   serializers.ModelSerializer):
     class Meta(BaseRecipeStatusSerializer.Meta):
-        pass
+        model = RecipeStatus
+        fields = ("id", "value")
 
 
 class RecipeStatusHyperlinkedSerializer(
@@ -124,6 +125,48 @@ class BaseRecipeSerializer:
         fields = "__all__"
 
 
+class RecipeIngredientWriteSerializer(serializers.Serializer):
+    """Flat ingredient entry accepted inside a recipe write payload."""
+    ingredient_name = serializers.CharField(max_length=50)
+    quantity = serializers.FloatField()
+    unit = serializers.PrimaryKeyRelatedField(queryset=Unit.objects.all())
+
+
+class RecipeWriteSerializer(serializers.ModelSerializer):
+    """Accepts PKs for related fields; used for create/update."""
+    difficulty = serializers.PrimaryKeyRelatedField(
+        queryset=Difficulty.objects.all()
+    )
+    ingredients = RecipeIngredientWriteSerializer(
+        many=True, required=False, write_only=True
+    )
+
+    class Meta:
+        model = Recipe
+        fields = "__all__"
+        read_only_fields = ("author", "status", "published_at")
+
+    def update(self, instance, validated_data):
+        ingredients_data = validated_data.pop("ingredients", None)
+        instance = super().update(instance, validated_data)
+
+        if ingredients_data is not None:
+            # Replace all existing ingredients with the new set
+            instance.ingredients.all().delete()
+            for item in ingredients_data:
+                ingredient, _created = Ingredient.objects.get_or_create(
+                    name=item["ingredient_name"],
+                )
+                RecipeIngredient.objects.create(
+                    recipe=instance,
+                    ingredient=ingredient,
+                    quantity=item["quantity"],
+                    unit=item["unit"],
+                )
+
+        return instance
+
+
 class RecipeSummarySerializer(BaseRecipeSerializer,
                               serializers.ModelSerializer):
     """Compact recipe response with nested author/difficulty/status objects."""
@@ -181,7 +224,8 @@ class RecipeDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = "__all__"
+        # fields = "__all__"
+        exclude = ("created_at", "updated_at")
 
 
 class BaseSavedRecipeSerializer:

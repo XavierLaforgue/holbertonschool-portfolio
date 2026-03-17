@@ -14,6 +14,7 @@ from .models import (Recipe, RecipePhoto, RecipeStatus, SavedRecipe,
 from .serializers import (RecipeSummarySerializer,
                           RecipeSummaryHyperlinkedSerializer,
                           RecipeDetailsSerializer,
+                          RecipeWriteSerializer,
                           SavedRecipeSummarySerializer,
                           SavedRecipeSummaryHyperlinkedSerializer,
                           SavedRecipeDetailsSerializer,
@@ -52,6 +53,7 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
     ordering = ["-published_at", "-created_at"]
     summary_serializer_class = None
     detail_serializer_class = None
+    write_serializer_class = None
 
     def get_serializer_class(self):
         """Use summary serializer for list and expanded serializer for detail.
@@ -59,6 +61,9 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
         if self.action in ("retrieve", "status") \
                 and self.detail_serializer_class:
             return self.detail_serializer_class
+        elif self.action in ("update", "partial_update") \
+                and self.write_serializer_class:
+            return self.write_serializer_class
         elif self.summary_serializer_class:
             return self.summary_serializer_class
         return super().get_serializer_class()
@@ -208,6 +213,7 @@ class RecipeModelViewSet(BaseRecipeViewSet):
     """
     summary_serializer_class = RecipeSummarySerializer
     detail_serializer_class = RecipeDetailsSerializer
+    write_serializer_class = RecipeWriteSerializer
 
     def perform_create(self, serializer):
         """Create a blank draft recipe owned by the current user."""
