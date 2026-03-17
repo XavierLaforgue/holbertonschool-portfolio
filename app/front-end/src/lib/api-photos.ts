@@ -1,3 +1,4 @@
+import type { RecipePhoto } from '../types'
 import { API_BASE_URL, ApiError, apiFetch } from './api'
 
 /**
@@ -8,7 +9,7 @@ export async function apiUploadPhoto(
 	recipeId: string,
 	file: File,
 	position: number,
-): Promise<unknown> {
+): Promise<RecipePhoto> {
 	const form = new FormData()
 	form.append('image', file)
 	form.append('position', String(position))

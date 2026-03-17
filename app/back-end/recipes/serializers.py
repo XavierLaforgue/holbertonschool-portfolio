@@ -91,7 +91,7 @@ class BaseRecipePhotoSerializer:
 class RecipePhotoModelSerializer(BaseRecipePhotoSerializer,
                                  serializers.ModelSerializer):
     class Meta(BaseRecipePhotoSerializer.Meta):
-        pass
+        read_only_fields = ("recipe",)
 
 
 class RecipePhotoHyperlinkedSerializer(

@@ -5,7 +5,6 @@ import { DIFF_COLORS, formatTime } from '../utils/recipe'
 import RecipeDetailActions from '../components/recipes/recipedetail/RecipeDetailActions'
 import RecipeDetailBanner from '../components/recipes/recipedetail/RecipeDetailBanner'
 import RecipeDetailDescription from '../components/recipes/recipedetail/RecipeDetailDescription'
-import RecipeDetailGallery from '../components/recipes/recipedetail/RecipeDetailGallery'
 import RecipeDetailHero from '../components/recipes/recipedetail/RecipeDetailHero'
 import RecipeDetailIngredients from '../components/recipes/recipedetail/RecipeDetailIngredients'
 import RecipeDetailMeta from '../components/recipes/recipedetail/RecipeDetailMeta'
@@ -52,8 +51,6 @@ export default function RecipeDetailPage() {
 	const isAuthor = !!(user && recipe && user.profile_id === recipe.author.id)
 	const statusValue = recipe.status.value
 
-	const mainPhoto = recipe.photos.find((p) => p.position === 1)
-	const galleryPhotos = recipe.photos.filter((p) => p.position !== 1)
 	const sortedSteps = [...recipe.steps].sort((a, b) => a.number - b.number)
 	const difficultyKey = recipe.difficulty.label.toLowerCase()
 	const difficultyColor = DIFF_COLORS[difficultyKey] ?? 'bg-surface-hover text-muted'
@@ -69,7 +66,7 @@ export default function RecipeDetailPage() {
 
 			{/* Hero image */}
 			<RecipeDetailHero
-				mainPhoto={mainPhoto}
+				photos={recipe.photos}
 				title={recipe.title}
 			/>
 
@@ -98,12 +95,6 @@ export default function RecipeDetailPage() {
 
 			{/* Description */}
 			<RecipeDetailDescription description={recipe.description} />
-
-			{/* Photo gallery */}
-			<RecipeDetailGallery
-				photos={galleryPhotos}
-				title={recipe.title}
-			/>
 
 			{/* Ingredients */}
 			<RecipeDetailIngredients ingredients={recipe.ingredients} />

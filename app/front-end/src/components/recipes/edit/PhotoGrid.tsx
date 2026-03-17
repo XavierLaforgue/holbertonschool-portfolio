@@ -52,7 +52,7 @@ export default function PhotoGrid({
 						<button
 							onClick={() => fileInputRef.current?.click()}
 							disabled={uploading}
-							className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium hover:bg-surface-hover disabled:opacity-50 transition-colors"
+							className="rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium hover:bg-surface-hover disabled:opacity-50 transition-colors cursor-pointer"
 						>
 							{uploading ? 'Uploading…' : '+ Upload photo'}
 						</button>
@@ -81,7 +81,7 @@ export default function PhotoGrid({
 								</span>
 								<button
 									onClick={() => onDelete(photo)}
-									className="rounded-full bg-red-500/80 p-1.5 text-xs text-white hover:bg-red-600 transition-colors"
+									className="rounded-full bg-red-500/80 p-1.5 text-xs text-white hover:bg-red-600 transition-colors cursor-pointer"
 									aria-label="Delete photo"
 								>
 									&times;

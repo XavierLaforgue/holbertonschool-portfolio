@@ -157,8 +157,8 @@ export default function RecipeEditPage() {
 		setPhotoUploading(true)
 		setPhotoError(null)
 		try {
-			await apiUploadPhoto(recipe.id, file, position)
-			await loadRecipe()
+			const photo = await apiUploadPhoto(recipe.id, file, position)
+			setRecipe((prev) => prev ? { ...prev, photos: [...prev.photos, photo] } : prev)
 		} catch (err) {
 			setPhotoError(err instanceof Error ? err.message : 'Upload failed')
 		} finally {
