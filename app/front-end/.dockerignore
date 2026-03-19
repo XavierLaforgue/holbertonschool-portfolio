@@ -1,0 +1,30 @@
+# =============================================================================
+# Front-end .dockerignore
+# =============================================================================
+# Excludes files from the Docker build context to speed up builds
+# and prevent secrets or bulky folders from ending up in the image.
+# =============================================================================
+
+# Dependencies (installed fresh inside Docker via `npm ci`)
+node_modules/
+
+# Previous build output
+dist/
+
+# Environment files (values are passed as build args, not baked from files)
+**/.env*
+!**/.env.*.example
+
+# IDE and editor files
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+## Personal docs
+**/DO_NOT_README/
+**/README.md
+
+## Files for the development stage
+**/*dependency-*

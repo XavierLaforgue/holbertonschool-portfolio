@@ -8,7 +8,7 @@
 
 # Environment files (secrets must be injected at runtime, not baked in)
 **/.env*
-# !**/.env.*.example
+!**/.env.*.example
 
 # Python caches
 **/__pycache__/
