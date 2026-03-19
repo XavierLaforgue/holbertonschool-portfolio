@@ -12,12 +12,16 @@
  * POST /api/token/refresh/ and retries the original request.
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string
+// In development, set to the backend URL (e.g., http://localhost:8000).
+// In production behind a reverse proxy, set to "" (empty string) so
+// requests go to the same origin and the proxy forwards them.
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '') as string
 
-if (!API_BASE_URL) {
+if (import.meta.env.VITE_API_BASE_URL === undefined) {
 	throw new Error(
 		'VITE_API_BASE_URL is not defined. ' +
-		'Copy .env.example into .env.local and set it.',
+		'Copy .env.example into .env.local and set it ' +
+		'(use "" for same-origin / reverse-proxy deployments).',
 	)
 }
 
