@@ -1,0 +1,39 @@
+# =============================================================================
+# Back-end .dockerignore
+# =============================================================================
+# Files listed here are excluded from the Docker build context.
+# This makes builds faster (less data to send to the Docker daemon)
+# and prevents secrets or unnecessary files from ending up in the image.
+# =============================================================================
+
+# Environment files (secrets must be injected at runtime, not baked in)
+**/.env*
+# !**/.env.*.example
+
+# Python caches
+**/__pycache__/
+*.pyc
+
+# Virtual environment (dependencies are installed fresh inside Docker)
+.venv/
+
+# Media uploads (mounted as a volume at runtime, not baked into the image)
+media/
+
+# Collected static files (rebuilt inside Docker during build)
+staticfiles/
+
+# IDE and editor files
+.vscode/
+
+# Git
+**/.git/
+**/.gitignore
+**/.github/
+
+# Unnecessary docs
+**/DO_NOT_README/
+**/README/
+
+# Files for the development stage
+**/scripts/
