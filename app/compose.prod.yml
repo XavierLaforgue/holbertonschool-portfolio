@@ -49,7 +49,7 @@ services:
     # them to create the database and user on first start.
     volumes:
       # Named volume for database persistence.
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     # Health check so dependent services wait until Postgres is ready
     # to accept connections (not just that the container is running).
     healthcheck:
@@ -149,6 +149,14 @@ services:
 volumes:
   # PostgreSQL data — survives container rebuilds.
   postgres_data:
+
+  # For even stronger safety over the volume we could set a external
+  # volume so `docker compose down -v` cannot delete it.
+  # Create once with: docker volume create app_postgres_data
+  # postgres_data:
+  #   external: true
+  #   name: app_postgres_data
+
   # Built React SPA files — populated by front-end, read by Nginx.
   frontend_build:
   # Django collectstatic output — populated by back-end, read by Nginx.
