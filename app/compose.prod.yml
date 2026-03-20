@@ -1,0 +1,157 @@
+# =============================================================================
+# Docker Compose — Production
+# =============================================================================
+#
+# Usage:
+#   docker compose -f compose.prod.yml up --build -d
+#
+# To scale the back-end (e.g., 3 replicas for round-robin load balancing):
+#   docker compose -f compose.prod.yml up --build -d --scale back-end=3
+#
+# Architecture overview:
+#
+#   Browser ──▶ Nginx (port 80)
+#                 ├── /           → serves React SPA (static files)
+#                 ├── /api/       → round-robin proxy to back-end replicas
+#                 ├── /admin/     → round-robin proxy to back-end replicas
+#                 ├── /static/    → serves Django static files directly
+#                 └── /media/     → serves user-uploaded media directly
+#
+#               back-end (Gunicorn, scalable replicas)
+#                 └── connects to ──▶ db (PostgreSQL)
+#
+# Volumes:
+#   - frontend_build : shares built React files from front-end → Nginx
+#   - backend_static : shares Django collectstatic output from back-end → Nginx
+#   - backend_media  : shares user uploads between back-end ↔ Nginx
+#   - postgres_data  : persists database data across container restarts
+#
+# Environment:
+#   Copy `.env.prod.example` to `.env.prod` and fill in real values.
+#   The compose file reads from `.env.prod` via `env_file`.
+#
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # DATABASE — PostgreSQL
+  # ===========================================================================
+  # Containerized PostgreSQL instance. Data is persisted in a named volume
+  # so it survives container restarts and rebuilds.
+  db:
+    image: postgres:18-alpine
+    # Restart automatically unless explicitly stopped.
+    restart: unless-stopped
+    env_file:
+      - ./back-end/.env.prod
+    # POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD are set in .env.prod
+    # and injected via env_file above. The official Postgres image reads
+    # them to create the database and user on first start.
+    volumes:
+      # Named volume for database persistence.
+      - postgres_data:/var/lib/postgresql/data
+    # Health check so dependent services wait until Postgres is ready
+    # to accept connections (not just that the container is running).
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # BACK-END — Django + Gunicorn
+  # ===========================================================================
+  # The Django REST API, served by Gunicorn (production WSGI server).
+  # Can be scaled to multiple replicas for load balancing:
+  #   docker compose -f compose.prod.yml up --scale back-end=3
+  back-end:
+    build:
+      context: ./back-end
+      args:
+        # Must match the `requires-python` version in pyproject.toml.
+        PYTHON_VERSION: "3.13"
+    restart: unless-stopped
+    env_file:
+      # All Django configuration comes from this file.
+      - ./back-end/.env.prod
+    environment:
+      # Override DJANGO_ENV so Django does NOT try to load a .env file
+      # (the env vars are already injected by Docker Compose above).
+      DJANGO_ENV: prod
+    volumes:
+      # Share collected static files with Nginx.
+      - backend_static:/app/staticfiles
+      # Share uploaded media files with Nginx.
+      - backend_media:/app/media
+    depends_on:
+      # Wait for the database to be healthy before starting.
+      db:
+        condition: service_healthy
+    # No `ports` exposed — only Nginx talks to the back-end via the
+    # internal Docker network. This is more secure: the API is not
+    # directly accessible from the host.
+
+  # ===========================================================================
+  # FRONT-END — React SPA (build-only container)
+  # ===========================================================================
+  # This service builds the React app at image build time and holds the
+  # resulting static files in a volume. It does NOT run a web server —
+  # Nginx serves the files.
+  #
+  # The container stays alive (via `tail -f /dev/null`) so the named
+  # volume remains mounted and accessible to Nginx.
+  front-end:
+    build:
+      context: ./front-end
+      args:
+        # Empty string = same-origin requests (Nginx proxies /api/ to
+        # the back-end, so the browser never needs a different origin).
+        VITE_API_BASE_URL: ""
+    volumes:
+      # The built React files are placed into this shared volume.
+      - frontend_build:/app/dist
+    # This container only needs to exist so its volume is populated.
+    # It doesn't need to restart if it stops.
+    restart: "no"
+
+  # ===========================================================================
+  # NGINX — Reverse proxy, static server, load balancer
+  # ===========================================================================
+  # Single entry point for all traffic:
+  #   - Serves the React SPA for all non-API routes
+  #   - Proxies /api/ and /admin/ to back-end (round-robin)
+  #   - Serves /static/ and /media/ directly from volumes
+  nginx:
+    build:
+      context: ./nginx
+    restart: unless-stopped
+    ports:
+      # Map container port 80 to host port 80.
+      # Change the left side to use a different host port (e.g., 3000:80).
+      - "80:80"
+    volumes:
+      # Mount the three shared volumes as read-only (:ro) since Nginx
+      # only needs to read these files, not write to them.
+      - frontend_build:/var/www/frontend:ro
+      - backend_static:/var/www/static:ro
+      - backend_media:/var/www/media:ro
+    depends_on:
+      # Nginx needs the back-end to be running (for proxying) and the
+      # front-end to have populated its volume (for serving the SPA).
+      - back-end
+      - front-end
+
+# =============================================================================
+# Named volumes
+# =============================================================================
+# Named volumes persist data independently of container lifecycles.
+# They are created automatically on first `docker compose up`.
+volumes:
+  # PostgreSQL data — survives container rebuilds.
+  postgres_data:
+  # Built React SPA files — populated by front-end, read by Nginx.
+  frontend_build:
+  # Django collectstatic output — populated by back-end, read by Nginx.
+  backend_static:
+  # User-uploaded media files — written by back-end, read by Nginx.
+  backend_media:
