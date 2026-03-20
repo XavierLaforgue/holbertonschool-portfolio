@@ -59,11 +59,18 @@ export async function apiFetch<T>(
 ): Promise<T> {
 	const url = `${API_BASE_URL}${path}`
 
+	// When the body is FormData, let the browser set Content-Type
+	// (multipart/form-data with boundary). Otherwise default to JSON.
+	const isFormData = init?.body instanceof FormData
+	const defaultHeaders: Record<string, string> = isFormData
+		? {}
+		: { 'Content-Type': 'application/json' }
+
 	const doFetch = () => fetch(url, {
 			...init,
 			credentials: 'include',
 			headers: {
-				'Content-Type': 'application/json',
+				...defaultHeaders,
 				...(init?.headers as Record<string, string>),
 			},
 		})
