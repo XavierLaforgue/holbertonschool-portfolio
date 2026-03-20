@@ -108,6 +108,7 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["uv", "run", "gunicorn", "config.wsgi:application", \
      "--bind", "0.0.0.0:8000", \
      "--workers", "2", \
+     "--timeout", "120", \
      "--worker-tmp-dir", "/dev/shm", \
      "--no-control-socket"]
 # change worker directory to one that is accessible by the app user
