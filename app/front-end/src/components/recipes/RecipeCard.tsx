@@ -115,7 +115,7 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
 				{/* Meta row */}
 				<div className="mt-auto flex flex-wrap items-center gap-3 pt-3 border-t border-border text-xs text-muted">
 					{/* Prep time */}
-					{recipe.estimated_time_minutes > 0 && (
+					{recipe.estimated_time_minutes != null && recipe.estimated_time_minutes > 0 && (
 						<span className="flex items-center gap-1" title="Preparation time">
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
