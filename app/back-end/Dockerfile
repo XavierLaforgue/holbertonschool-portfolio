@@ -21,8 +21,17 @@ FROM python:${PYTHON_VERSION}-slim
 
 # Prevent Python from writing .pyc files and enable unbuffered output
 # so logs appear immediately in `docker logs`.
+# The `uv` searches for the `app` user's home directory to write its
+# cache there. The non-existance of this directory causes then an
+# error. Simple fix: force `uv` to use no cache (dependencies are
+# already installed, so caching shouldn't be necessary).
+# The local copy of Python that uv installs needs to be in a directory
+# accessible by the app user (by default it is in a subdirectory of
+# root, which is inaccessible)
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    UV_NO_CACHE=1 \
+    UV_PYTHON_INSTALL_DIR=/opt/uv-python
 
 # Install system dependencies required by:
 #   - psycopg: libpq-dev (PostgreSQL client library headers)
@@ -76,6 +85,9 @@ RUN mkdir -p /app/media && chown -R app:app /app/media
 RUN chown -R app:app /app/staticfiles
 # recursively change ownership of the static files to the user and
 # group app.
+RUN chown -R app:app /app/.venv
+# the virtual environment was created as root during the build;
+# the app user needs access to run Python and uv at runtime.
 
 # Make the entrypoint script executable
 RUN chmod +x /app/entrypoint.sh
@@ -95,4 +107,10 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 #                          but we keep it low for a single-server deployment)
 CMD ["uv", "run", "gunicorn", "config.wsgi:application", \
      "--bind", "0.0.0.0:8000", \
-     "--workers", "2"]
+     "--workers", "2", \
+     "--worker-tmp-dir", "/dev/shm", \
+     "--no-control-socket"]
+# change worker directory to one that is accessible by the app user
+# disable gunicorn control socket since the app user doesn't have write
+# permissions to write where the socket wants to be created and the
+# socket is not necessary.

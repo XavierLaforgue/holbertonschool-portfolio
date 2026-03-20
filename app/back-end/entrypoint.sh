@@ -33,10 +33,11 @@ if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PW" ]; then
     DJANGO_SUPERUSER_PASSWORD="$ADMIN_PW" \
         uv run manage.py createsuperuser \
             --noinput \
-            --username "$ADMIN_USER" \
             --email "$ADMIN_EMAIL" \
         || true
 fi
+# --username "$ADMIN_USER" \  # custom user doesn't accept username so
+# it can not be provided
 
 echo "Populating reference data..."
 uv run manage.py create_difficulties
