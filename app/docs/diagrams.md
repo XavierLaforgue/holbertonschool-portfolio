@@ -242,3 +242,189 @@ erDiagram
         datetime updated_at
     }
 ```
+
+## Class Diagram
+
+```mermaid
+classDiagram
+    direction TB
+
+    class UUIDModel {
+        <<abstract>>
+        +UUID id
+    }
+
+    class AbstractUser {
+        <<Django>>
+        +string password
+        +bool is_active
+        +bool is_staff
+        +bool is_superuser
+        +datetime last_login
+        +datetime date_joined
+    }
+
+    class CustomUser {
+        +string email ‹USERNAME_FIELD›
+        +string username
+        +string first_name
+        +string last_name
+        +datetime created_at
+        +datetime updated_at
+        +datetime deactivated_at
+        +datetime deleted_at
+    }
+
+    class Profile {
+        +OneToOne~CustomUser~ user
+        +string display_name
+        +date birth_date
+        +text bio
+        +string favorite_anime_custom
+        +string favorite_meal
+        +string location
+        +url myAnimeList_profile
+        +text dietary_preferences
+        +datetime created_at
+        +datetime updated_at
+        +datetime cleared_at
+    }
+
+    class RecipeBase {
+        <<abstract>>
+        +string title
+        +string anime_custom
+        +text description
+        +FK~Difficulty~ difficulty
+        +int portions
+        +int estimated_time_minutes
+        +FK~RecipeStatus~ status
+        +datetime published_at
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class Recipe {
+        +FK~Profile~ author
+    }
+
+    class SavedRecipe {
+        +FK~Profile~ saver
+        +FK~Recipe~ original_recipe
+        +FK~Profile~ original_author
+        +datetime saved_at
+    }
+
+    class StepBase {
+        <<abstract>>
+        +int number
+        +text description
+        +duration duration
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class Step {
+        +FK~Recipe~ recipe
+    }
+
+    class SavedStep {
+        +FK~SavedRecipe~ recipe
+    }
+
+    class RecipePhoto {
+        +FK~Recipe~ recipe
+        +image image
+        +int position ‹1-5›
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class Difficulty {
+        +string label
+        +int value
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class RecipeStatus {
+        +string value
+        +datetime created_at
+        +datetime updated_at
+    }
+
+    class RecipeIngredientBase {
+        <<abstract>>
+        +FK~Ingredient~ ingredient
+        +float quantity
+        +FK~Unit~ unit
+        +datetime created_at
+        +datetime updated_at
+        +clean() validate unit kind
+    }
+
+    class RecipeIngredient {
+        +FK~Recipe~ recipe
+    }
+
+    class SavedRecipeIngredient {
+        +FK~SavedRecipe~ recipe
+    }
+
+    class Ingredient {
+        +string name
+        +M2M~UnitKind~ allowed_unit_kinds
+    }
+
+    class Unit {
+        +string name
+        +string symbol
+        +FK~UnitKind~ kind
+    }
+
+    class UnitKind {
+        +string label
+        +string descriptive_name
+    }
+
+    %% Inheritance
+    UUIDModel <|-- CustomUser
+    AbstractUser <|-- CustomUser
+    UUIDModel <|-- Profile
+    UUIDModel <|-- RecipeBase
+    RecipeBase <|-- Recipe
+    RecipeBase <|-- SavedRecipe
+    UUIDModel <|-- StepBase
+    StepBase <|-- Step
+    StepBase <|-- SavedStep
+    UUIDModel <|-- RecipePhoto
+    UUIDModel <|-- Difficulty
+    UUIDModel <|-- RecipeStatus
+    UUIDModel <|-- RecipeIngredientBase
+    RecipeIngredientBase <|-- RecipeIngredient
+    RecipeIngredientBase <|-- SavedRecipeIngredient
+    UUIDModel <|-- Ingredient
+    UUIDModel <|-- Unit
+    UUIDModel <|-- UnitKind
+
+    %% Relationships
+    CustomUser "1" -- "1" Profile : post_save signal
+    Profile "1" -- "*" Recipe : author
+    Profile "1" -- "*" SavedRecipe : saver
+    Recipe "*" -- "1" Difficulty : difficulty
+    Recipe "*" -- "1" RecipeStatus : status
+    Recipe "1" -- "*" Step : steps
+    Recipe "1" -- "*" RecipePhoto : photos
+    Recipe "1" -- "*" RecipeIngredient : ingredients
+    Recipe "1" -- "*" SavedRecipe : saved_copies
+    SavedRecipe "*" -- "1" Difficulty : difficulty
+    SavedRecipe "*" -- "1" RecipeStatus : status
+    SavedRecipe "1" -- "*" SavedStep : steps
+    SavedRecipe "1" -- "*" SavedRecipeIngredient : ingredients
+    RecipeIngredient "*" -- "1" Ingredient : ingredient
+    RecipeIngredient "*" -- "1" Unit : unit
+    SavedRecipeIngredient "*" -- "1" Ingredient : ingredient
+    SavedRecipeIngredient "*" -- "1" Unit : unit
+    Unit "*" -- "1" UnitKind : kind
+    Ingredient "*" -- "*" UnitKind : allowed_unit_kinds
+```
