@@ -428,3 +428,14 @@ classDiagram
     Unit "*" -- "1" UnitKind : kind
     Ingredient "*" -- "*" UnitKind : allowed_unit_kinds
 ```
+
+## Development Architecture
+
+```mermaid
+flowchart LR
+  U[User] -->|Browser| FE[Front-end\nReact + TS + Vite + Tailwind]
+  FE -->|fetch\ncredentials: include| API[Back-end API\nDjango + DRF]
+  API --> DB[(PostgreSQL)]
+  API --> MEDIA[(Media storage\nlocal for now → S3 later)]
+  MEDIA -->|/media/*| FE
+```
