@@ -42,3 +42,29 @@ flowchart TD
         media_vol[/"backend_media"/]
     end
 ```
+
+## User Flow
+
+```mermaid
+flowchart TD
+    Visit["Visit site"] --> Feed["Browse public feed\n(search, filter, sort)"]
+    Feed --> ViewRecipe["View recipe detail"]
+    Feed --> Auth{"Logged in?"}
+
+    Auth -->|No| LoginSignup["Sign up / Log in"]
+    LoginSignup --> AuthDone["Authenticated"]
+    Auth -->|Yes| AuthDone
+
+    AuthDone --> MyRecipes["My Recipes dashboard\n(Draft / Ready / Published / Saved)"]
+    AuthDone --> SaveCopy["Save/copy a published recipe\n(immutable snapshot)"]
+
+    MyRecipes --> Create["Create new recipe\n(starts as Draft)"]
+    MyRecipes --> Edit["Edit existing recipe"]
+
+    Create --> AddContent["Add steps, ingredients, photos"]
+    Edit --> AddContent
+
+    AddContent --> Ready["Set status: Ready\n(needs title + anime + 1 ingredient)"]
+    Ready --> Publish["Set status: Published\n(needs main photo)"]
+    Publish --> Feed
+```
