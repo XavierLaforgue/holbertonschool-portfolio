@@ -439,3 +439,26 @@ flowchart LR
   API --> MEDIA[(Media storage\nlocal for now → S3 later)]
   MEDIA -->|/media/*| FE
 ```
+
+## Authentication Flow
+
+```mermaid
+sequenceDiagram
+  participant B as Browser (cookies)
+  participant FE as Front-end (apiFetch)
+  participant API as Django API
+
+  FE->>API: POST /api/token/ (email, password)
+  API-->>B: Set-Cookie access_token + refresh_token
+
+  FE->>API: GET /api/... (credentials: include)
+  alt access token expired
+    API-->>FE: 401 Unauthorized
+    FE->>API: POST /api/token/refresh/ (cookie refresh_token)
+    API-->>B: Set-Cookie access_token (new)
+    FE->>API: retry original request
+    API-->>FE: 200 OK (JSON)
+  else access token valid
+    API-->>FE: 200 OK (JSON)
+  end
+```
