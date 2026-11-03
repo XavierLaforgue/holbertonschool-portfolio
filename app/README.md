@@ -25,3 +25,12 @@ app/
 Nginx is the single entry point. It serves the React SPA, proxies API requests to scalable Django/Gunicorn replicas (round-robin), and serves static/media files directly from shared Docker volumes.
 
 See the [Production Architecture diagram](docs/diagrams.md#production-architecture) and [Development Architecture diagram](docs/diagrams.md#development-architecture).
+
+### Frontend
+
+- **Router:** React Router DOM with `createBrowserRouter`
+- **Auth state:** React Context (`AuthProvider`) — no external state library
+- **API layer:** Centralized fetch wrapper (`src/lib/api.ts`) with automatic 401 refresh/retry
+- **Components:** Feature-based folders under `src/components/`
+- **Path alias:** `@` maps to `src/`
+- **Styling:** Tailwind CSS 4
