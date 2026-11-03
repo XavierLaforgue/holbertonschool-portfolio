@@ -84,3 +84,23 @@ npm run build      # TypeScript check + production build
 npm run lint       # ESLint
 npm run format     # Prettier (ts, tsx, css, json)
 ```
+
+### Backend (`back-end/`)
+
+```bash
+uv run manage.py runserver          # Start Django dev server
+uv run manage.py migrate            # Apply migrations
+uv run manage.py makemigrations     # Create migrations
+uv run manage.py createsuperuser    # Create admin user
+uv add <package>                    # Add dependency
+uv sync                             # Sync virtualenv from lockfile
+```
+
+Seed data commands:
+
+```bash
+uv run manage.py create_difficulties
+uv run manage.py create_recipe_statuses
+uv run manage.py create_unit_kinds
+uv run manage.py create_units
+```
