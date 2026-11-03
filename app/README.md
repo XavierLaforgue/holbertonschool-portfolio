@@ -34,3 +34,11 @@ See the [Production Architecture diagram](docs/diagrams.md#production-architectu
 - **Components:** Feature-based folders under `src/components/`
 - **Path alias:** `@` maps to `src/`
 - **Styling:** Tailwind CSS 4
+
+### Backend
+
+- **Django apps:** `core` (UUID base model), `accounts` (auth/users), `recipes` (recipes/steps/photos), `ingredients` (ingredients/units), `animes` (stub)
+- **Custom user model:** `CustomUser` with UUID PK and email as `USERNAME_FIELD`, plus a one-to-one `Profile`
+- **Auth:** `CookieJWTAuthentication` — access token (5 min), refresh token (1 day), stored in cookies
+- **Snapshot pattern:** Abstract base models (`RecipeBase`, `StepBase`, `RecipeIngredientBase`) allow creating both mutable recipes and immutable saved copies
+- **Validation:** Ingredient unit validation ensures the unit's kind matches the ingredient's `allowed_unit_kinds`
