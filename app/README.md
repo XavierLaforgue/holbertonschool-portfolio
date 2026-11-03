@@ -19,3 +19,9 @@ app/
 ├── compose.prod.yml   # Docker Compose production config
 └── INSTALLATION.md    # Setup instructions
 ```
+
+## Architecture
+
+Nginx is the single entry point. It serves the React SPA, proxies API requests to scalable Django/Gunicorn replicas (round-robin), and serves static/media files directly from shared Docker volumes.
+
+See the [Production Architecture diagram](docs/diagrams.md#production-architecture) and [Development Architecture diagram](docs/diagrams.md#development-architecture).
