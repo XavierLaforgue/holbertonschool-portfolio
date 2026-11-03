@@ -112,3 +112,10 @@ uv run manage.py create_units
 - **Docker production:** All env vars injected via `compose.prod.yml` from `.env.prod`. Django does not load a `.env` file in production.
 
 Full setup details in the [Installation Guide](INSTALLATION.md).
+
+## Roadmap / Known Limitations
+
+- No test suite or CI/CD pipeline yet
+- Media served locally by Nginx (no S3/CDN)
+- `animes` app is a stub (planned feature)
+- Cookie-based JWT tokens are not yet `httpOnly` (migration planned)
