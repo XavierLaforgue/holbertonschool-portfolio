@@ -104,3 +104,11 @@ uv run manage.py create_recipe_statuses
 uv run manage.py create_unit_kinds
 uv run manage.py create_units
 ```
+
+## Environment Variables
+
+- **Backend:** Uses `DJANGO_ENV` (default `dev`) to load `.env.<DJANGO_ENV>` via `python-dotenv`. See `.env.dev.example` and `.env.prod.example` for required variables.
+- **Frontend:** Uses `.env.development` (loaded by `npm run dev`) with `VITE_` prefix. See `.env.dev.example` and `.env.prod.example`. The Docker production build gets `VITE_API_BASE_URL` from a build argument in `compose.prod.yml`.
+- **Docker production:** All env vars injected via `compose.prod.yml` from `.env.prod`. Django does not load a `.env` file in production.
+
+Full setup details in the [Installation Guide](INSTALLATION.md).
