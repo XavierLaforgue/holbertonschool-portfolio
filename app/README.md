@@ -73,3 +73,14 @@ All endpoints are under `/api/`. The DRF browsable API is available at `/api/` w
 ## User Flow & Auth Flow
 
 See the [User Flow diagram](docs/diagrams.md#user-flow) and [Authentication Flow diagram](docs/diagrams.md#authentication-flow).
+
+## Development Commands
+
+### Frontend (`front-end/`)
+
+```bash
+npm run dev        # Start Vite dev server (localhost:5173)
+npm run build      # TypeScript check + production build
+npm run lint       # ESLint
+npm run format     # Prettier (ts, tsx, css, json)
+```
