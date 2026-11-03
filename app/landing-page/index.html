@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- The line above tells the browser "this is a modern HTML5 document".
+     Everything written between these comment markers is a note for humans:
+     the browser ignores it. -->
+<!-- <html> is the root element that wraps the whole page.
+     lang="en" tells browsers and screen readers that the page is in English. -->
+<html lang="en">
+<!-- <head> holds information ABOUT the page. None of it is displayed inside the page itself. -->
+<head>
+  <!-- Text encoding. UTF-8 is required for characters like an em dash, é or emojis. -->
+  <meta charset="UTF-8">
+  <!-- On phones, use the real screen width instead of pretending to be a desktop.
+       Required for the responsive rules (@media at the end of style.css) to work. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Text shown in the browser tab and as the title in search results. -->
+  <title>animize_eat — Anime-Inspired Recipe Sharing Platform</title>
+  <!-- The short summary shown under the title in search results. -->
+  <meta name="description" content="Cook the dishes you've always dreamed about, from Naruto's legendary ichiraku ramen to Totoro's bento. Share your creations with the community.">
+
+  <!-- Open Graph -->
+  <!-- Open Graph tags: when someone shares the link (Discord, LinkedIn, Slack...), they give
+       the preview card its title, text, image and type.
+       Note: most platforms need og:image to be a full URL (https://.../assets/logo.png);
+       with a relative path the preview image may not appear. -->
+  <meta property="og:title" content="animize_eat — Anime-Inspired Recipe Sharing Platform">
+  <meta property="og:description" content="Cook the dishes you've always dreamed about, from Naruto's legendary ichiraku ramen to Totoro's bento.">
+  <meta property="og:image" content="assets/logo.png">
+  <meta property="og:type" content="website">
+
+  <!-- Favicon -->
+  <!-- The small icon shown in the browser tab. -->
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+
+  <!-- Fonts -->
+  <!-- preconnect = "open the connection to these servers now, I'll need them soon",
+       so the font loads faster. crossorigin is required because font files are
+       fetched in CORS mode. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Loads the Inter font from Google Fonts in weights 400 (normal), 600, 700 and 800 (extra bold).
+       display=swap shows the text in a fallback font immediately, then switches to Inter once loaded. -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Loads OUR stylesheet (style.css, in the same folder). -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<!-- <body> is the visible part of the page: every section below lives inside it. -->
+<body>
+
+</body>
+</html>

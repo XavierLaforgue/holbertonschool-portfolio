@@ -1,0 +1,172 @@
+/* ===========================
+   Shokugeki Theme Tokens
+   =========================== */
+/* Everything between these markers is a CSS comment: a note for humans, ignored by the browser.
+   "Shokugeki" (an anime about cooking) is the name of the colour theme, the same as the React app. */
+/* :root is the <html> element. "--name: value;" defines a CSS variable ("token"),
+   used later with var(--name). Colours are defined once, so changing the theme
+   means changing one line here. */
+:root {
+  /* page background: cream */
+  --background: #fff8f0;
+  /* main text: dark brown */
+  --foreground: #2d1b14;
+  /* cards: white, and beige */
+  --surface: #ffffff;
+  --surface-hover: #f5ebe0;
+  /* buttons and links: red, darker red on hover, white text on red */
+  --primary: #d4423b;
+  --primary-hover: #b83530;
+  --primary-fg: #ffffff;
+  /* orange (defined for consistency with the React app) */
+  --secondary: #e8960c;
+  /* plum: second colour of the gradients */
+  --accent: #8b2252;
+  /* secondary text: brown-grey */
+  --muted: #7a5c50;
+  /* borders: light beige */
+  --border: #e8d5c8;
+
+  /* font, with fallbacks used if Inter fails to load */
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  /* rounded corners */
+  --radius: 12px;
+  /* maximum width of the content */
+  --max-width: 1100px;
+}
+
+/* ===========================
+   Reset & Base
+   =========================== */
+/* A reset: every browser adds its own default margins; this removes them on every
+   element (*) and its ::before / ::after pseudo-elements.
+   box-sizing: border-box makes "width" include padding and border,
+   which makes sizes much easier to reason about. */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  /* clicking a link like #features scrolls smoothly instead of jumping */
+  scroll-behavior: smooth;
+  /* stop 70px before the target, so the fixed navbar (64px high) doesn't cover the section title */
+  scroll-padding-top: 70px;
+}
+
+/* Default font, text colour and background, comfortable line spacing (1.6 x the font size)
+   and smoother text rendering on macOS/Safari. */
+body {
+  font-family: var(--font);
+  color: var(--foreground);
+  background: var(--background);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Links are red, not underlined, and change colour smoothly (over 0.2s)... */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+/* ...to a darker red when the mouse is over them (:hover). */
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Images never overflow their container (max-width), keep their proportions (height: auto),
+   and don't leave a small gap below them (which "inline" images do). */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ===========================
+   Utilities
+   =========================== */
+/* Reusable classes that any element can use. */
+/* Centres content (margin: 0 auto) and limits its width, with side padding.
+   rem = a multiple of the root font size (usually 16px), so 1.5rem is about 24px. */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* The base button look (applied to <a> links). */
+.btn {
+  display: inline-block;
+  /* vertical then horizontal inner space */
+  padding: 0.75rem 1.75rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 1rem;
+  /* the "hand" cursor that shows something is clickable */
+  cursor: pointer;
+  /* animate background and movement changes over 0.2s */
+  transition: background 0.2s, transform 0.2s;
+  /* a transparent border keeps all buttons the same size, outlined or not */
+  border: 2px solid transparent;
+  text-align: center;
+}
+
+/* On hover, the button lifts by 1px. */
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Red filled button. */
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+
+/* The text colour is repeated here so the generic a:hover rule doesn't turn the text red. */
+.btn-primary:hover {
+  background: var(--primary-hover);
+  color: var(--primary-fg);
+}
+
+/* Outlined button (used in the About section)... */
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* ...that fills with red on hover. */
+.btn-outline:hover {
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+
+/* Smaller button variant (used in the navbar). */
+.btn-sm {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+}
+
+/* Gradient text trick: paint a red-to-plum gradient as the background, clip it to the
+   shape of the letters (background-clip: text), and make the letters themselves transparent
+   so the gradient shows through. */
+.gradient-text {
+  background: linear-gradient(to right, var(--primary), var(--accent));
+  /* prefixed version that some browsers still need */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Same trick with a vertical gradient (plum at the bottom, red at the top). */
+.gradient-text-reverse {
+  background: linear-gradient(to top, var(--accent), var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
