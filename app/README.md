@@ -48,3 +48,24 @@ See the [Production Architecture diagram](docs/diagrams.md#production-architectu
 The database uses UUID primary keys throughout (via `core.UUIDModel`). Recipes have a status workflow (Draft → Ready → Published) with validation gates at each transition. Saving another user's recipe creates an immutable snapshot (separate tables) preserving the original state.
 
 See the [ER diagram](docs/diagrams.md#entity-relationship-diagram) and [Class diagram](docs/diagrams.md#class-diagram).
+
+## API Overview
+
+All endpoints are under `/api/`. The DRF browsable API is available at `/api/` when `DEBUG=True`.
+
+| Prefix                                        | Purpose                          |
+| --------------------------------------------- | -------------------------------- |
+| `POST /api/token/`                            | Login (obtain JWT)               |
+| `POST /api/token/refresh/`                    | Refresh access token             |
+| `POST /api/token/logout/`                     | Clear auth cookies               |
+| `GET /api/me/`                                | Current user info                |
+| `/api/accounts/user_models/`                  | User CRUD                        |
+| `/api/accounts/profile_models/`               | User profiles                    |
+| `/api/recipes/recipe_models/`                 | Recipe CRUD, status changes      |
+| `/api/recipes/recipe_models/{id}/steps/`      | Recipe steps                     |
+| `/api/recipes/recipe_models/{id}/photos/`     | Recipe photos                    |
+| `/api/recipes/recipe_models/{id}/save-copy/`  | Save recipe as immutable copy    |
+| `/api/recipes/savedrecipe_models/`            | List saved recipes               |
+| `/api/ingredients/ingredient_models/`         | Ingredients catalog              |
+| `/api/ingredients/unit_models/`               | Measurement units                |
+| `/api/ingredients/unitkind_models/`           | Unit categories (weight/volume/count) |
