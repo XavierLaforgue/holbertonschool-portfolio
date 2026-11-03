@@ -69,3 +69,7 @@ All endpoints are under `/api/`. The DRF browsable API is available at `/api/` w
 | `/api/ingredients/ingredient_models/`         | Ingredients catalog              |
 | `/api/ingredients/unit_models/`               | Measurement units                |
 | `/api/ingredients/unitkind_models/`           | Unit categories (weight/volume/count) |
+
+## User Flow & Auth Flow
+
+See the [User Flow diagram](docs/diagrams.md#user-flow) and [Authentication Flow diagram](docs/diagrams.md#authentication-flow).
