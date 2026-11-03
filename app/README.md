@@ -42,3 +42,9 @@ See the [Production Architecture diagram](docs/diagrams.md#production-architectu
 - **Auth:** `CookieJWTAuthentication` — access token (5 min), refresh token (1 day), stored in cookies
 - **Snapshot pattern:** Abstract base models (`RecipeBase`, `StepBase`, `RecipeIngredientBase`) allow creating both mutable recipes and immutable saved copies
 - **Validation:** Ingredient unit validation ensures the unit's kind matches the ingredient's `allowed_unit_kinds`
+
+## Data Model
+
+The database uses UUID primary keys throughout (via `core.UUIDModel`). Recipes have a status workflow (Draft → Ready → Published) with validation gates at each transition. Saving another user's recipe creates an immutable snapshot (separate tables) preserving the original state.
+
+See the [ER diagram](docs/diagrams.md#entity-relationship-diagram) and [Class diagram](docs/diagrams.md#class-diagram).
