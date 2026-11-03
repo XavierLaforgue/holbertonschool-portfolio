@@ -47,5 +47,37 @@
 <!-- <body> is the visible part of the page: every section below lives inside it. -->
 <body>
 
+  <!-- Navbar -->
+  <!-- <nav> = a navigation area (meaningful for screen readers).
+       class is used by the CSS; id is a unique name that script.js uses to find this element. -->
+  <nav class="navbar" id="navbar">
+    <!-- Inner box that centres the content and puts the brand and the links side by side. -->
+    <div class="nav-container">
+      <!-- The brand: a link to the top of the page (href="#").
+           <img>: the icon. alt is the text read by screen readers (or shown if the image fails).
+           <span>: the project name next to it (the "wordmark"). -->
+      <a href="#" class="nav-brand">
+        <img src="assets/icon.svg" alt="animize_eat icon" class="nav-icon">
+        <span class="nav-wordmark">animize_eat</span>
+      </a>
+
+      <!-- <ul> = unordered list, <li> = list item: a navigation menu is semantically a list of links.
+           href="#features" jumps to the element that has id="features" (same for the others).
+           id="nav-links" lets script.js find this list. -->
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#tech-stack">Tech Stack</a></li>
+        <li><a href="#about">About</a></li>
+        <!-- target="_blank": open in a new tab.
+             rel="noopener": security, the new tab can't control this page through window.opener.
+             class="btn btn-primary btn-sm": three utility classes from style.css = small red button. -->
+        <li>
+          <a href="https://github.com/XavierLaforgue/holbertonschool-portfolio" target="_blank" rel="noopener" class="btn btn-primary btn-sm">
+            View on GitHub
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
 </body>
 </html>

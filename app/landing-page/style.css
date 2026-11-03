@@ -170,3 +170,82 @@ img {
   background-clip: text;
   color: transparent;
 }
+
+/* ===========================
+   Navbar
+   =========================== */
+.navbar {
+  /* position: fixed + top/left/right 0: stuck to the top of the window, full width,
+     even when scrolling */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* drawn ABOVE the rest of the page */
+  z-index: 100;
+  /* the cream background at 90% opacity... */
+  background: rgba(255, 248, 240, 0.9);
+  /* ...and whatever scrolls behind it is blurred ("frosted glass") */
+  backdrop-filter: blur(12px);
+  /* a thin line separating it from the page */
+  border-bottom: 1px solid var(--border);
+  /* animate the shadow of .navbar.scrolled (below) smoothly */
+  transition: box-shadow 0.3s;
+}
+
+.nav-container {
+  /* centred and width-limited, like .container */
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  /* lay the children out in a row... */
+  display: flex;
+  /* ...centred vertically... */
+  align-items: center;
+  /* ...with the brand on the far left and the links on the far right */
+  justify-content: space-between;
+  /* bar height (that's why scroll-padding-top is 70px) */
+  height: 64px;
+}
+
+/* Icon and name in a row with a small gap, dark extra-bold text. */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--foreground);
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+/* Cancels the red hover colour that all links get. */
+.nav-brand:hover {
+  color: var(--foreground);
+}
+
+/* Icon size. */
+.nav-icon {
+  width: 32px;
+  height: 32px;
+}
+
+/* Links in a row, 2rem apart, WITHOUT the bullet points lists normally have. */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+}
+
+/* Links are muted brown... */
+.nav-links a {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+/* ...and turn dark on hover. */
+.nav-links a:hover {
+  color: var(--foreground);
+}
