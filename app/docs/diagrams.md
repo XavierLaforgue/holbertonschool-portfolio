@@ -199,7 +199,7 @@ erDiagram
 
     RecipeStatus {
         UUID id PK
-        string value UK "Draft|Ready|Published"
+        string value UK "Draft|Ready|Published|Saved"
         datetime created_at
         datetime updated_at
     }
