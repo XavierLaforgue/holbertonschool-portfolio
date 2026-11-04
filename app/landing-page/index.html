@@ -123,5 +123,64 @@
     <div class="blob blob-top"></div>
     <div class="blob blob-bottom"></div>
   </section>
+
+  <!-- Features -->
+  <!-- id="features": the target of the navbar link href="#features".
+       class="container": centred, width-limited content (utility from style.css).
+       <h2>: a second-level heading (the sections sit under the page's single <h1>). -->
+  <section class="section" id="features">
+    <div class="container">
+      <h2 class="section-title fade-in">Features</h2>
+      <p class="section-subtitle fade-in">Everything you need to bring anime cuisine to life</p>
+
+      <!-- The grid that holds the six cards. -->
+      <div class="features-grid">
+        <!-- One card = icon + title (<h3>) + text (<p>). The six cards follow the same pattern.
+             &#9997; is an HTML entity: a character written by its number (9997 = writing hand).
+             Writing emojis as numbers avoids encoding problems. -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#9997;</div>
+          <h3>Recipe Workflow</h3>
+          <p>Create recipes with a structured workflow — Draft, Ready, Published — so you can refine before sharing.</p>
+        </div>
+
+        <!-- &#128247; = camera -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#128247;</div>
+          <h3>Photo Gallery</h3>
+          <p>Showcase your creations with a main image and up to four gallery photos per recipe.</p>
+        </div>
+
+        <!-- &#128278; = bookmark -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#128278;</div>
+          <h3>Save a Copy</h3>
+          <p>Save a copy of other users' published recipes to your personal collection.</p>
+        </div>
+
+        <!-- &#127860; = fork and knife -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#127860;</div>
+          <h3>Public Feed</h3>
+          <p>Browse every recipe published by the community, newest first.</p>
+        </div>
+
+        <!-- &#128100; = person silhouette -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#128100;</div>
+          <h3>Personal Dashboard</h3>
+          <p>Secure authentication with JWT. Find your draft, ready, published and saved recipes in one personal dashboard.</p>
+        </div>
+
+        <!-- &#128241; = mobile phone -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#128241;</div>
+          <h3>Responsive Design</h3>
+          <p>A seamless experience across desktop, tablet, and mobile — cook from any device.</p>
+        </div>
+      <!-- Close the grid, the container and the section. -->
+      </div>
+    </div>
+  </section>
 </body>
 </html>

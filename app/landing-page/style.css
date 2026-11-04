@@ -338,3 +338,81 @@ img {
   right: -5rem;
   background: rgba(139, 34, 82, 0.06);
 }
+
+/* ===========================
+   Sections
+   =========================== */
+/* Shared by the Features, Tech Stack and About sections. */
+/* Vertical space above and below every section. */
+.section {
+  padding: 5rem 0;
+}
+
+/* An alternative (white) background, so consecutive sections are visually separated. */
+.section-alt {
+  background: var(--surface);
+}
+
+/* Centred, fluid-size section titles... */
+.section-title {
+  text-align: center;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+/* ...and muted subtitles with space below them. */
+.section-subtitle {
+  text-align: center;
+  color: var(--muted);
+  font-size: 1.1rem;
+  margin-bottom: 3rem;
+}
+
+/* ===========================
+   Features
+   =========================== */
+.features-grid {
+  /* a 2-D layout of rows and columns */
+  display: grid;
+  /* "create as many columns as fit, each at least 300px wide, sharing the leftover space
+     equally": 3 columns on desktop, 2 on tablets, 1 on phones, without any media query */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  /* space between the cards */
+  gap: 1.5rem;
+}
+
+/* White rounded card with a border. */
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* On hover the card rises 4px and gets a soft shadow (x-offset y-offset blur colour). */
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(45, 27, 20, 0.08);
+}
+
+/* Big emoji. */
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Bold card title. ".feature-card h3" means "any <h3> INSIDE a .feature-card". */
+.feature-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* Muted description. */
+.feature-card p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
