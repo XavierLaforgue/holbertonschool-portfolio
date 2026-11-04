@@ -256,6 +256,47 @@ img {
   color: var(--foreground);
 }
 
+/* Hamburger */
+.nav-toggle {
+  /* hidden by default (desktop); the Responsive part below shows it on small screens */
+  display: none;
+  /* when shown, the three lines are stacked 5px apart */
+  flex-direction: column;
+  gap: 5px;
+  /* no background, no border: just the lines */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Each line: 24x2px, dark, slightly rounded, with animated movement and opacity. */
+.nav-toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--foreground);
+  border-radius: 2px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+/* When the button has the class "active" (menu open, added by script.js), the hamburger
+   becomes an X:
+   - the 1st line (:nth-child(1)) moves down 7px (2px line + 5px gap) to the middle and rotates 45deg, */
+.nav-toggle.active span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+/* - the 2nd (middle) line disappears, */
+.nav-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+/* - the 3rd line moves up 7px and rotates -45deg, so the two remaining lines cross. */
+.nav-toggle.active span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
 /* ===========================
    Hero
    =========================== */
@@ -592,6 +633,42 @@ img {
 /* A media query: "apply the rules inside these braces ONLY IF the window is at most 768px wide"
    (phones, small tablets). Inside it, rules are indented one level. */
 @media (max-width: 768px) {
+  /* Show the hamburger button. */
+  .nav-toggle {
+    display: flex;
+  }
+
+  /* The link list becomes a slide-down panel. */
+  .nav-links {
+    /* full width, just below the 64px navbar */
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    /* nearly opaque cream background with blur, like the navbar */
+    background: rgba(255, 248, 240, 0.98);
+    backdrop-filter: blur(12px);
+    /* links stacked vertically, 1.5rem apart */
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    /* CLOSED state: moved up by its own height (hidden behind the navbar), invisible,
+       and can't be clicked while invisible */
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    /* opening and closing slide and fade over 0.3s */
+    transition: transform 0.3s, opacity 0.3s;
+  }
+
+  /* OPEN state (class "open", added by script.js): back in place, visible, clickable. */
+  .nav-links.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   /* Less empty space at the bottom of the hero (3rem instead of 5rem). */
   .hero {
     padding: 7rem 1.5rem 3rem;

@@ -61,6 +61,17 @@
         <span class="nav-wordmark">animize_eat</span>
       </a>
 
+      <!-- Hamburger button, only shown on small screens (see .nav-toggle in style.css).
+           <button>: a real button, usable with the keyboard (unlike a clickable <div>).
+           aria-label: the button has no text, so this label tells screen-reader users what it does.
+           The three empty <span>s are turned into the three lines of the icon by the CSS;
+           script.js opens and closes the menu when it is clicked. -->
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
       <!-- <ul> = unordered list, <li> = list item: a navigation menu is semantically a list of links.
            href="#features" jumps to the element that has id="features" (same for the others).
            id="nav-links" lets script.js find this list. -->

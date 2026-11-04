@@ -39,3 +39,26 @@ window.addEventListener('scroll', () => {
   // false: more than 10px scrolled = shadow; back at the top = no shadow.
   navbar.classList.toggle('scrolled', window.scrollY > 10);
 });
+
+// Mobile nav toggle
+// Find the hamburger button and the link list (by their id in index.html).
+const navToggle = document.getElementById('nav-toggle');
+const navLinks = document.getElementById('nav-links');
+
+// On each click of the button, toggle adds the class if it's missing and removes it if present.
+// So one click opens the menu (hamburger becomes X, panel slides down), the next click closes it.
+navToggle.addEventListener('click', () => {
+  navToggle.classList.toggle('active');
+  navLinks.classList.toggle('open');
+});
+
+// Close mobile nav on link click
+// Find every <a> INSIDE the link list and loop over them...
+navLinks.querySelectorAll('a').forEach((link) => {
+  // ...and when one is clicked, REMOVE both classes: the panel closes while the page scrolls
+  // to the chosen section. (remove rather than toggle, because here we always want "closed".)
+  link.addEventListener('click', () => {
+    navToggle.classList.remove('active');
+    navLinks.classList.remove('open');
+  });
+});
