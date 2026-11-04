@@ -56,7 +56,7 @@ flowchart TD
     Auth -->|Yes| AuthDone
 
     AuthDone --> MyRecipes["My Recipes dashboard\n(Draft / Ready / Published / Saved)"]
-    AuthDone --> SaveCopy["Save/copy a published recipe\n(immutable snapshot)"]
+    AuthDone --> SaveCopy["Save a copy of a\npublished recipe"]
 
     MyRecipes --> Create["Create new recipe\n(starts as Draft)"]
     MyRecipes --> Edit["Edit existing recipe"]
