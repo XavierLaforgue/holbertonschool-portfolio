@@ -560,6 +560,27 @@ img {
 }
 
 /* ===========================
+   Animations
+   =========================== */
+/* Elements with the class fade-in start hidden; script.js adds the class "visible"
+   when they scroll into view. */
+.fade-in {
+  /* fully transparent (invisible) */
+  opacity: 0;
+  /* shifted 20px down */
+  transform: translateY(20px);
+  /* when these values change, animate over 0.6s, fast at first and slowing down at the end */
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* ".fade-in.visible" (no space) = an element with BOTH classes: fully opaque and back in place.
+   Because of the transition above, the change is animated. */
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===========================
    Responsive
    =========================== */
 /* A media query: "apply the rules inside these braces ONLY IF the window is at most 768px wide"
