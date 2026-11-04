@@ -558,3 +558,39 @@ img {
 .footer-links a:hover {
   color: var(--background);
 }
+
+/* ===========================
+   Responsive
+   =========================== */
+/* A media query: "apply the rules inside these braces ONLY IF the window is at most 768px wide"
+   (phones, small tablets). Inside it, rules are indented one level. */
+@media (max-width: 768px) {
+  /* Less empty space at the bottom of the hero (3rem instead of 5rem). */
+  .hero {
+    padding: 7rem 1.5rem 3rem;
+  }
+
+  /* Smaller logo (200px instead of 280px). */
+  .hero-logo {
+    width: 200px;
+    height: 200px;
+  }
+
+  /* Less vertical space between sections (3.5rem instead of 5rem). */
+  .section {
+    padding: 3.5rem 0;
+  }
+
+  /* Exactly ONE column. Without this, a card's 300px minimum could overflow on very narrow
+     phones (e.g. 320px wide minus the padding). */
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Smaller badges, so more of them fit per row. */
+  .tech-badge {
+    min-width: 110px;
+    padding: 1rem 1.25rem;
+  }
+/* closes the @media block */
+}
