@@ -64,7 +64,7 @@ All endpoints are under `/api/`. The DRF browsable API is available at `/api/` w
 | `/api/recipes/recipe_models/`                 | Recipe CRUD, status changes      |
 | `/api/recipes/{id}/steps/`                    | Recipe steps                     |
 | `/api/recipes/{id}/photos/`                   | Recipe photos                    |
-| `/api/recipes/recipe_models/{id}/save-copy/`  | Save recipe as immutable copy    |
+| `POST /api/recipes/savedrecipe_models/`       | Save a copy of a published recipe |
 | `/api/recipes/savedrecipe_models/`            | List saved recipes               |
 | `/api/ingredients/ingredient_models/`         | Ingredients catalog              |
 | `/api/ingredients/unit_models/`               | Measurement units                |
