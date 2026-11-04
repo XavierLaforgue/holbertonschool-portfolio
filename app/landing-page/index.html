@@ -233,5 +233,35 @@
       </div>
     </div>
   </section>
+
+  <!-- About -->
+  <!-- Same section structure. No section-alt, so it has the cream background,
+       which contrasts with the white Tech Stack section above it. -->
+  <section class="section" id="about">
+    <div class="container">
+      <h2 class="section-title fade-in">About</h2>
+
+      <!-- Two paragraphs. <strong> marks important words (bold). -->
+      <div class="about-content fade-in">
+        <p>
+          <strong>animize_eat</strong> is a full-stack recipe-sharing platform built as the final portfolio project
+          for <strong>Holberton School</strong>. It combines a love for anime and cooking into a community-driven
+          web application where users can create, publish, and discover anime-inspired recipes.
+        </p>
+        <p>
+          The architecture features a React single-page application served through Nginx, which also acts as a
+          reverse proxy and load balancer for multiple Django API replicas — all orchestrated with Docker Compose.
+        </p>
+        <!-- The author credit and an OUTLINED button (btn-outline), so it stands out
+             less than the red "View on GitHub" buttons. -->
+        <div class="about-author">
+          <p>Built by <strong>Xavier Laforgue</strong></p>
+          <a href="https://github.com/XavierLaforgue" target="_blank" rel="noopener" class="btn btn-outline">
+            GitHub Profile
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
 </body>
 </html>

@@ -462,3 +462,39 @@ img {
   font-size: 0.8rem;
   color: var(--muted);
 }
+
+/* ===========================
+   About
+   =========================== */
+/* A narrow, centred text column (long lines are hard to read). */
+.about-content {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Muted paragraphs with generous line spacing... */
+.about-content p {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+  line-height: 1.7;
+}
+
+/* ...bold words are darker so they stand out. */
+.about-content strong {
+  color: var(--foreground);
+}
+
+/* A thin separator line above the author block... */
+.about-author {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ...and a slightly larger "Built by" line. */
+.about-author p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
