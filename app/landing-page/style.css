@@ -498,3 +498,63 @@ img {
   font-size: 1.1rem;
   margin-bottom: 1rem;
 }
+
+/* ===========================
+   Footer
+   =========================== */
+/* The dark-brown text colour is used as the BACKGROUND here, and the text is cream at 70%
+   opacity: the colours are inverted, like a dark theme. */
+.footer {
+  background: var(--foreground);
+  color: rgba(255, 248, 240, 0.7);
+  padding: 3rem 0;
+}
+
+/* Centre everything. */
+.footer-content {
+  text-align: center;
+}
+
+/* Icon and name in a row. inline-flex keeps the block only as wide as its content,
+   so text-align: center (above) can centre it. */
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--background);
+  margin-bottom: 0.75rem;
+}
+
+.footer-icon {
+  width: 24px;
+  height: 24px;
+  /* trick to turn the coloured icon WHITE: brightness(0) makes it black,
+     then invert(1) flips black to white */
+  filter: brightness(0) invert(1);
+}
+
+/* Small text. */
+.footer p {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/* The two links and the dot in a centred row. */
+.footer-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Links are faded cream... */
+.footer-links a {
+  color: rgba(255, 248, 240, 0.7);
+}
+
+/* ...and become fully cream on hover (instead of the default red, hard to read on dark brown). */
+.footer-links a:hover {
+  color: var(--background);
+}
