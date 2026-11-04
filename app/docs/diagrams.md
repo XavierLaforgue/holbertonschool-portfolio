@@ -64,8 +64,8 @@ flowchart TD
     Create --> AddContent["Add steps, ingredients, photos"]
     Edit --> AddContent
 
-    AddContent --> Ready["Set status: Ready\n(needs title + anime + 1 ingredient)"]
-    Ready --> Publish["Set status: Published\n(needs main photo)"]
+    AddContent --> Ready["Set status: Ready"]
+    Ready --> Publish["Set status: Published\n(needs title + anime +\n1 ingredient + 1 step)"]
     Publish --> Feed
 ```
 
