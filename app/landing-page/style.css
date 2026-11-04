@@ -416,3 +416,49 @@ img {
   font-size: 0.95rem;
   line-height: 1.6;
 }
+
+/* ===========================
+   Tech Stack
+   =========================== */
+/* Badges in a row that WRAPS to the next line when there's no room, centred, with 1rem gaps.
+   (Flexbox instead of a grid here, because badges have different widths and should stay centred.) */
+.tech-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.tech-badge {
+  /* stack the name and the role vertically, centred */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  /* cream background, which contrasts with the white section */
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.75rem;
+  /* so short names don't look tiny */
+  min-width: 130px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+/* On hover: lift by 2px and turn the border red. */
+.tech-badge:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+/* Dark name... */
+.tech-badge strong {
+  font-size: 1rem;
+  color: var(--foreground);
+}
+
+/* ...small muted role. */
+.tech-badge span {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
