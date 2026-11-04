@@ -193,6 +193,12 @@ img {
   transition: box-shadow 0.3s;
 }
 
+/* When the navbar ALSO has the class "scrolled" (added by script.js once the page is scrolled),
+   give it a shadow: 0px horizontal offset, 2px down, 20px blur, very transparent dark brown. */
+.navbar.scrolled {
+  box-shadow: 0 2px 20px rgba(45, 27, 20, 0.08);
+}
+
 .nav-container {
   /* centred and width-limited, like .container */
   max-width: var(--max-width);

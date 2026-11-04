@@ -28,3 +28,14 @@ const observer = new IntersectionObserver(
 // Find every element with the class fade-in ("." = class selector, like in CSS)
 // and start watching each one.
 document.querySelectorAll('.fade-in').forEach((el) => observer.observe(el));
+
+// Navbar shadow on scroll
+// Find the element with id="navbar" and keep it in a constant.
+const navbar = document.getElementById('navbar');
+// "Every time the window scrolls, run this function."
+window.addEventListener('scroll', () => {
+  // window.scrollY = how many pixels the page is scrolled down.
+  // classList.toggle(name, condition) ADDS the class if the condition is true and REMOVES it if
+  // false: more than 10px scrolled = shadow; back at the top = no shadow.
+  navbar.classList.toggle('scrolled', window.scrollY > 10);
+});
