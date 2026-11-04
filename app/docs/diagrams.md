@@ -47,7 +47,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    Visit["Visit site"] --> Feed["Browse public feed\n(search, filter, sort)"]
+    Visit["Visit site"] --> Feed["Browse public feed"]
     Feed --> ViewRecipe["View recipe detail"]
     Feed --> Auth{"Logged in?"}
 
