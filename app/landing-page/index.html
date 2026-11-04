@@ -79,5 +79,49 @@
       </ul>
     </div>
   </nav>
+
+  <!-- Hero -->
+  <!-- The "hero" is the big first block visitors see.
+       <section> = a thematic block of the page. .hero-content stacks and centres everything inside.
+       The class fade-in (used on many elements below) is the scroll animation:
+       style.css says what it looks like and script.js triggers it. -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <!-- The big logo.
+           width/height attributes: the browser reserves the space BEFORE the image loads,
+           so the page doesn't jump (the CSS then sets the real displayed size).
+           fetchpriority="high": download this image first, it's the most visible one. -->
+      <img src="assets/logo.png" alt="animize_eat logo" class="hero-logo fade-in" width="320" height="320" fetchpriority="high">
+
+      <!-- <h1> = the page's main heading (there should be only one).
+           The <span> makes part of it use the red-to-plum gradient text (.gradient-text). -->
+      <h1 class="hero-title fade-in">
+        Recipes Straight Out of
+        <span class="gradient-text">Your Favorite Anime</span>
+      </h1>
+
+      <!-- The tagline, partly in the vertical gradient (.gradient-text-reverse). -->
+      <p class="hero-subtitle fade-in">
+        <span class="gradient-text-reverse">anime straight </span>into your life
+      </p>
+
+      <!-- The pitch. In HTML, a line break inside a paragraph is displayed as a simple space. -->
+      <p class="hero-description fade-in">
+        Cook the dishes you've always dreamed about, from Naruto's legendary ichiraku ramen to Totoro's bento.
+        Share your creations with the community and let your passion for anime and food come alive.
+      </p>
+
+      <!-- The call-to-action button (normal size this time: no btn-sm). -->
+      <a href="https://github.com/XavierLaforgue/holbertonschool-portfolio" target="_blank" rel="noopener" class="btn btn-primary fade-in">
+        View on GitHub
+      </a>
+    </div>
+
+    <!-- Decorative blobs -->
+    <!-- Two empty <div>s that the CSS turns into soft, blurred coloured circles in the corners:
+         pure decoration. -->
+    <div class="blob blob-top"></div>
+    <div class="blob blob-bottom"></div>
+  </section>
 </body>
 </html>
