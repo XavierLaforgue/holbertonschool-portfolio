@@ -79,14 +79,14 @@ erDiagram
     Profile ||--o{ SavedRecipe : "saves"
 
     Recipe }o--|| RecipeStatus : "has status"
-    Recipe }o--o| Difficulty : "has difficulty"
+    Recipe }o--|| Difficulty : "has difficulty"
     Recipe ||--o{ Step : "has steps"
     Recipe ||--o{ RecipePhoto : "has photos"
     Recipe ||--o{ RecipeIngredient : "has ingredients"
     Recipe ||--o{ SavedRecipe : "original for"
 
     SavedRecipe }o--|| RecipeStatus : "has status"
-    SavedRecipe }o--o| Difficulty : "has difficulty"
+    SavedRecipe }o--|| Difficulty : "has difficulty"
     SavedRecipe ||--o{ SavedStep : "has steps"
     SavedRecipe ||--o{ SavedRecipeIngredient : "has ingredients"
     SavedRecipe }o--o| Profile : "original author"
