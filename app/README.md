@@ -16,6 +16,7 @@ app/
 ├── front-end/         # React 19 + Vite SPA
 ├── nginx/             # Reverse proxy configuration
 ├── docs/              # Diagrams and reference notes
+├── landing-page/      # Static project landing page (GitHub Pages)
 ├── compose.prod.yml   # Docker Compose production config
 └── INSTALLATION.md    # Setup instructions
 ```
