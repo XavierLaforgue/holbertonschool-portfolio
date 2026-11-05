@@ -45,7 +45,7 @@ See the [Production Architecture diagram](docs/diagrams.md#production-architectu
 
 ## Data Model
 
-The database uses UUID primary keys throughout (via `core.UUIDModel`). Recipes have a status workflow (Draft → Ready → Published). Only a Ready recipe can be published, and only if it has a title, an anime, at least one ingredient and at least one step. A published recipe must be moved back to Ready before it can be edited. Saving another user's recipe creates an immutable snapshot (separate tables) preserving the original state.
+The database uses UUID primary keys throughout (via `core.UUIDModel`). Recipes have a status workflow (Draft → Ready → Published). Only a Ready recipe can be published, and only if it has a title, an anime, at least one ingredient and at least one step. A published recipe must be moved back to Ready before it can be edited. Saving another user's published recipe stores a copy of its main fields (title, anime, description, difficulty, portions, estimated time) in a separate table. Steps and ingredients are not copied yet, and photos are still read from the original recipe.
 
 See the [ER diagram](docs/diagrams.md#entity-relationship-diagram) and [Class diagram](docs/diagrams.md#class-diagram).
 
