@@ -46,7 +46,7 @@ See the [Production Architecture diagram](app/docs/diagrams.md#production-archit
 
 ## Key Technical Decisions
 
-1. **Cookie-based JWT**: reduces XSS attack surface since tokens are not accessible via JavaScript (httpOnly migration in progress).
+1. **Cookie-based JWT**: the browser stores and sends the tokens automatically, so the front-end code never handles them. Making the cookies httpOnly (migration in progress) will also hide them from JavaScript and reduce the XSS attack surface.
 2. **Abstract base models for snapshots**: `RecipeBase`, `StepBase`, and `RecipeIngredientBase` are inherited by both mutable recipes and immutable saved copies, keeping the schema DRY while enforcing immutability.
 3. **UUID primary keys**: prevents ID enumeration, makes records merge-safe across environments.
 4. **Nginx as single entry point**: handles SPA routing (`try_files` fallback), round-robin load balancing across back-end replicas, and efficient static file delivery.
