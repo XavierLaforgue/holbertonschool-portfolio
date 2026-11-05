@@ -59,6 +59,7 @@ All endpoints are under `/api/`. The DRF browsable API is available at `/api/` w
 | `POST /api/token/refresh/`                    | Refresh access token             |
 | `POST /api/token/logout/`                     | Clear auth cookies               |
 | `GET /api/me/`                                | Current user info                |
+| `GET /api/me/recipes/`                        | Current user's recipes by status |
 | `/api/accounts/user_models/`                  | User CRUD                        |
 | `/api/accounts/profile_models/`               | User profiles                    |
 | `/api/recipes/recipe_models/`                 | Recipe CRUD, status changes      |
