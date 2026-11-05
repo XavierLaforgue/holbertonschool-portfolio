@@ -259,7 +259,11 @@ class BaseSavedRecipeViewSet(viewsets.ModelViewSet):
     GET /saved-recipes/<id>/ - Detail with nested full objects
     """
     queryset = SavedRecipe.objects.all()
-    permission_classes = [permissions.AllowAny]
+    # Only logged-in users can save copies and see their own copies.
+    permission_classes = [permissions.IsAuthenticated]
+    # Saved copies are read-only: they can be created, read and deleted,
+    # but not edited (no PUT or PATCH).
+    http_method_names = ["get", "post", "delete", "head", "options"]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["title", "anime_custom", "description",
                      "saver__display_name", "original_author__display_name"]
@@ -297,7 +301,10 @@ class BaseSavedRecipeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):  # type: ignore[override]
         """Optimize queries for detail endpoint with nested objects."""
-        queryset = SavedRecipe.objects.all().order_by("-saved_at")
+        # Each user only sees (and can only delete) their own saved copies.
+        queryset = SavedRecipe.objects.filter(
+            saver__user=self.request.user
+        ).order_by("-saved_at")
         if self.action == "retrieve":
             # Detail endpoint: optimize for expanded nested data.
             # select_related: SQL JOIN (1 query) -> ForeignKey/OneToOne
