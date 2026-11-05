@@ -41,7 +41,7 @@ See the [Production Architecture diagram](docs/diagrams.md#production-architectu
 - **Custom user model:** `CustomUser` with UUID PK and email as `USERNAME_FIELD`, plus a one-to-one `Profile`
 - **Auth:** `CookieJWTAuthentication` — access token (5 min), refresh token (1 day), stored in cookies
 - **Snapshot pattern:** Abstract base models (`RecipeBase`, `StepBase`, `RecipeIngredientBase`) let editable recipes and their saved copies share the same fields while living in separate tables
-- **Validation:** Ingredient unit validation ensures the unit's kind matches the ingredient's `allowed_unit_kinds`
+- **Validation:** `RecipeIngredientBase.clean()` rejects a unit whose kind is not in the ingredient's `allowed_unit_kinds` (an ingredient with no allowed kinds accepts any unit). It runs in the Django admin, but the API does not call it yet
 
 ## Data Model
 
