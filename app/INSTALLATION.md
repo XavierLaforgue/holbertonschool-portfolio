@@ -61,7 +61,7 @@ Provide the desired database configuration.
 
 ### 3. Provide environment file (front-end)
 
-Use the provided `front-end/animize_eat/.env.dev.example` to create a private `front-end/animize_eat/.env.dev` file the front-end (`React`) will actually use.
+Use the provided `front-end/.env.dev.example` to create a private `front-end/.env.development` file the front-end (`React`) will actually use. Vite loads it automatically when you run `npm run dev`.
 
 <!-- ### 4. Import media files
 
