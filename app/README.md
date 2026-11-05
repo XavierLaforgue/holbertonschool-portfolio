@@ -121,6 +121,7 @@ Full setup details in the [Installation Guide](INSTALLATION.md).
 - Media served locally by Nginx (no S3/CDN)
 - `animes` app is a stub (planned feature)
 - Cookie-based JWT tokens are not yet `httpOnly` (migration planned)
+- Saved copies do not include steps and ingredients yet (planned)
 
 ## License
 
