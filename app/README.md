@@ -117,7 +117,7 @@ Full setup details in the [Installation Guide](INSTALLATION.md).
 
 ## Roadmap / Known Limitations
 
-- No test suite or CI/CD pipeline yet
+- No test suite or CI pipeline yet (only the landing page is deployed automatically, by a GitHub Actions workflow)
 - Media served locally by Nginx (no S3/CDN)
 - `animes` app is a stub (planned feature)
 - Cookie-based JWT tokens are not yet `httpOnly` (migration planned)
