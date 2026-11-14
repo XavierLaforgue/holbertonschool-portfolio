@@ -7,6 +7,7 @@ type RecipeFeedGridProps = {
 
 export default function RecipeFeedGrid({ recipes }: RecipeFeedGridProps) {
 	return (
+		// 1 column by default (mobile), 2 from 640 px, 3 from 1024 px
 		<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 			{recipes.map((recipe) => (
 				<RecipeCard key={recipe.id} recipe={recipe} />
