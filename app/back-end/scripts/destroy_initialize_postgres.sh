@@ -10,12 +10,29 @@ set -euo pipefail
 # bash ./scripts/destroy_initialize_postgres.sh
 # ```
 
-# Add details of the database to the local environment from an
-# environment file:
-export $(grep '^DB_USER=' .env.dev)
-export $(grep '^DB_HOST=' .env.dev)
-export $(grep '^DB_PORT=' .env.dev)
-export $(grep '^DB_NAME=' .env.dev)
+ENV_FILE=.env.dev
+if [ ! -f "$ENV_FILE" ]; then
+    echo "No ${ENV_FILE} found. Run this script from back-end/ after" \
+         "copying .env.dev.example to .env.dev." >&2
+    exit 1
+fi
+
+# Read one variable from the environment file.
+# `export $(grep ...)` would break on lines with an inline comment, like
+# `DB_PORT=5432  # default PostgreSQL port`, so instead: keep what follows
+# the first `=`, then remove an inline comment (whitespace + `#`), trailing
+# whitespace and surrounding quotes. (Values must therefore not contain
+# " #".)
+env_value() {
+    grep -E "^$1=" "$ENV_FILE" | tail -n 1 | cut -d '=' -f 2- \
+        | sed -E -e 's/[[:space:]]+#.*$//' -e 's/[[:space:]]+$//' \
+                 -e 's/^"(.*)"$/\1/' -e "s/^'(.*)'$/\1/"
+}
+
+DB_NAME=$(env_value DB_NAME)
+DB_USER=$(env_value DB_USER)
+DB_HOST=$(env_value DB_HOST)
+DB_PORT=$(env_value DB_PORT)
 
 # Drop the database:
 echo -e "Dropping postgres database ${DB_NAME}..."
@@ -36,8 +53,8 @@ echo "Applying migrations..."
 uv run manage.py migrate
 
 # Use details of the superuser from the environment file:
-export $(grep '^ADMIN_USER=' .env.dev)
-export $(grep '^ADMIN_EMAIL=' .env.dev)
+ADMIN_USER=$(env_value ADMIN_USER)
+ADMIN_EMAIL=$(env_value ADMIN_EMAIL)
 # Create a superuser (admin user) for the django server
 echo "Creating superuser '$ADMIN_USER' with email '${ADMIN_EMAIL}'..."
 echo "Password for the new superuser will be requested:" 
