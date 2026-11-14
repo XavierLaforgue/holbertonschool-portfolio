@@ -22,14 +22,6 @@ echo -e "Dropping postgres database ${DB_NAME}..."
 echo -e "Database owner password (${DB_USER}) will be requested."
 dropdb -U $DB_USER -h $DB_HOST -p $DB_PORT $DB_NAME 
 
-# Remove all files with '.py' file extension in a 'migrations/'
-# directory two levels below the project directory, i.e.,
-# `back-end/*/migrations/`, except those that start with an underscore
-# (_). The --force option is so no error is thrown if there are no
-# files to delete.
-echo "Removing migrations files..."
-rm --verbose --force */migrations/[!_]*.py 
-
 # Create database and assign the Django user as its owner.
 # This uses the postgres user which is the default user of postresql
 # databases and has no password, but needs to match with the user
@@ -37,11 +29,10 @@ rm --verbose --force */migrations/[!_]*.py
 echo -e "Creating database $DB_NAME with owner $DB_USER..."
 sudo -u postgres createdb --owner=$DB_USER $DB_NAME
 
-# Create initial migrations for the models defined in the project:
-echo "Creating migration files..."
-uv run manage.py makemigrations
-# Perform said migrations:
-echo "Migrating models to database schema..."
+# Create the tables from the migration files. They are committed with
+# the code (never deleted or regenerated here), so every machine creates
+# exactly the same tables.
+echo "Applying migrations..."
 uv run manage.py migrate
 
 # Use details of the superuser from the environment file:
