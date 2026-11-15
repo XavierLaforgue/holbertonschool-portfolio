@@ -31,20 +31,43 @@ env_value() {
 
 DB_NAME=$(env_value DB_NAME)
 DB_USER=$(env_value DB_USER)
-DB_HOST=$(env_value DB_HOST)
-DB_PORT=$(env_value DB_PORT)
+DB_PW=$(env_value DB_PW)
 
-# Drop the database:
-echo -e "Dropping postgres database ${DB_NAME}..."
-echo -e "Database owner password (${DB_USER}) will be requested."
-dropdb -U $DB_USER -h $DB_HOST -p $DB_PORT $DB_NAME 
+# Run a command as the `postgres` superuser. It is the default admin role
+# of PostgreSQL and has no password: it uses "peer" authentication, i.e.
+# the Linux user running the command must have the same name (hence
+# `sudo -u postgres`). The `cd /` avoids a harmless "could not change
+# directory" warning, since `postgres` cannot read our home directory.
+as_postgres() {
+    (cd / && sudo -u postgres "$@")
+}
 
-# Create database and assign the Django user as its owner.
-# This uses the postgres user which is the default user of postresql
-# databases and has no password, but needs to match with the user
-# executing the command (hence the `sudo -u postgres`).
-echo -e "Creating database $DB_NAME with owner $DB_USER..."
-sudo -u postgres createdb --owner=$DB_USER $DB_NAME
+# Drop the database (no error if it does not exist yet).
+echo "Dropping database ${DB_NAME} (if it exists)..."
+as_postgres dropdb --if-exists "$DB_NAME"
+
+# Create the role Django connects with, unless it already exists.
+# The SQL is read from stdin (heredoc) so psql can substitute its
+# variables safely: :"user" is quoted as an identifier and :'pw' as a
+# string literal (psql does not substitute variables in `-c` commands).
+# CREATEDB lets Django create its temporary database when running tests.
+role_exists=$(as_postgres psql -tA -v user="$DB_USER" <<'SQL'
+SELECT 1 FROM pg_roles WHERE rolname = :'user';
+SQL
+)
+if [ "$role_exists" = "1" ]; then
+    echo "Role ${DB_USER} already exists (its password is left unchanged)."
+else
+    echo "Creating role ${DB_USER} with the password DB_PW from ${ENV_FILE}..."
+    as_postgres psql -q -v ON_ERROR_STOP=1 -v user="$DB_USER" \
+        -v pw="$DB_PW" <<'SQL'
+CREATE ROLE :"user" LOGIN CREATEDB PASSWORD :'pw';
+SQL
+fi
+
+# Create the database and make the Django role its owner.
+echo "Creating database ${DB_NAME} with owner ${DB_USER}..."
+as_postgres createdb --owner="$DB_USER" "$DB_NAME"
 
 # Create the tables from the migration files. They are committed with
 # the code (never deleted or regenerated here), so every machine creates
