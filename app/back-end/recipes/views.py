@@ -455,12 +455,12 @@ class RecipeStepListCreateSwapAPIView(generics.ListCreateAPIView):
         return Step.objects.filter(recipe_id=recipe_id).order_by("number")
 
     def perform_create(self, serializer):
-        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
+        recipe = get_recipe_of_author(self.request, self.kwargs["recipe_id"])
         serializer.save(recipe=recipe)
 
     def patch(self, request, *args, **kwargs):
         """Swap two steps via payload: {"swap": [{"id", "number"}, ...]}."""
-        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
+        recipe = get_recipe_of_author(request, self.kwargs["recipe_id"])
         swap_payload = request.data.get("swap")
 
         if not isinstance(swap_payload, list) or len(swap_payload) != 2:
@@ -527,8 +527,12 @@ class RecipeStepDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return Step.objects.filter(recipe_id=recipe_id)
 
     def perform_update(self, serializer):
-        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
+        recipe = get_recipe_of_author(self.request, self.kwargs["recipe_id"])
         serializer.save(recipe=recipe)
+
+    def perform_destroy(self, instance):
+        get_recipe_of_author(self.request, self.kwargs["recipe_id"])
+        instance.delete()
 
 
 class StepModelViewSet(BaseStepViewSet):
