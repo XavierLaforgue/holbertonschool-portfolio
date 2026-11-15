@@ -48,17 +48,25 @@ RUN npm run build
 # from a shared Docker volume.
 FROM alpine:3.21
 
+# Copy only the build output from stage 1, into /build.
+# /build is deliberately NOT the folder where the shared volume is mounted
+# (/app/dist, see compose.prod.yml): a volume hides whatever the image has
+# at its mount point, so files stored there would only reach a brand-new
+# volume and a rebuilt image would never replace them.
+COPY --from=build /app/dist /build
+
+# Create the mount point of the shared volume (also the working directory).
 WORKDIR /app/dist
 
-# Copy only the build output from stage 1.
-COPY --from=build /app/dist .
-# /app/dist will be mounted as volume while composing so the
-# Nginx container can serve these files.
-
-# This container's sole purpose is to populate the shared volume with
-# the built front-end files. 
-# `tail -f /dev/null` is a common lightweight "do nothing" pattern.
-CMD ["tail", "-f", "/dev/null"]
-# This instruction starts the container and keeps it alive so Docker
-# Compose keeps the volume mounted, while consuming virtually zero
-# resources.
+# On every start (`sh -c "..."` runs the three commands in order):
+#   1. `rm -rf /app/dist/*` empties the shared volume (the files of the
+#      previous build, whose names change on every build),
+#   2. `cp -a /build/. /app/dist/` copies this image's files into it
+#      (`-a` keeps the files' attributes, `/.` copies the folder's content),
+#   3. `exec tail -f /dev/null` then does nothing forever: a common
+#      lightweight pattern that keeps the container alive, so Docker
+#      Compose keeps the volume mounted, at virtually zero cost (`exec`
+#      makes it replace the shell, so `docker compose stop` stops it
+#      at once).
+# So `docker compose up --build` is enough to serve a new front-end build.
+CMD ["sh", "-c", "rm -rf /app/dist/* && cp -a /build/. /app/dist/ && exec tail -f /dev/null"]

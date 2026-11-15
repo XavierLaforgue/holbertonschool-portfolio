@@ -98,8 +98,10 @@ services:
   # resulting static files in a volume. It does NOT run a web server:
   # Nginx serves the files.
   #
-  # The container stays alive (via `tail -f /dev/null`) so the named
-  # volume remains mounted and accessible to Nginx.
+  # On every start, the container copies the files of its image into the
+  # volume (replacing those of the previous build), then stays alive
+  # (via `tail -f /dev/null`) so the named volume remains mounted and
+  # accessible to Nginx.
   front-end:
     build:
       context: ./front-end
@@ -110,7 +112,7 @@ services:
     volumes:
       # The built React files are placed into this shared volume.
       - frontend_build:/app/dist
-    # This container only needs to exist so its volume is populated.
+    # This container only needs to start once to fill its volume.
     # It doesn't need to restart if it stops.
     restart: "no"
 
