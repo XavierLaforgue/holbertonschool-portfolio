@@ -18,12 +18,17 @@
   <!-- Open Graph -->
   <!-- Open Graph tags: when someone shares the link (Discord, LinkedIn, Slack...), they give
        the preview card its title, text, image and type.
-       Note: most platforms need og:image to be a full URL (https://.../assets/logo.png);
-       with a relative path the preview image may not appear. -->
-  <meta property="og:title" content="animize_eat — Anime-Inspired Recipe Sharing Platform">
+       og:url and og:image are full URLs: most platforms ignore relative paths, and then
+       the preview shows no image. -->
+  <meta property="og:title" content="animize_eat: an Anime-Inspired Recipe Sharing Platform">
   <meta property="og:description" content="Cook the dishes you've always dreamed about, from Naruto's legendary ichiraku ramen to Totoro's bento.">
-  <meta property="og:image" content="assets/logo.png">
+  <meta property="og:image" content="https://xavierlaforgue.github.io/holbertonschool-portfolio/assets/logo.png">
   <meta property="og:type" content="website">
+  <meta property="og:url" content="https://xavierlaforgue.github.io/holbertonschool-portfolio/">
+
+  <!-- Canonical URL: tells search engines the one official address of this page
+       (the same page also answers at .../index.html). -->
+  <link rel="canonical" href="https://xavierlaforgue.github.io/holbertonschool-portfolio/">
 
   <!-- Favicon -->
   <!-- The small icon shown in the browser tab. -->
