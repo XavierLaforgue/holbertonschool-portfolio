@@ -31,15 +31,9 @@
   <!-- The small icon shown in the browser tab. -->
   <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 
-  <!-- Fonts -->
-  <!-- preconnect = "open the connection to these servers now, I'll need them soon",
-       so the font loads faster. crossorigin is required because font files are
-       fetched in CORS mode. -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Loads the Inter font from Google Fonts in weights 400 (normal), 600, 700 and 800 (extra bold).
-       display=swap shows the text in a fallback font immediately, then switches to Inter once loaded. -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Fonts: the Inter font files are in assets/fonts/ and declared at the top of
+       style.css. They are not loaded from Google Fonts, which would receive the IP
+       address of every visitor (RGPD). -->
 
   <!-- Loads OUR stylesheet (style.css, in the same folder). -->
   <link rel="stylesheet" href="style.css">

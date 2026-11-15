@@ -1,4 +1,39 @@
 /* ===========================
+   Fonts
+   =========================== */
+/* The Inter font, served from our own folder (assets/fonts/) instead of Google
+   Fonts, so visitors' IP addresses are not sent to Google (RGPD). Each
+   @font-face tells the browser which file to download for one weight: 400
+   (normal), 600, 700 and 800 (extra bold). Only the Latin characters are
+   included. font-display: swap shows the text in a fallback font at once, then
+   switches to Inter once it is loaded. Licence: SIL Open Font License
+   (assets/fonts/OFL.txt). */
+@font-face {
+  font-family: 'Inter';
+  font-weight: 400;
+  font-display: swap;
+  src: url('assets/fonts/inter-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 600;
+  font-display: swap;
+  src: url('assets/fonts/inter-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 700;
+  font-display: swap;
+  src: url('assets/fonts/inter-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 800;
+  font-display: swap;
+  src: url('assets/fonts/inter-latin-800-normal.woff2') format('woff2');
+}
+
+/* ===========================
    Shokugeki Theme Tokens
    =========================== */
 /* Everything between these markers is a CSS comment: a note for humans, ignored by the browser.
