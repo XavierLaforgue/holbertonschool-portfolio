@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import type { User } from '../types'
 import { AuthContext } from '../contexts/AuthContext'
-import { apiLogin, apiSignup, apiFetchMe, apiLogout } from '../lib/api-auth'
+import { apiLogin, apiSignup, apiFetchMe, apiLogout, apiDeleteAccount } from '../lib/api-auth'
 
 /**
  * AuthProvider: wrap app so any component can call `useAuth()`.
@@ -85,8 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setUser(null)
 	}, [])
 
+	const deleteAccount = useCallback(async () => {
+		if (!user) return
+		await apiDeleteAccount(user.id)  // the back-end also deletes the cookies
+		setUser(null)
+	}, [user])
+
 	return (
-		<AuthContext.Provider value={{ user, isLoading, login, signup, verifyAuth, logout }}>
+		<AuthContext.Provider value={{ user, isLoading, login, signup, verifyAuth, logout, deleteAccount }}>
 			{children}
 		</AuthContext.Provider>
 	)

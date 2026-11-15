@@ -5,6 +5,7 @@ import NotFoundPage from '@/pages/NotFoundPage'
 import ErrorPage from '@/pages/ErrorPage'
 import LoginPage from '@/pages/LoginPage'
 import SignUpPage from '@/pages/SignUpPage'
+import AccountPage from '@/pages/AccountPage'
 import RecipeDetailPage from '@/pages/RecipeDetailPage'
 import RecipeEditPage from '@/pages/RecipeEditPage'
 import MyRecipesPage from '@/pages/MyRecipesPage'
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
 			{ index: true, element: <HomePage /> },
 			{ path: 'login', element: <LoginPage /> },
 			{ path: 'signup', element: <SignUpPage /> },
+			{ path: 'account', element: <AccountPage /> },
 			// Edit must come before :id to avoid ":id" matching "create"
 			{ path: 'recipes/:id/edit', element: <RecipeEditPage /> },
 			{ path: 'recipes/:id', element: <RecipeDetailPage /> },

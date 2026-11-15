@@ -174,6 +174,8 @@ export interface AuthContextType {
 	verifyAuth: () => Promise<User | null>
 	// asks the backend to delete the (httpOnly) cookies
 	logout: () => Promise<void>
+	// deletes the current user's account and everything in it
+	deleteAccount: () => Promise<void>
 }
 
 // --- Styling ------------------------

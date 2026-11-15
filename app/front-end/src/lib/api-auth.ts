@@ -32,3 +32,8 @@ export async function apiFetchMe(): Promise<User> {
 export async function apiLogout(): Promise<void> {
 	await apiFetch('/api/token/logout/', { method: 'POST' })
 }
+
+/** Delete the account for good (the back-end also deletes the cookies). */
+export async function apiDeleteAccount(userId: string): Promise<void> {
+	await apiFetch(`/api/accounts/user_models/${userId}/`, { method: 'DELETE' })
+}

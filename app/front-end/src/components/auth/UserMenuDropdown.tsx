@@ -9,6 +9,12 @@ export default function UserMenuDropdown({ onLogout }: UserMenuDropdownProps) {
 		<div className="absolute flex flex-col right-0 mt-2 w-48 rounded-md border border-input bg-surface py-1 shadow-lg z-1">
 			{/* TODO: add icons to the dropdown menu items */}
 			<Link
+				to="/account"
+				className="w-full px-4 py-2 text-left text-sm text-subtle hover:bg-surface-hover hover:cursor-pointer transition-colors"
+			>
+				My account
+			</Link>
+			<Link
 				to="/recipes"
 				className="w-full px-4 py-2 text-left text-sm text-subtle hover:bg-surface-hover hover:cursor-pointer transition-colors"
 			>
