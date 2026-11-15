@@ -9,6 +9,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.utils import timezone
+from core.permissions import IsAdminOrReadOnly
 from .models import (Recipe, RecipePhoto, RecipeStatus, SavedRecipe,
                      Difficulty, Step, SavedStep)
 from .serializers import (RecipeSummarySerializer,
@@ -372,7 +373,7 @@ class SavedRecipeHyperlinkedViewSet(BaseSavedRecipeViewSet):
 
 class DifficultyBaseViewSet(viewsets.ModelViewSet):
     queryset = Difficulty.objects.all().order_by("value")
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class DifficultyModelViewSet(DifficultyBaseViewSet):
@@ -385,7 +386,7 @@ class DifficultyHyperlinkedViewSet(DifficultyBaseViewSet):
 
 class BaseRecipeStatusViewSet(viewsets.ModelViewSet):
     queryset = RecipeStatus.objects.all().order_by("value")
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
 
 
 class RecipeStatusModelViewSet(BaseRecipeStatusViewSet):
@@ -397,8 +398,13 @@ class RecipeStatusHyperlinkedViewSet(BaseRecipeStatusViewSet):
 
 
 class BaseStepViewSet(viewsets.ModelViewSet):
+    """Every step of every recipe, drafts included: administrators only.
+
+    The application uses the recipe endpoints and the nested
+    /api/recipes/<id>/steps/ endpoints instead, which check the author.
+    """
     queryset = Step.objects.all()
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAdminUser]
 
     @staticmethod
     def _swap_step_numbers(step_a, step_b):
@@ -557,8 +563,9 @@ class StepHyperlinkedViewSet(BaseStepViewSet):
 
 
 class BaseSavedStepViewSet(viewsets.ModelViewSet):
+    """Steps of every user's saved copies (private): administrators only."""
     queryset = SavedStep.objects.all()
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAdminUser]
 
 
 class SavedStepModelViewSet(BaseSavedStepViewSet):
