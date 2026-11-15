@@ -124,7 +124,7 @@ Full setup details in the [Installation Guide](INSTALLATION.md).
 
 ## Roadmap / Known Limitations
 
-- No test suite or CI pipeline yet (only the landing page is deployed automatically, by a GitHub Actions workflow)
+- API tests exist (`manage.py test`, see [INSTALLATION.md](INSTALLATION.md#automated-tests)) but no CI pipeline runs them yet (only the landing page is deployed automatically, by a GitHub Actions workflow)
 - Media served locally by Nginx (no S3/CDN)
 - `animes` app is a stub (planned feature)
 - Saved copies do not include steps and ingredients yet (planned)

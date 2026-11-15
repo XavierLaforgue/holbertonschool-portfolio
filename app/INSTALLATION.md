@@ -313,6 +313,29 @@ remove the test data, reset the database.
 
 ---
 
+## Automated tests
+
+The back-end has API tests (`recipes/tests.py`, `accounts/tests.py`): the
+test cases of the recipe publication, the access rules and the account
+deletion. Django creates an empty test database, runs the tests, then
+deletes it: your data is not touched.
+
+```bash
+# Docker, from app/ (the app must be running)
+docker compose -f compose.prod.yml exec back-end uv run manage.py test
+
+# Local development, from back-end/
+uv run manage.py test
+```
+
+Locally, the database user needs the right to create a database. The
+reset script gives it to a user it creates; for an older user, give it
+once with `sudo -u postgres psql -c 'ALTER ROLE "<DB_USER>" CREATEDB;'`
+(`<DB_USER>`: the value in `back-end/.env.dev`). Without it, the tests
+stop with `permission denied to create database`.
+
+---
+
 ## Troubleshooting
 
 ### Port 80 is already in use
