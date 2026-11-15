@@ -57,8 +57,7 @@ export default function LegalPage() {
 				</li>
 			</ul>
 			<p className="mt-2">
-				The first and last name fields of the sign-up form are optional
-				and are not stored.
+				Sign-up asks only for your email address and a password.
 			</p>
 
 			<h2 className={h2Class}>Why, and on what legal basis</h2>

@@ -8,20 +8,11 @@ export async function apiLogin(email: string, password: string): Promise<void> {
 	})
 }
 
-export async function apiSignup(
-	email: string,
-	password: string,
-	firstName?: string,  // Maybe I'll include it in the form later
-	lastName?: string,  // Maybe I'll include it in the form later
-): Promise<User> {
+// Sign-up asks only for what the account needs (RGPD minimization).
+export async function apiSignup(email: string, password: string): Promise<User> {
 	return apiFetch<User>('/api/accounts/user_models/', {
 		method: 'POST',
-		body: JSON.stringify({
-			email,
-			password,
-			...(firstName && { first_name: firstName }),
-			...(lastName && { last_name: lastName }),
-		}),
+		body: JSON.stringify({ email, password }),
 	})
 }
 

@@ -51,13 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	}, [])
 
 	const signup = useCallback(
-		async (
-			email: string,
-			password: string,
-			firstName?: string,
-			lastName?: string,
-		) => {
-			await apiSignup(email, password, firstName, lastName)
+		async (email: string, password: string) => {
+			await apiSignup(email, password)
 			// automatic login after registration
 			await login(email, password)
 		},
