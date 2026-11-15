@@ -99,13 +99,19 @@ uv add <package>                    # Add dependency
 uv sync                             # Sync virtualenv from lockfile
 ```
 
-Seed data commands:
+Reference data commands (the difficulties, statuses, unit kinds and units the app needs; the Docker entrypoint and `scripts/destroy_initialize_postgres.sh` already run them, and they skip existing rows):
 
 ```bash
 uv run manage.py create_difficulties
 uv run manage.py create_recipe_statuses
 uv run manage.py create_unit_kinds
 uv run manage.py create_units
+```
+
+Test data (optional: test users and recipes, created through the API of a running app; see [Test data](INSTALLATION.md#test-data-optional)):
+
+```bash
+python3 scripts/seed_data.py --base-url http://localhost:8000
 ```
 
 ## Environment Variables
