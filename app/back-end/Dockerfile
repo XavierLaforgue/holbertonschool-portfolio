@@ -65,6 +65,10 @@ COPY . .
 # Django's collectstatic gathers all static assets (admin CSS/JS, app
 # static files) into STATIC_ROOT so Nginx can serve them directly
 # instead of Django handling every static file request.
+# Running it here checks the static files configuration at build time
+# and fills a brand-new `backend_static` volume. The volume then hides
+# these files, so entrypoint.sh runs collectstatic again on every start
+# to bring the volume up to date.
 # SECRET_KEY is needed by Django to start, but collectstatic does not
 # use it. We pass a dummy value since the real one is injected at runtime.
 RUN DJANGO_ENV=prod SECRET_KEY=dummy-build-key \

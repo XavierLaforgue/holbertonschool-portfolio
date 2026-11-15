@@ -45,6 +45,15 @@ uv run manage.py create_recipe_statuses
 uv run manage.py create_unit_kinds
 uv run manage.py create_units
 
+# Copy the static files of this image (Django admin and DRF CSS/JS) into
+# the shared `backend_static` volume that Nginx serves, so a rebuilt image
+# also updates them (collectstatic only copies new or changed files).
+# Several back-end replicas share the volume and start at the same time:
+# `flock /app/staticfiles` makes them take turns (it locks the folder
+# itself, so no lock file ends up being served by Nginx).
+echo "Collecting static files..."
+flock /app/staticfiles uv run manage.py collectstatic --noinput
+
 echo "Starting server..."
 # Execute the CMD passed to the container (Gunicorn by default).
 # `exec` replaces this shell process with Gunicorn so that signals
