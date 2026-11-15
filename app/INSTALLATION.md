@@ -44,7 +44,8 @@ On Windows with WSL, start Docker Desktop and enable its WSL integration.
 
 Tested with `Docker version 29.9.2` and `Docker Compose version v5.6.1`.
 
-Port `80` of your machine must be free.
+Port `80` of your machine must be free (see
+[Troubleshooting](#port-80-is-already-in-use) otherwise).
 
 > **Tip:** every Compose command below needs `-f compose.prod.yml`. To avoid
 > typing it, run `export COMPOSE_FILE=compose.prod.yml` once per terminal
@@ -309,3 +310,37 @@ python3 scripts/seed_data.py --base-url http://localhost:8000  # local developme
 Then log in with e.g. `seed.user1@animize.example` / `Itadakimasu-2026!`.
 See [`scripts/README.md`](back-end/scripts/README.md) for details. To
 remove the test data, reset the database.
+
+---
+
+## Troubleshooting
+
+### Port 80 is already in use
+
+`up` fails with "port is already allocated" or "address already in use".
+Either stop the program using port 80, or use another port: in
+`compose.prod.yml`, change `"80:80"` to e.g. `"8080:80"`, add
+`http://localhost:8080` to `DJANGO_CSRF_TRUSTED_ORIGINS` in
+`back-end/.env.prod` (needed to log in to the admin site), run
+`up -d` again and open `http://localhost:8080`.
+
+### `env file .../back-end/.env.prod not found`
+
+Create it (see [Docker step 1](#1-create-the-environment-file)). Run the
+Compose commands from `app/`.
+
+### `back-end` keeps restarting
+
+Look at its logs: `docker compose -f compose.prod.yml logs back-end`.
+
+- `password authentication failed`: `DB_*` and `POSTGRES_*` do not match,
+  or `POSTGRES_*` were changed after the first start. Fix `.env.prod`,
+  then [reset everything](#reset-everything) (or set the old values back).
+- Missing variable / `SECRET_KEY` errors: check `.env.prod` against
+  `.env.prod.example`.
+
+### `Cannot reach http://localhost` (seed script)
+
+The app is not running, or runs elsewhere: start it, or pass the right
+`--base-url` (`http://localhost:8000` for local development,
+`http://localhost:8080` if you changed the Docker port).
