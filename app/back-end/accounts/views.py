@@ -1,7 +1,7 @@
-from django.utils import timezone
 from rest_framework import viewsets, permissions
 from .models import CustomUser, Profile
 from .permissions import IsAccountOwnerOrAdmin
+from .views_auth import clear_auth_cookies
 from .serializers import (CustomUserModelSerializer,
                           CustomUserHyperlinkedSerializer,
                           ProfileModelSerializer,
@@ -22,17 +22,21 @@ class BaseCustomUserViewSet(viewsets.ModelViewSet):
         # Reading, changing or deleting one account: its owner or an admin.
         return [permissions.IsAuthenticated(), IsAccountOwnerOrAdmin()]
 
-    def perform_destroy(self, instance):
-        """Soft-delete a user instead of removing it from the database.
+    def destroy(self, request, *args, **kwargs):
+        """Delete the account for good (RGPD: right to erasure).
 
-        Marks the user as inactive and records when it was deactivated.
+        The database deletes, by cascade (on_delete=CASCADE), the profile,
+        the recipes with their steps, ingredients and photos (the image
+        files too, see recipes/models.py), and the user's saved copies.
+        Copies that other users saved of this user's recipes stay, without
+        their link to the deleted author (on_delete=SET_NULL).
         """
-        instance.is_active = False
-        instance.deactivated_at = timezone.now()
-        instance.deleted_at = timezone.now()
-        instance.save(update_fields=["is_active",
-                                     "deactivated_at",
-                                     "deleted_at"])
+        deleting_myself = self.get_object() == request.user
+        response = super().destroy(request, *args, **kwargs)
+        if deleting_myself:
+            # The account no longer exists: log this browser out.
+            clear_auth_cookies(response)
+        return response
 
 
 class CustomUserModelViewSet(BaseCustomUserViewSet):
