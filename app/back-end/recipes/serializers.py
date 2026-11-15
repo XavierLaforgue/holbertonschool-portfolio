@@ -1,5 +1,6 @@
 from .models import (Difficulty, Recipe, RecipePhoto, SavedRecipe,
                      RecipeStatus, Step, SavedStep)
+from django.db import transaction
 from rest_framework import serializers
 from accounts.serializers import ProfileSummarySerializer
 from ingredients.models import RecipeIngredient, Ingredient, Unit, UnitKind
@@ -177,6 +178,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                 )
         return items
 
+    # One transaction: the recipe, its ingredients and its steps are all
+    # saved, or nothing is (an error in the middle would otherwise leave
+    # the recipe with its old ingredients deleted).
+    @transaction.atomic
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop("ingredients", None)
         steps_data = validated_data.pop("steps", None)
