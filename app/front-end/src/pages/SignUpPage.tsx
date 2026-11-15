@@ -35,6 +35,15 @@ export default function SignUpPage() {
 		} catch (err) {
 			if (err instanceof ApiError && err.status === 401) {
 				setError('Invalid email, password, or name(s).')
+			} else if (err instanceof ApiError && err.status === 400) {
+				// The API lists the refused fields and why, e.g.
+				// {"password": ["This password is too short. ..."]}
+				try {
+					const fields = JSON.parse(err.body) as Record<string, string[]>
+					setError(Object.values(fields).flat().join(' '))
+				} catch {
+					setError('Sign-up failed.')
+				}
 			} else {
 				setError(
 					err instanceof Error ? err.message : 'Sign-up failed.',
