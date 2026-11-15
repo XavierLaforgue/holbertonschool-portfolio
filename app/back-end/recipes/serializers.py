@@ -156,6 +156,27 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ("author", "status", "published_at")
 
+    def validate_ingredients(self, items):
+        """Refuse a unit whose kind is not allowed for the ingredient,
+        e.g. litres of flour.
+
+        Same rule as RecipeIngredientBase.clean() (ingredients/models.py),
+        which Django only runs in its own forms (the admin site).
+        """
+        for item in items:
+            ingredient = Ingredient.objects.filter(
+                name=item["ingredient_name"]).first()
+            if ingredient is None:
+                continue  # new ingredient: no kinds configured yet
+            allowed_kinds = ingredient.allowed_unit_kinds.all()
+            # No kinds configured means "every kind is allowed".
+            if (allowed_kinds.exists()
+                    and item["unit"].kind not in allowed_kinds):
+                raise serializers.ValidationError(
+                    f"'{item['unit']}' cannot measure '{ingredient.name}'."
+                )
+        return items
+
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop("ingredients", None)
         steps_data = validated_data.pop("steps", None)
