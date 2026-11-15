@@ -1,8 +1,15 @@
 # `animize_eat` installation guide
 
-This guide explains how to run the application with Docker.
+There are two ways to run the application:
 
-It starts with an **empty database**: only the reference data the app
+| | [A. Docker](#a-docker-production-like) | [B. Local development](#b-local-development) |
+| --- | --- | --- |
+| Use it to | run the app as it runs in production | work on the code (hot reload) |
+| You install | Docker only | Python/`uv`, Node.js, PostgreSQL |
+| Services | PostgreSQL, Django + Gunicorn, React build, Nginx, all in containers | Django dev server and Vite dev server on your machine |
+| App URL | `http://localhost` | `http://localhost:5173` |
+
+Both start with an **empty database**: only the reference data the app
 needs (difficulties, statuses, unit kinds, units) and an admin user are
 created.
 
@@ -187,27 +194,98 @@ database from the current `back-end/.env.prod`.
 
 ---
 
-## `uv` project setup
+## B. Local development
 
-```python
-```
+### Prerequisites
 
-## Environment variables
+- [`uv`](https://docs.astral.sh/uv/getting-started/installation/): Python
+  package manager. It installs the right Python version (3.13) by itself.
+- [Node.js](https://nodejs.org/) `20.19+` or `22.12+` (required by Vite 7)
+  and `npm`.
+- A local [PostgreSQL](https://www.postgresql.org/download/) server and
+  `sudo` rights (to create the database).
 
-Create `.env` file and replace the default (insecure) data.
-Password may not be provided since they need to be input when prompted anyway.
+Tested with `uv 0.12.5`, Node.js `20.19.3` and PostgreSQL `18`.
 
-## Initialize database
+### First setup
+
+#### 1. Back-end (`back-end/`)
 
 ```bash
-./scripts/destroy_initialize_postgres.sh
+cd back-end
+cp .env.dev.example .env.dev
 ```
 
-## Add model data
+Edit `back-end/.env.dev`:
 
-```python
-uv run manage.py create_difficulties
-uv run manage.py create_recipe_statuses
-uv run manage.py create_unit_kinds
-uv run manage.py create_units
+- `SECRET_KEY`: generate one as in [Docker step 1](#1-create-the-environment-file).
+- `DB_NAME`, `DB_USER`, `DB_PW`: the database, role and password to
+  create. Keep `DB_HOST=localhost` and `DB_PORT=5432`.
+- `ADMIN_EMAIL`, `ADMIN_PW`: the superuser to create (leave one empty to
+  be asked for it instead).
+
+Install the dependencies, then create the database:
+
+```bash
+uv sync
+bash scripts/destroy_initialize_postgres.sh
 ```
+
+The script asks for your `sudo` password, creates the role and the
+database, applies the migrations, adds the reference data and creates the
+superuser (details in [`scripts/README.md`](back-end/scripts/README.md)).
+
+#### 2. Front-end (`front-end/`)
+
+```bash
+cd ../front-end
+cp .env.dev.example .env.development
+npm ci
+```
+
+`npm ci` ("clean install") is a standard `npm` command: it installs exactly
+the versions recorded in `package-lock.json`, so everybody gets the same
+dependencies. It deletes `node_modules/` first and stops with an error if
+`package.json` and `package-lock.json` disagree. (`npm install`, by
+contrast, may update `package-lock.json`: use it only to add or upgrade a
+dependency.)
+
+`npm run dev` loads `.env.development` automatically. Its default
+`VITE_API_BASE_URL=http://localhost:8000` points to the Django dev server.
+
+### Run
+
+Use two terminals:
+
+```bash
+# Terminal 1, in back-end/
+uv run manage.py runserver   # API on http://localhost:8000/api/, admin on http://localhost:8000/admin/
+
+# Terminal 2, in front-end/
+npm run dev                  # app on http://localhost:5173
+```
+
+Open [http://localhost:5173](http://localhost:5173). Stop the servers with
+`Ctrl+C`.
+
+### After pulling changes
+
+```bash
+cd back-end && uv sync && uv run manage.py migrate
+cd ../front-end && npm ci
+```
+
+### Change the models
+
+```bash
+uv run manage.py makemigrations   # creates files in <app>/migrations/
+uv run manage.py migrate
+```
+
+Commit the new migration files with the model changes: the Docker
+`back-end` and other developers need them to create the same tables.
+
+### Reset the database
+
+Run `bash scripts/destroy_initialize_postgres.sh` again from `back-end/`
+(⚠️ deletes all local data).
