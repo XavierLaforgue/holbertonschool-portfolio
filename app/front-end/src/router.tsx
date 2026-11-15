@@ -9,6 +9,7 @@ import AccountPage from '@/pages/AccountPage'
 import RecipeDetailPage from '@/pages/RecipeDetailPage'
 import RecipeEditPage from '@/pages/RecipeEditPage'
 import MyRecipesPage from '@/pages/MyRecipesPage'
+import LegalPage from '@/pages/LegalPage'
 
 /**
  * Application router.
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
 			{ path: 'recipes/:id/edit', element: <RecipeEditPage /> },
 			{ path: 'recipes/:id', element: <RecipeDetailPage /> },
 			{ path: 'recipes/', element: <MyRecipesPage /> },
+			{ path: 'legal', element: <LegalPage /> },
 			{ path: '*', element: <NotFoundPage /> },
 		],
 	},
