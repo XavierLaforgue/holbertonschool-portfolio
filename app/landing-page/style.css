@@ -642,6 +642,32 @@ img {
 }
 
 /* ===========================
+   Legal page (legal.html)
+   =========================== */
+/* A narrow, left-aligned column of text, easier to read than centred text. */
+.legal-content {
+  max-width: 700px;
+}
+
+.legal-content h2 {
+  font-size: 1.25rem;
+  margin: 2rem 0 0.75rem;
+}
+
+.legal-content p,
+.legal-content li {
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+
+/* The reset at the top of this file removes the list's left padding: put it
+   back, so the bullets stay inside the column. */
+.legal-content ul {
+  padding-left: 1.25rem;
+}
+
+/* ===========================
    Animations
    =========================== */
 /* Elements with the class fade-in start hidden; script.js adds the class "visible"
