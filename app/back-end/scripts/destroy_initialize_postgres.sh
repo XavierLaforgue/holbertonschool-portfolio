@@ -1,13 +1,27 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 # flags breakdown:
 # - set -e: exit immediately if any command returns a non‑zero status.
 # - set -u: treat use of unset variables as an error.
 # - set -o pipefail: make pipelines fail if any part fails.
 
+# (Re-)create the LOCAL DEVELOPMENT PostgreSQL database of the Django
+# back-end, apply the migrations, add the reference data (difficulties,
+# statuses, unit kinds, units) and create the admin user.
+#
+# ⚠ DESTRUCTIVE: if the database already exists it is DROPPED, with all
+# its data. Use it for the first setup or to start again from an empty
+# database. It does not touch the Docker database.
+#
+# It also works on a fresh machine: the database role (user) is created
+# if it does not exist yet.
+#
+# Requirements: a local PostgreSQL server, `sudo` rights (to act as the
+# `postgres` superuser), `uv`, and a `.env.dev` file.
+#
 # To be executed from the Django-project directory (back-end/), e.g.,
 # ```bash
-# bash ./scripts/destroy_initialize_postgres.sh
+# bash scripts/destroy_initialize_postgres.sh
 # ```
 
 ENV_FILE=.env.dev
@@ -98,3 +112,5 @@ else
     echo "Creating superuser (you will be asked for its details)..."
     uv run manage.py createsuperuser
 fi
+
+echo "Done. Start the dev server with: uv run manage.py runserver"
