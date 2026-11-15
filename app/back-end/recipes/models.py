@@ -2,6 +2,8 @@ import uuid
 
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 from core.models import UUIDModel
 from accounts.models import Profile
@@ -236,3 +238,11 @@ class RecipePhoto(UUIDModel):
         # label = "main" if self.is_main else f"#{self.position}"
         label = "main" if self.position == 1 else f"#{self.position}"
         return f"{self.recipe.title}: photo {label}"
+
+
+# Django deletes the database row of a photo, but never its image file.
+# This receiver runs after every deletion of a RecipePhoto: one photo, a
+# whole recipe (its photos are deleted by cascade) or a whole account.
+@receiver(post_delete, sender=RecipePhoto)
+def delete_photo_file(sender, instance, **kwargs):
+    instance.image.delete(save=False)  # save=False: the row is already gone

@@ -7,8 +7,6 @@ export default function SignUpPage() {
 	const { signup } = useAuth()
 	const navigate = useNavigate()
 	const location = useLocation()  // allows to acess current pathname
-	const [firstName, setFirstName] = useState('')
-	const [lastName, setLastName] = useState('')
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [isSubmitting, setIsSubmitting] = useState(false)
@@ -29,12 +27,20 @@ export default function SignUpPage() {
 		setError(null)
 		setIsSubmitting(true)
 		try {
-			await signup(email, password, firstName || undefined,
-				lastName || undefined)
+			await signup(email, password)
 			navigate(from, { replace: true })
 		} catch (err) {
 			if (err instanceof ApiError && err.status === 401) {
-				setError('Invalid email, password, or name(s).')
+				setError('Invalid email or password.')
+			} else if (err instanceof ApiError && err.status === 400) {
+				// The API lists the refused fields and why, e.g.
+				// {"password": ["This password is too short. ..."]}
+				try {
+					const fields = JSON.parse(err.body) as Record<string, string[]>
+					setError(Object.values(fields).flat().join(' '))
+				} catch {
+					setError('Sign-up failed.')
+				}
 			} else {
 				setError(
 					err instanceof Error ? err.message : 'Sign-up failed.',
@@ -56,28 +62,6 @@ export default function SignUpPage() {
 			)}
 
 			<form onSubmit={handleSubmit} className="flex flex-col gap-4">
-				<div className="grid grid-cols-2 gap-3">
-					<label className="flex flex-col gap-1 text-sm font-medium">
-						First name
-						<input
-							type="text"
-							value={firstName}
-							onChange={(e) => setFirstName(e.target.value)}
-							className="rounded-md border border-input bg-surface px-3 py-2"
-						/>
-					</label>
-
-					<label className="flex flex-col gap-1 text-sm font-medium">
-						Last name
-						<input
-							type="text"
-							value={lastName}
-							onChange={(e) => setLastName(e.target.value)}
-							className="rounded-md border border-input bg-surface px-3 py-2"
-						/>
-					</label>
-				</div>
-
 				<label className="flex flex-col gap-1 text-sm font-medium">
 					Email
 					<input

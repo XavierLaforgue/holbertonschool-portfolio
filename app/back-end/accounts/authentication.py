@@ -3,8 +3,8 @@
 Reads the access token from the `access_token` cookie instead of the
 `Authorization` header.
 The browser handles the token transport automatically via `credentials:
-'include'`, keeping the frontend free of any token manipulation and
-facilitating migration to httpOnly.
+'include'`, keeping the frontend free of any token manipulation, which lets the
+cookies be httpOnly.
 """
 
 from rest_framework_simplejwt.authentication import JWTAuthentication

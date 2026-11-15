@@ -3,21 +3,24 @@
  * Base URL is read from VITE_API_BASE_URL (set in .env.local).
  * All helpers return typed JSON or throw errors on non-2xx responses.
  *
- * Authentication relies on cookies set by the backend. The frontend
- * should never read or write token cookies directly so as to prepare
- * for httpOnly cookies migration. Every request uses
+ * Authentication relies on httpOnly cookies set by the backend: the
+ * frontend cannot read or write them, and never needs to. Every request uses
  * `credentials: 'include'` so the browser sends cookies automatically.
  *
  * On a 401 the wrapper tries to refresh the access token once via
  * POST /api/token/refresh/ and retries the original request.
  */
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string
+// In development, set to the backend URL (e.g., http://localhost:8000).
+// In production behind a reverse proxy, set to "" (empty string) so
+// requests go to the same origin and the proxy forwards them.
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? '') as string
 
-if (!API_BASE_URL) {
+if (import.meta.env.VITE_API_BASE_URL === undefined) {
 	throw new Error(
 		'VITE_API_BASE_URL is not defined. ' +
-		'Copy .env.example into .env.local and set it.',
+		'Copy .env.example into .env.local and set it ' +
+		'(use "" for same-origin / reverse-proxy deployments).',
 	)
 }
 
@@ -110,16 +113,6 @@ export async function apiFetch<T>(
 	return res.json() as Promise<T>
 }
 
-
-/* TODO: for httpOnly migration I should delete this function
- * Client-side cookie cleanup, fallback when the current
- * regular-cookies `logout` endpoint fails.  Once cookies are httpOnly the
- * browser won't allow this.
- */
-export function clearTokensFallback(): void {
-	document.cookie = 'access_token=; Max-Age=0; path=/'
-	document.cookie = 'refresh_token=; Max-Age=0; path=/'
-}
 
 /** Error class
  *

@@ -13,8 +13,6 @@ export interface User {
 	avatarUrl?: string
 	display_name?: string
 	profile_id: string | null   // Profile UUID — used to detect authorship
-	first_name?: string
-	last_name?: string
 }
 
 // -------------- Profiles------------------------
@@ -163,20 +161,14 @@ export interface AuthContextType {
 	isLoading: boolean
 	// sets user in the context
 	login: (email: string, password: string) => Promise<void>
-	signup: (
-		email: string,
-		password: string,
-		firstName?: string,
-		lastName?: string,
-	) => Promise<void>
+	signup: (email: string, password: string) => Promise<void>
 	// Verify auth by calling /me. Refreshes token on 401 (via apiFetch).
 	// Updates context user and returns it, or null if not authenticated.
 	verifyAuth: () => Promise<User | null>
-	// requests backend to remove cookies and cleares them if backend
-	// call fails
-	// TODO: update logout to not try to touch the cookies when they
-	// will be httpOnly
+	// asks the backend to delete the (httpOnly) cookies
 	logout: () => Promise<void>
+	// deletes the current user's account and everything in it
+	deleteAccount: () => Promise<void>
 }
 
 // --- Styling ------------------------

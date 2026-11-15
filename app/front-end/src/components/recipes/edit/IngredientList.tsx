@@ -51,6 +51,7 @@ export default function IngredientList({
 								value={row.ingredient_name}
 								onChange={(e) => updateRow(i, { ingredient_name: e.target.value })}
 								placeholder="Ingredient name"
+								aria-label="Ingredient name"
 								className={`min-w-0 flex-1 ${inputClass}`}
 							/>
 							<input
@@ -59,11 +60,13 @@ export default function IngredientList({
 								step="1"
 								value={row.quantity}
 								onChange={(e) => updateRow(i, { quantity: Number(e.target.value) })}
+								aria-label="Quantity"
 								className={`w-20 ${inputClass}`}
 							/>
 							<select
 								value={row.unit}
 								onChange={(e) => updateRow(i, { unit: e.target.value })}
+								aria-label="Unit"
 								className={inputClass}
 							>
 								{units.map((u) => (

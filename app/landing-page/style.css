@@ -1,0 +1,761 @@
+/* ===========================
+   Fonts
+   =========================== */
+/* The Inter font, served from our own folder (assets/fonts/) instead of Google
+   Fonts, so visitors' IP addresses are not sent to Google (RGPD). Each
+   @font-face tells the browser which file to download for one weight: 400
+   (normal), 600, 700 and 800 (extra bold). Only the Latin characters are
+   included. font-display: swap shows the text in a fallback font at once, then
+   switches to Inter once it is loaded. Licence: SIL Open Font License
+   (assets/fonts/OFL.txt). */
+@font-face {
+  font-family: 'Inter';
+  font-weight: 400;
+  font-display: swap;
+  src: url('assets/fonts/inter-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 600;
+  font-display: swap;
+  src: url('assets/fonts/inter-latin-600-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 700;
+  font-display: swap;
+  src: url('assets/fonts/inter-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 800;
+  font-display: swap;
+  src: url('assets/fonts/inter-latin-800-normal.woff2') format('woff2');
+}
+
+/* ===========================
+   Shokugeki Theme Tokens
+   =========================== */
+/* Everything between these markers is a CSS comment: a note for humans, ignored by the browser.
+   "Shokugeki" (an anime about cooking) is the name of the colour theme, the same as the React app. */
+/* :root is the <html> element. "--name: value;" defines a CSS variable ("token"),
+   used later with var(--name). Colours are defined once, so changing the theme
+   means changing one line here. */
+:root {
+  /* page background: cream */
+  --background: #fff8f0;
+  /* main text: dark brown */
+  --foreground: #2d1b14;
+  /* cards: white, and beige */
+  --surface: #ffffff;
+  --surface-hover: #f5ebe0;
+  /* buttons and links: red, darker red on hover, white text on red */
+  --primary: #d4423b;
+  --primary-hover: #b83530;
+  --primary-fg: #ffffff;
+  /* orange (defined for consistency with the React app) */
+  --secondary: #e8960c;
+  /* plum: second colour of the gradients */
+  --accent: #8b2252;
+  /* secondary text: brown-grey */
+  --muted: #7a5c50;
+  /* borders: light beige */
+  --border: #e8d5c8;
+
+  /* font, with fallbacks used if Inter fails to load */
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  /* rounded corners */
+  --radius: 12px;
+  /* maximum width of the content */
+  --max-width: 1100px;
+}
+
+/* ===========================
+   Reset & Base
+   =========================== */
+/* A reset: every browser adds its own default margins; this removes them on every
+   element (*) and its ::before / ::after pseudo-elements.
+   box-sizing: border-box makes "width" include padding and border,
+   which makes sizes much easier to reason about. */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  /* clicking a link like #features scrolls smoothly instead of jumping */
+  scroll-behavior: smooth;
+  /* stop 70px before the target, so the fixed navbar (64px high) doesn't cover the section title */
+  scroll-padding-top: 70px;
+}
+
+/* Default font, text colour and background, comfortable line spacing (1.6 x the font size)
+   and smoother text rendering on macOS/Safari. */
+body {
+  font-family: var(--font);
+  color: var(--foreground);
+  background: var(--background);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Links are red, not underlined, and change colour smoothly (over 0.2s)... */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+/* ...to a darker red when the mouse is over them (:hover). */
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Images never overflow their container (max-width), keep their proportions (height: auto),
+   and don't leave a small gap below them (which "inline" images do). */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ===========================
+   Utilities
+   =========================== */
+/* Reusable classes that any element can use. */
+/* Centres content (margin: 0 auto) and limits its width, with side padding.
+   rem = a multiple of the root font size (usually 16px), so 1.5rem is about 24px. */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* The base button look (applied to <a> links). */
+.btn {
+  display: inline-block;
+  /* vertical then horizontal inner space */
+  padding: 0.75rem 1.75rem;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 1rem;
+  /* the "hand" cursor that shows something is clickable */
+  cursor: pointer;
+  /* animate background and movement changes over 0.2s */
+  transition: background 0.2s, transform 0.2s;
+  /* a transparent border keeps all buttons the same size, outlined or not */
+  border: 2px solid transparent;
+  text-align: center;
+}
+
+/* On hover, the button lifts by 1px. */
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Red filled button. */
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+
+/* The text colour is repeated here so the generic a:hover rule doesn't turn the text red. */
+.btn-primary:hover {
+  background: var(--primary-hover);
+  color: var(--primary-fg);
+}
+
+/* Outlined button (used in the About section)... */
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* ...that fills with red on hover. */
+.btn-outline:hover {
+  background: var(--primary);
+  color: var(--primary-fg);
+}
+
+/* Smaller button variant (used in the navbar). */
+.btn-sm {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+}
+
+/* Gradient text trick: paint a red-to-plum gradient as the background, clip it to the
+   shape of the letters (background-clip: text), and make the letters themselves transparent
+   so the gradient shows through. */
+.gradient-text {
+  background: linear-gradient(to right, var(--primary), var(--accent));
+  /* prefixed version that some browsers still need */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Same trick with a vertical gradient (plum at the bottom, red at the top). */
+.gradient-text-reverse {
+  background: linear-gradient(to top, var(--accent), var(--primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ===========================
+   Navbar
+   =========================== */
+.navbar {
+  /* position: fixed + top/left/right 0: stuck to the top of the window, full width,
+     even when scrolling */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* drawn ABOVE the rest of the page */
+  z-index: 100;
+  /* the cream background at 90% opacity... */
+  background: rgba(255, 248, 240, 0.9);
+  /* ...and whatever scrolls behind it is blurred ("frosted glass") */
+  backdrop-filter: blur(12px);
+  /* a thin line separating it from the page */
+  border-bottom: 1px solid var(--border);
+  /* animate the shadow of .navbar.scrolled (below) smoothly */
+  transition: box-shadow 0.3s;
+}
+
+/* When the navbar ALSO has the class "scrolled" (added by script.js once the page is scrolled),
+   give it a shadow: 0px horizontal offset, 2px down, 20px blur, very transparent dark brown. */
+.navbar.scrolled {
+  box-shadow: 0 2px 20px rgba(45, 27, 20, 0.08);
+}
+
+.nav-container {
+  /* centred and width-limited, like .container */
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  /* lay the children out in a row... */
+  display: flex;
+  /* ...centred vertically... */
+  align-items: center;
+  /* ...with the brand on the far left and the links on the far right */
+  justify-content: space-between;
+  /* bar height (that's why scroll-padding-top is 70px) */
+  height: 64px;
+}
+
+/* Icon and name in a row with a small gap, dark extra-bold text. */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--foreground);
+  font-weight: 800;
+  font-size: 1.25rem;
+}
+
+/* Cancels the red hover colour that all links get. */
+.nav-brand:hover {
+  color: var(--foreground);
+}
+
+/* Icon size. */
+.nav-icon {
+  width: 32px;
+  height: 32px;
+}
+
+/* Links in a row, 2rem apart, WITHOUT the bullet points lists normally have. */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+}
+
+/* Links are muted brown... */
+.nav-links a {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+
+/* ...and turn dark on hover. */
+.nav-links a:hover {
+  color: var(--foreground);
+}
+
+/* Hamburger */
+.nav-toggle {
+  /* hidden by default (desktop); the Responsive part below shows it on small screens */
+  display: none;
+  /* when shown, the three lines are stacked 5px apart */
+  flex-direction: column;
+  gap: 5px;
+  /* no background, no border: just the lines */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Each line: 24x2px, dark, slightly rounded, with animated movement and opacity. */
+.nav-toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--foreground);
+  border-radius: 2px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+/* When the button has the class "active" (menu open, added by script.js), the hamburger
+   becomes an X:
+   - the 1st line (:nth-child(1)) moves down 7px (2px line + 5px gap) to the middle and rotates 45deg, */
+.nav-toggle.active span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+/* - the 2nd (middle) line disappears, */
+.nav-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+/* - the 3rd line moves up 7px and rotates -45deg, so the two remaining lines cross. */
+.nav-toggle.active span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ===========================
+   Hero
+   =========================== */
+.hero {
+  /* the blobs (position: absolute) are placed relative to this section */
+  position: relative;
+  /* the parts of the blobs that go outside are cut off (no horizontal scrollbar) */
+  overflow: hidden;
+  /* top / sides / bottom; the big top padding leaves room under the fixed navbar */
+  padding: 8rem 1.5rem 5rem;
+  text-align: center;
+  /* a diagonal (135deg) gradient: very light red, then cream, then very light plum (8% opacity) */
+  background: linear-gradient(135deg, rgba(212, 66, 59, 0.08), var(--background) 50%, rgba(139, 34, 82, 0.08));
+}
+
+/* Stack the children vertically (column), centred horizontally, with 1rem between them. */
+.hero-content {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Displayed size of the logo. */
+.hero-logo {
+  width: 280px;
+  height: 280px;
+  /* keep the whole image visible without distortion */
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.hero-title {
+  /* clamp(min, preferred, max): the size follows 5vw (5% of the window width) but never goes
+     below 2rem or above 3.5rem. A fluid font size: big on desktop, smaller on phones. */
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  /* tight line height and slightly tighter letters look better for large headlines */
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+/* Tagline size. */
+.hero-subtitle {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.hero-description {
+  /* keeps lines short enough to read comfortably */
+  max-width: 640px;
+  font-size: 1.125rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.blob {
+  /* placed freely inside .hero */
+  position: absolute;
+  width: 18rem;
+  height: 18rem;
+  /* turns the square into a circle */
+  border-radius: 50%;
+  /* very blurry, so it looks like soft light */
+  filter: blur(80px);
+  /* clicks pass through it */
+  pointer-events: none;
+  /* drawn behind the content */
+  z-index: -1;
+}
+
+/* A reddish blob partly outside the top-left corner... */
+.blob-top {
+  top: -5rem;
+  left: -5rem;
+  background: rgba(212, 66, 59, 0.06);
+}
+
+/* ...and a plum blob at the bottom-right. */
+.blob-bottom {
+  bottom: -5rem;
+  right: -5rem;
+  background: rgba(139, 34, 82, 0.06);
+}
+
+/* ===========================
+   Sections
+   =========================== */
+/* Shared by the Features, Tech Stack and About sections. */
+/* Vertical space above and below every section. */
+.section {
+  padding: 5rem 0;
+}
+
+/* An alternative (white) background, so consecutive sections are visually separated. */
+.section-alt {
+  background: var(--surface);
+}
+
+/* Centred, fluid-size section titles... */
+.section-title {
+  text-align: center;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+/* ...and muted subtitles with space below them. */
+.section-subtitle {
+  text-align: center;
+  color: var(--muted);
+  font-size: 1.1rem;
+  margin-bottom: 3rem;
+}
+
+/* ===========================
+   Features
+   =========================== */
+.features-grid {
+  /* a 2-D layout of rows and columns */
+  display: grid;
+  /* "create as many columns as fit, each at least 300px wide, sharing the leftover space
+     equally": 3 columns on desktop, 2 on tablets, 1 on phones, without any media query */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  /* space between the cards */
+  gap: 1.5rem;
+}
+
+/* White rounded card with a border. */
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* On hover the card rises 4px and gets a soft shadow (x-offset y-offset blur colour). */
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(45, 27, 20, 0.08);
+}
+
+/* Big emoji. */
+.feature-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+/* Bold card title. ".feature-card h3" means "any <h3> INSIDE a .feature-card". */
+.feature-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* Muted description. */
+.feature-card p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ===========================
+   Tech Stack
+   =========================== */
+/* Badges in a row that WRAPS to the next line when there's no room, centred, with 1rem gaps.
+   (Flexbox instead of a grid here, because badges have different widths and should stay centred.) */
+.tech-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.tech-badge {
+  /* stack the name and the role vertically, centred */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  /* cream background, which contrasts with the white section */
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.75rem;
+  /* so short names don't look tiny */
+  min-width: 130px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+/* On hover: lift by 2px and turn the border red. */
+.tech-badge:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+/* Dark name... */
+.tech-badge strong {
+  font-size: 1rem;
+  color: var(--foreground);
+}
+
+/* ...small muted role. */
+.tech-badge span {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* ===========================
+   About
+   =========================== */
+/* A narrow, centred text column (long lines are hard to read). */
+.about-content {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* Muted paragraphs with generous line spacing... */
+.about-content p {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin-bottom: 1.25rem;
+  line-height: 1.7;
+}
+
+/* ...bold words are darker so they stand out. */
+.about-content strong {
+  color: var(--foreground);
+}
+
+/* A thin separator line above the author block... */
+.about-author {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ...and a slightly larger "Built by" line. */
+.about-author p {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* ===========================
+   Footer
+   =========================== */
+/* The dark-brown text colour is used as the BACKGROUND here, and the text is cream at 70%
+   opacity: the colours are inverted, like a dark theme. */
+.footer {
+  background: var(--foreground);
+  color: rgba(255, 248, 240, 0.7);
+  padding: 3rem 0;
+}
+
+/* Centre everything. */
+.footer-content {
+  text-align: center;
+}
+
+/* Icon and name in a row. inline-flex keeps the block only as wide as its content,
+   so text-align: center (above) can centre it. */
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--background);
+  margin-bottom: 0.75rem;
+}
+
+.footer-icon {
+  width: 24px;
+  height: 24px;
+  /* trick to turn the coloured icon WHITE: brightness(0) makes it black,
+     then invert(1) flips black to white */
+  filter: brightness(0) invert(1);
+}
+
+/* Small text. */
+.footer p {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/* The two links and the dot in a centred row. */
+.footer-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Links are faded cream... */
+.footer-links a {
+  color: rgba(255, 248, 240, 0.7);
+}
+
+/* ...and become fully cream on hover (instead of the default red, hard to read on dark brown). */
+.footer-links a:hover {
+  color: var(--background);
+}
+
+/* ===========================
+   Legal page (legal.html)
+   =========================== */
+/* A narrow, left-aligned column of text, easier to read than centred text. */
+.legal-content {
+  max-width: 700px;
+}
+
+.legal-content h2 {
+  font-size: 1.25rem;
+  margin: 2rem 0 0.75rem;
+}
+
+.legal-content p,
+.legal-content li {
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+
+/* The reset at the top of this file removes the list's left padding: put it
+   back, so the bullets stay inside the column. */
+.legal-content ul {
+  padding-left: 1.25rem;
+}
+
+/* ===========================
+   Animations
+   =========================== */
+/* Elements with the class fade-in start hidden; script.js adds the class "visible"
+   when they scroll into view. */
+.fade-in {
+  /* fully transparent (invisible) */
+  opacity: 0;
+  /* shifted 20px down */
+  transform: translateY(20px);
+  /* when these values change, animate over 0.6s, fast at first and slowing down at the end */
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* ".fade-in.visible" (no space) = an element with BOTH classes: fully opaque and back in place.
+   Because of the transition above, the change is animated. */
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===========================
+   Responsive
+   =========================== */
+/* A media query: "apply the rules inside these braces ONLY IF the window is at most 768px wide"
+   (phones, small tablets). Inside it, rules are indented one level. */
+@media (max-width: 768px) {
+  /* Show the hamburger button. */
+  .nav-toggle {
+    display: flex;
+  }
+
+  /* The link list becomes a slide-down panel. */
+  .nav-links {
+    /* full width, just below the 64px navbar */
+    position: fixed;
+    top: 64px;
+    left: 0;
+    right: 0;
+    /* nearly opaque cream background with blur, like the navbar */
+    background: rgba(255, 248, 240, 0.98);
+    backdrop-filter: blur(12px);
+    /* links stacked vertically, 1.5rem apart */
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    /* CLOSED state: moved up by its own height (hidden behind the navbar), invisible,
+       and can't be clicked while invisible */
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    /* opening and closing slide and fade over 0.3s */
+    transition: transform 0.3s, opacity 0.3s;
+  }
+
+  /* OPEN state (class "open", added by script.js): back in place, visible, clickable. */
+  .nav-links.open {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Less empty space at the bottom of the hero (3rem instead of 5rem). */
+  .hero {
+    padding: 7rem 1.5rem 3rem;
+  }
+
+  /* Smaller logo (200px instead of 280px). */
+  .hero-logo {
+    width: 200px;
+    height: 200px;
+  }
+
+  /* Less vertical space between sections (3.5rem instead of 5rem). */
+  .section {
+    padding: 3.5rem 0;
+  }
+
+  /* Exactly ONE column. Without this, a card's 300px minimum could overflow on very narrow
+     phones (e.g. 320px wide minus the padding). */
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Smaller badges, so more of them fit per row. */
+  .tech-badge {
+    min-width: 110px;
+    padding: 1rem 1.25rem;
+  }
+/* closes the @media block */
+}

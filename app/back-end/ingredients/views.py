@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions, filters
+from core.permissions import IsAdminOrReadOnly
 from .models import (Ingredient, RecipeIngredient, SavedRecipeIngredient,
                      Unit, UnitKind)
 from .serializers import (IngredientModelSerializer,
@@ -15,7 +16,7 @@ from .serializers import (IngredientModelSerializer,
 
 class UnitKindBaseViewSet(viewsets.ModelViewSet):
     queryset = UnitKind.objects.all()
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["label", "descriptive_name"]
     ordering_fields = ["label", "descriptive_name"]
@@ -33,7 +34,7 @@ class UnitKindHyperlinkedViewSet(UnitKindBaseViewSet):
 class UnitBaseViewSet(viewsets.ModelViewSet):
     # sectec_related perfomrs a JOIN with the related table
     queryset = Unit.objects.select_related("kind").all()
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name", "symbol", "kind__label", "kind__descriptive_name"]
     ordering_fields = ["name", "symbol", "kind__descriptive_name"]
@@ -49,16 +50,14 @@ class UnitHyperlinkedViewSet(viewsets.ModelViewSet):
 
 
 class IngredientBaseViewSet(viewsets.ModelViewSet):
+    # New ingredients are created when a recipe is saved
+    # (RecipeWriteSerializer), so users never need to write here.
     queryset = Ingredient.objects.all()
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name"]
     ordering_fields = ["name"]
     ordering = "name"
-
-    def get_permissions(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
 
 
 class IngredientModelViewSet(IngredientBaseViewSet):
@@ -76,16 +75,16 @@ class IngredientHyperlinkedViewSet(IngredientBaseViewSet):
 
 
 class RecipeIngredientBaseViewSet(viewsets.ModelViewSet):
+    """Every ingredient line of every recipe, drafts included:
+    administrators only. The application saves a recipe's ingredients
+    through the recipe endpoint, which checks the author.
+    """
     queryset = RecipeIngredient.objects.all()
+    permission_classes = [permissions.IsAdminUser]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["ingredient__name", "recipe__title", "unit__name"]
     ordering_fields = ["created_at", "updated_at", "recipe__published_at"]
     ordering = ["-recipe__published_at", "-created_at"]
-
-    def get_permissions(self):
-        if self.request.method in permissions.SAFE_METHODS:
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
 
 
 class RecipeIngredientModelViewSet(RecipeIngredientBaseViewSet):
@@ -103,8 +102,10 @@ class RecipeIngredientHyperlinkedViewSet(viewsets.ModelViewSet):
 
 
 class BaseSavedRecipeIngredientViewSet(viewsets.ModelViewSet):
+    """Ingredients of every user's saved copies (private): administrators
+    only."""
     queryset = SavedRecipeIngredient.objects.all()
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAdminUser]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["ingredient__name", "recipe__title", "unit__name"]
     ordering_fields = ["created_at", "updated_at", "recipe__saved_at"]
