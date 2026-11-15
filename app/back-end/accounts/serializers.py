@@ -1,5 +1,8 @@
-from .models import CustomUser, Profile
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+
+from .models import CustomUser, Profile
 
 
 class BaseCustomUserSerializer(serializers.ModelSerializer):
@@ -54,6 +57,26 @@ class BaseCustomUserSerializer(serializers.ModelSerializer):
                 "read_only": True,
             },
         }
+
+    def validate(self, attrs):
+        """Check the password with Django's validators.
+
+        They are listed in AUTH_PASSWORD_VALIDATORS (settings.py): minimum
+        length, common passwords, numbers only, too close to the email.
+        Django only runs them by itself in its own forms (the admin site),
+        so the API calls them here, before the account is created.
+        """
+        password = attrs.get("password")
+        if password:
+            # The account being changed, or a new unsaved one: the
+            # similarity validator compares the password with its email.
+            user = self.instance or CustomUser(email=attrs.get("email", ""))
+            try:
+                validate_password(password, user)
+            except DjangoValidationError as error:
+                raise serializers.ValidationError(
+                    {"password": list(error.messages)})
+        return attrs
 
     def create(self, validated_data: dict[str, str]) -> CustomUser:
         """Hash the password before creating the user.

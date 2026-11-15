@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import type { User } from '../types'
 import { AuthContext } from '../contexts/AuthContext'
-import { clearTokensFallback } from '../lib/api'
-import { apiLogin, apiSignup, apiFetchMe, apiLogout } from '../lib/api-auth'
+import { apiLogin, apiSignup, apiFetchMe, apiLogout, apiDeleteAccount } from '../lib/api-auth'
 
 /**
  * AuthProvider: wrap app so any component can call `useAuth()`.
@@ -52,13 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	}, [])
 
 	const signup = useCallback(
-		async (
-			email: string,
-			password: string,
-			firstName?: string,
-			lastName?: string,
-		) => {
-			await apiSignup(email, password, firstName, lastName)
+		async (email: string, password: string) => {
+			await apiSignup(email, password)
 			// automatic login after registration
 			await login(email, password)
 		},
@@ -78,18 +72,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	const logout = useCallback(async () => {
 		try {
-			await apiLogout()  // backend clears cookies: pattern pre-migration 
-							   // to httponly cookies
+			await apiLogout()  // the back-end deletes the cookies
 		} catch {
-			// In case of failure, clear cookies from the client.
-			// TODO: When using httpOnly cookies, remove this fallback entirely.
-			clearTokensFallback()
+			// The cookies are HttpOnly: JavaScript cannot delete them. If
+			// the request failed, they stay until they expire.
 		}
 		setUser(null)
 	}, [])
 
+	const deleteAccount = useCallback(async () => {
+		if (!user) return
+		await apiDeleteAccount(user.id)  // the back-end also deletes the cookies
+		setUser(null)
+	}, [user])
+
 	return (
-		<AuthContext.Provider value={{ user, isLoading, login, signup, verifyAuth, logout }}>
+		<AuthContext.Provider value={{ user, isLoading, login, signup, verifyAuth, logout, deleteAccount }}>
 			{children}
 		</AuthContext.Provider>
 	)

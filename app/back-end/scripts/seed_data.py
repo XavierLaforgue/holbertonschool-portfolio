@@ -1,787 +1,526 @@
 #!/usr/bin/env python3
-"""
-API-based database seeding script for animize_eat backend.
+"""Fill a running animize_eat instance with test users and recipes.
 
-Creates a complete dataset using REST API endpoints:
-- 5 users with personalized profiles
-- 25 recipes (5 per user) with steps and ingredients
-- 25 saved recipes (5 per user) copied from other users
-- Foundational data: unit kinds, units, ingredients, difficulties
+This script is for TESTING ONLY. It is never run automatically: a fresh
+installation starts with an empty database (apart from the reference data
+that `entrypoint.sh` / the management commands create: difficulties,
+statuses, unit kinds and units).
 
-Usage:
-    uv run python scripts/seed_data.py [--base-url URL] [--clean]
+It talks to the app exclusively through the public REST API, exactly like
+the front-end does. This way every request goes through the same
+validation (serializers, permission checks, status transitions) as a real
+user's request, and the script also works against the Docker setup without
+access to the database.
+
+It only uses the Python standard library, so any Python >= 3.10 can run it
+(no `uv sync` or `pip install` needed):
+
+    python3 scripts/seed_data.py                                # Docker (Nginx on port 80)
+    python3 scripts/seed_data.py --base-url http://localhost:8000  # local dev server
+
+What it creates (skipping anything that already exists, so it is safe to
+run several times):
+    - 4 users (seed.user1@animize.example ... seed.user4@animize.example,
+      all with the password in SEED_PASSWORD) with a filled-in profile
+    - 2 published recipes per user (with ingredients and steps)
+    - 1 draft recipe per user
+    - 2 saved copies per user (of other users' published recipes)
 """
 
 import argparse
-import random
+import http.cookiejar
+import json
 import sys
-from datetime import date, timedelta
-from typing import Any, Dict, List, Optional
+import urllib.error
+import urllib.request
 
-import requests
-from faker import Faker
+# ---------------------------------------------------------------------------
+# Seed data
+# ---------------------------------------------------------------------------
 
-# Initialize Faker for generating realistic mock data
-fake = Faker()
+# Shared password for every seed user. It is public (it is in this file), so
+# never run this script against a real, publicly reachable deployment.
+SEED_PASSWORD = "Itadakimasu-2026!"
 
-# Configuration
-DEFAULT_BASE_URL = "http://localhost:8000"
-API_TIMEOUT = 10  # seconds
+# `.example` is a reserved top-level domain: these addresses can never
+# belong to a real person.
+EMAIL_TEMPLATE = "seed.user{n}@animize.example"
 
-
-# ============================================================================
-# MOCK DATA CONSTANTS
-# ============================================================================
-
-# Anime titles for recipe inspiration
-ANIME_TITLES = [
-    "Food Wars! Shokugeki no Soma",
-    "Restaurant to Another World",
-    "Today's Menu for the Emiya Family",
-    "Sweetness & Lightning",
-    "Ms. Koizumi Loves Ramen Noodles",
-    "Toriko",
-    "Yakitate!! Japan",
-    "Ben-To",
-    "Isekai Izakaya: Japanese Food From Another World",
-    "Campfire Cooking in Another World",
-    "The Disastrous Life of Saiki K",
-    "Silver Spoon",
-    "Gourmet Girl Graffiti",
-    "Cooking Papa",
-    "Delicious in Dungeon",
-    "Laid-Back Camp",
-    "Flying Witch",
-    "My Hero Academia",
-    "One Piece",
-    "Naruto",
+USERS = [
+    {
+        "display_name": "ramen_ronin",
+        "bio": "Will cross any village for a good bowl of noodles.",
+        "favorite_anime_custom": "Naruto",
+        "favorite_meal": "Miso ramen",
+        "location": "Lyon",
+    },
+    {
+        "display_name": "bento_witch",
+        "bio": "Delivering comfort food by broom since forever.",
+        "favorite_anime_custom": "Kiki's Delivery Service",
+        "favorite_meal": "Herring and pumpkin pie",
+        "location": "Bordeaux",
+    },
+    {
+        "display_name": "katsu_skater",
+        "bio": "Eats katsudon only after winning. Wins a lot.",
+        "favorite_anime_custom": "Yuri!!! on Ice",
+        "favorite_meal": "Katsudon",
+        "location": "Grenoble",
+    },
+    {
+        "display_name": "moving_castle_cook",
+        "bio": "Cooks breakfast on a fire demon. Bacon included.",
+        "favorite_anime_custom": "Howl's Moving Castle",
+        "favorite_meal": "Bacon and eggs",
+        "location": "Nantes",
+    },
 ]
 
-# Recipe ideas with anime inspiration
-RECIPE_IDEAS = [
-    ("Gotcha Pork Roast", "Food Wars! Shokugeki no Soma", "Juicy roasted pork with a sweet glaze that melts in your mouth"),
-    ("Chaliapin Steak Don", "Food Wars! Shokugeki no Soma", "Tender steak on rice with caramelized onions"),
-    ("Rainbow Terrine", "Food Wars! Shokugeki no Soma", "Colorful layered vegetable terrine"),
-    ("Soma's Transforming Furikake Gohan", "Food Wars! Shokugeki no Soma", "Rice with special seasoning that evolves with each bite"),
-    ("Beef Stew from Another World", "Restaurant to Another World", "Rich, hearty beef stew that transcends dimensions"),
-    ("Chicken Curry with Naan", "Restaurant to Another World", "Aromatic curry with fluffy homemade naan"),
-    ("Hamburg Steak Deluxe", "Restaurant to Another World", "Classic Japanese-style hamburg with demi-glace sauce"),
-    ("Nikujaga (Meat and Potatoes)", "Today's Menu for the Emiya Family", "Comforting Japanese home-style dish"),
-    ("Tamagoyaki (Sweet Rolled Omelette)", "Today's Menu for the Emiya Family", "Perfectly layered sweet Japanese omelette"),
-    ("Salmon Onigiri", "Today's Menu for the Emiya Family", "Hand-formed rice balls with grilled salmon"),
-    ("Shoyu Ramen", "Ms. Koizumi Loves Ramen Noodles", "Classic soy sauce ramen with rich broth"),
-    ("Tonkotsu Ramen", "Ms. Koizumi Loves Ramen Noodles", "Creamy pork bone broth with thin noodles"),
-    ("Miso Ramen with Butter Corn", "Ms. Koizumi Loves Ramen Noodles", "Rich miso broth topped with butter and sweet corn"),
-    ("Takoyaki (Octopus Balls)", "Delicious in Dungeon", "Crispy outside, creamy inside octopus fritters"),
-    ("Okonomiyaki (Savory Pancake)", "Delicious in Dungeon", "Japanese savory pancake with various toppings"),
-    ("Katsudon (Pork Cutlet Rice Bowl)", "Ben-To", "Crispy pork cutlet over rice with egg and sauce"),
-    ("Tempura Assortment", "Flying Witch", "Light and crispy battered vegetables and seafood"),
-    ("Matcha Ice Cream Parfait", "Sweetness & Lightning", "Layered dessert with matcha ice cream and sweet red beans"),
-    ("Chicken Karaage", "My Hero Academia", "Japanese fried chicken, perfectly crispy"),
-    ("Curry Rice (Japanese Style)", "One Piece", "Comforting Japanese curry with vegetables"),
-    ("Onigiri Assortment", "Laid-Back Camp", "Various rice ball flavors perfect for camping"),
-    ("Miso Soup with Tofu", "Silver Spoon", "Simple, warming soup with silky tofu"),
-    ("Gyoza (Pot Stickers)", "Toriko", "Pan-fried dumplings with savory filling"),
-    ("Yakitori Skewers", "Yakitate!! Japan", "Grilled chicken skewers with tare sauce"),
-    ("Tonkatsu (Breaded Pork Cutlet)", "Gourmet Girl Graffiti", "Crispy breaded pork with tangy sauce"),
-    ("Cream Stew", "Sweetness & Lightning", "White cream stew with chicken and vegetables"),
-    ("Oyakodon (Chicken and Egg Bowl)", "Cooking Papa", "Tender chicken and egg over steaming rice"),
-    ("Yakisoba Noodles", "Food Wars! Shokugeki no Soma", "Stir-fried noodles with vegetables and meat"),
-    ("Sushi Roll Platter", "The Disastrous Life of Saiki K", "Assorted sushi rolls with fresh fish"),
-    ("Pancakes with Maple Syrup", "Sweetness & Lightning", "Fluffy pancakes perfect for breakfast"),
-    ("Green Tea Mochi", "Flying Witch", "Soft mochi filled with sweet green tea paste"),
-    ("Beef Bowl (Gyudon)", "Restaurant to Another World", "Quick beef and onion over rice"),
-    ("Dorayaki (Red Bean Pancakes)", "Campfire Cooking in Another World", "Sweet pancakes with red bean filling"),
-    ("Udon Noodle Soup", "Ms. Koizumi Loves Ramen Noodles", "Thick wheat noodles in hot broth"),
-    ("Fried Rice with Vegetables", "Isekai Izakaya", "Simple yet flavorful fried rice"),
-    ("Steamed Pork Buns", "Toriko", "Soft steamed buns with savory pork filling"),
-    ("Chawanmushi (Savory Egg Custard)", "Today's Menu for the Emiya Family", "Delicate steamed egg custard"),
-    ("Mentaiko Pasta", "Food Wars! Shokugeki no Soma", "Creamy pasta with spicy cod roe"),
-    ("Tsukemen (Dipping Ramen)", "Ms. Koizumi Loves Ramen Noodles", "Cold noodles with hot dipping broth"),
-    ("Coffee Jelly", "The Disastrous Life of Saiki K", "Refreshing coffee-flavored jelly dessert"),
+# Each recipe belongs to the user at index `author` in USERS.
+# Ingredients are (name, quantity, unit symbol); the unit symbols must exist
+# in the database (they come from the `create_units` management command).
+# Step durations use Django's DurationField format "HH:MM:SS" (or None).
+RECIPES = [
+    {
+        "author": 0,
+        "title": "Ninja Village Miso Ramen",
+        "anime_custom": "Naruto",
+        "description": "A rich miso broth with chashu, egg and naruto "
+                       "fishcake, worthy of a future Hokage.",
+        "difficulty": "Medium",
+        "portions": 2,
+        "estimated_time_minutes": 45,
+        "ingredients": [
+            ("Ramen noodles", 250, "g"),
+            ("Chicken stock", 1, "l"),
+            ("White miso paste", 3, "tbsp"),
+            ("Pork belly", 300, "g"),
+            ("Egg", 2, "pc"),
+            ("Naruto fishcake", 4, "slice"),
+            ("Spring onion", 1, "bunch"),
+        ],
+        "steps": [
+            ("Sear the pork belly, then simmer it in the stock.", "00:30:00"),
+            ("Soft-boil the eggs, peel them and cut them in half.",
+             "00:06:30"),
+            ("Whisk the miso into a ladle of hot stock, then pour it back.",
+             None),
+            ("Cook the noodles, drain them and assemble the bowls.",
+             "00:03:00"),
+        ],
+    },
+    {
+        "author": 0,
+        "title": "Hidden Leaf Onigiri",
+        "anime_custom": "Naruto",
+        "description": "Simple salted rice balls for long missions.",
+        "difficulty": "Easy",
+        "portions": 4,
+        "estimated_time_minutes": 30,
+        "ingredients": [
+            ("Short-grain rice", 300, "g"),
+            ("Nori sheet", 2, "pc"),
+            ("Salt", 1, "pinch"),
+            ("Umeboshi", 4, "pc"),
+        ],
+        "steps": [
+            ("Rinse and cook the rice, then let it cool slightly.",
+             "00:20:00"),
+            ("Wet and salt your hands, shape the rice around an umeboshi.",
+             None),
+            ("Wrap each rice ball with a strip of nori.", None),
+        ],
+    },
+    {
+        "author": 1,
+        "title": "Herring and Pumpkin Pot Pie",
+        "anime_custom": "Kiki's Delivery Service",
+        "description": "Grandma's famous pie, even if some people don't "
+                       "like it.",
+        "difficulty": "Hard",
+        "portions": 6,
+        "estimated_time_minutes": 90,
+        "ingredients": [
+            ("Pumpkin", 500, "g"),
+            ("Smoked herring fillet", 300, "g"),
+            ("Puff pastry", 2, "pc"),
+            ("Heavy cream", 200, "ml"),
+            ("Black olive", 12, "pc"),
+        ],
+        "steps": [
+            ("Roast the pumpkin until soft, then mash it with the cream.",
+             "00:35:00"),
+            ("Layer the pumpkin mash and herring in a pie dish.", None),
+            ("Cover with pastry, draw a fish with olives on top.", None),
+            ("Bake until golden.", "00:40:00"),
+        ],
+    },
+    {
+        "author": 1,
+        "title": "Bakery Chocolate Cake",
+        "anime_custom": "Kiki's Delivery Service",
+        "description": "The birthday cake that saved a rainy delivery day.",
+        "difficulty": "Medium",
+        "portions": 8,
+        "estimated_time_minutes": 60,
+        "ingredients": [
+            ("Dark chocolate", 200, "g"),
+            ("Butter", 150, "g"),
+            ("Sugar", 150, "g"),
+            ("Egg", 4, "pc"),
+            ("Flour", 60, "g"),
+        ],
+        "steps": [
+            ("Melt the chocolate and butter together.", "00:05:00"),
+            ("Whisk the eggs and sugar, then fold in the chocolate.", None),
+            ("Fold in the flour and bake.", "00:25:00"),
+        ],
+    },
+    {
+        "author": 2,
+        "title": "Victory Katsudon",
+        "anime_custom": "Yuri!!! on Ice",
+        "description": "Crispy pork cutlet simmered with egg over rice. "
+                       "Only after a gold medal.",
+        "difficulty": "Medium",
+        "portions": 2,
+        "estimated_time_minutes": 40,
+        "ingredients": [
+            ("Pork loin", 2, "slice"),
+            ("Panko", 100, "g"),
+            ("Egg", 3, "pc"),
+            ("Onion", 1, "whole"),
+            ("Dashi", 200, "ml"),
+            ("Soy sauce", 2, "tbsp"),
+            ("Cooked rice", 400, "g"),
+        ],
+        "steps": [
+            ("Bread the pork with flour, egg and panko, then deep-fry it.",
+             "00:08:00"),
+            ("Simmer the sliced onion in dashi and soy sauce.", "00:05:00"),
+            ("Add the sliced cutlet, pour beaten egg over it and cover.",
+             "00:01:30"),
+            ("Slide everything over a bowl of rice.", None),
+        ],
+    },
+    {
+        "author": 2,
+        "title": "Rink-side Pirozhki",
+        "anime_custom": "Yuri!!! on Ice",
+        "description": "Grandpa's pork and rice buns, a Russian skater's "
+                       "favourite.",
+        "difficulty": "Hard",
+        "portions": 10,
+        "estimated_time_minutes": 120,
+        "ingredients": [
+            ("Flour", 500, "g"),
+            ("Milk", 250, "ml"),
+            ("Dry yeast", 1, "tbsp"),
+            ("Minced pork", 300, "g"),
+            ("Cooked rice", 150, "g"),
+        ],
+        "steps": [
+            ("Make a soft yeast dough and let it rise.", "01:00:00"),
+            ("Cook the pork and mix it with the rice.", "00:10:00"),
+            ("Fill and seal small dough rounds.", None),
+            ("Fry until golden on both sides.", "00:06:00"),
+        ],
+    },
+    {
+        "author": 3,
+        "title": "Fire Demon Bacon and Eggs",
+        "anime_custom": "Howl's Moving Castle",
+        "description": "Thick bacon and eggs cooked in one pan over a very "
+                       "grumpy fire.",
+        "difficulty": "Easy",
+        "portions": 3,
+        "estimated_time_minutes": 15,
+        "ingredients": [
+            ("Thick-cut bacon", 6, "slice"),
+            ("Egg", 6, "pc"),
+            ("Bread", 3, "slice"),
+        ],
+        "steps": [
+            ("Lay the bacon in a cold pan and render it slowly.", "00:08:00"),
+            ("Crack the eggs between the bacon slices.", "00:04:00"),
+            ("Serve straight from the pan with bread.", None),
+        ],
+    },
+    {
+        "author": 3,
+        "title": "Seaside Ham Ramen",
+        "anime_custom": "Ponyo",
+        "description": "Instant ramen upgraded with ham, egg and spring "
+                       "onion. Do not peek before it is ready.",
+        "difficulty": "Easy",
+        "portions": 2,
+        "estimated_time_minutes": 10,
+        "ingredients": [
+            ("Instant ramen", 2, "pc"),
+            ("Ham", 2, "slice"),
+            ("Egg", 2, "pc"),
+            ("Spring onion", 1, "stick"),
+        ],
+        "steps": [
+            ("Pour boiling water over the noodles and cover.", "00:03:00"),
+            ("Top with ham, a soft-boiled egg and spring onion.", None),
+        ],
+    },
 ]
 
-# Common ingredients for Japanese/anime-inspired recipes
-INGREDIENT_LIST = [
-    "all-purpose flour",
-    "rice",
-    "soy sauce",
-    "miso paste",
-    "sake",
-    "mirin",
-    "rice vinegar",
-    "sesame oil",
-    "vegetable oil",
-    "sugar",
-    "salt",
-    "black pepper",
-    "chicken breast",
-    "pork belly",
-    "beef chuck",
-    "salmon fillet",
-    "eggs",
-    "butter",
-    "milk",
-    "heavy cream",
-    "onion",
-    "garlic",
-    "ginger",
-    "carrot",
-    "potato",
-    "scallions",
-    "nori (seaweed)",
-    "noodles",
-    "panko breadcrumbs",
-    "cornstarch",
-    "dashi stock",
-    "tofu",
-    "shiitake mushrooms",
-    "white mushrooms",
-    "bell pepper",
-    "cabbage",
-    "bok choy",
-    "spinach",
-    "tomato",
-    "cucumber",
-    "daikon radish",
-]
+# One unfinished draft per user, so the "Drafts" group of My Recipes is not
+# empty. Drafts only get a title.
+DRAFT_TITLE = "Work in progress: secret family recipe"
 
-# Unit data: (name, symbol, kind_label)
-UNIT_DATA = [
-    # Weight units
-    ("kilogram", "kg", "weight"),
-    ("gram", "g", "weight"),
-    ("pound", "lb", "weight"),
-    ("ounce", "oz", "weight"),
-    # Volume units
-    ("liter", "L", "volume"),
-    ("milliliter", "mL", "volume"),
-    ("cup", "cup", "volume"),
-    ("tablespoon", "tbsp", "volume"),
-    ("teaspoon", "tsp", "volume"),
-    # Count/piece units
-    ("piece", "pc", "piece"),
-    ("whole", "whole", "piece"),
-    ("clove", "clove", "piece"),
-    ("slice", "slice", "piece"),
-    ("pinch", "pinch", "piece"),
-    ("dash", "dash", "piece"),
-]
+# Each user saves the published recipes with these titles (from other
+# users, since saving your own recipe makes little sense).
+SAVES = {
+    0: ["Victory Katsudon", "Fire Demon Bacon and Eggs"],
+    1: ["Ninja Village Miso Ramen", "Seaside Ham Ramen"],
+    2: ["Herring and Pumpkin Pot Pie", "Hidden Leaf Onigiri"],
+    3: ["Bakery Chocolate Cake", "Rink-side Pirozhki"],
+}
 
-# Difficulty levels
-DIFFICULTY_DATA = [
-    ("Easy", 1),
-    ("Medium", 2),
-    ("Hard", 3),
-    ("Expert", 4),
-]
-
-# Recipe step templates
-STEP_TEMPLATES = [
-    "Prepare {ingredient} by {action}.",
-    "{Action} the {ingredient} {method}.",
-    "In a {container}, combine {ingredients}.",
-    "Heat {ingredient} in a {container} over {heat} heat.",
-    "{Action} for {time} minutes or until {done_state}.",
-    "Season with {seasonings} to taste.",
-    "Serve hot and garnish with {garnish}.",
-    "Let rest for {time} minutes before serving.",
-    "Mix thoroughly until {texture} forms.",
-    "Bring to a boil, then reduce heat and simmer.",
-]
+TIMEOUT_SECONDS = 15
 
 
-# ============================================================================
-# API HELPER FUNCTIONS
-# ============================================================================
+# ---------------------------------------------------------------------------
+# Minimal API client
+# ---------------------------------------------------------------------------
 
-class APIClient:
-    """Helper class for making API requests with consistent error handling."""
-    
+class ApiError(Exception):
+    """Raised when the API answers with an unexpected status code."""
+
+
+class ApiClient:
+    """One client = one browser-like session (its own cookie jar).
+
+    The back-end authenticates with JWT tokens stored in cookies, so after
+    `login()` the cookie jar sends the `access_token` cookie with every
+    request, just like the browser does for the front-end.
+    """
+
     def __init__(self, base_url: str):
         self.base_url = base_url.rstrip("/")
-        self.session = requests.Session()
-        self.created_counts = {
-            "users": 0,
-            "profiles": 0,
-            "recipes": 0,
-            "saved_recipes": 0,
-            "steps": 0,
-            "ingredients": 0,
-            "units": 0,
-            "unit_kinds": 0,
-            "recipe_ingredients": 0,
-            "difficulties": 0,
-        }
-    
-    def _log(self, message: str, level: str = "INFO"):
-        """Simple logging helper."""
-        print(f"[{level}] {message}")
-    
-    def get(self, endpoint: str, params: Optional[Dict] = None) -> Optional[Dict[str, Any]]:
-        """Make GET request to API."""
-        url = f"{self.base_url}{endpoint}"
+        self.opener = urllib.request.build_opener(
+            urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
+        )
+
+    def request(self, method: str, path: str, data=None,
+                expected=(200, 201)):
+        """Send a JSON request and return (status code, decoded body).
+
+        Raises ApiError if the status code is not in `expected`.
+        """
+        body = json.dumps(data).encode() if data is not None else None
+        req = urllib.request.Request(
+            self.base_url + path,
+            data=body,
+            method=method,
+            headers={"Content-Type": "application/json",
+                     "Accept": "application/json"},
+        )
         try:
-            response = self.session.get(url, params=params, timeout=API_TIMEOUT)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            self._log(f"GET {endpoint} failed: {e}", "ERROR")
-            return None
-    
-    def post(self, endpoint: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Make POST request to API."""
-        url = f"{self.base_url}{endpoint}"
+            with self.opener.open(req, timeout=TIMEOUT_SECONDS) as resp:
+                code, raw = resp.status, resp.read()
+        except urllib.error.HTTPError as err:
+            # 4xx/5xx answers arrive as exceptions; read their body anyway
+            # so we can show the API's error message.
+            code, raw = err.code, err.read()
         try:
-            response = self.session.post(url, json=data, timeout=API_TIMEOUT)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            self._log(f"POST {endpoint} failed: {e}", "ERROR")
-            if hasattr(e.response, 'text'):
-                self._log(f"Response: {e.response.text}", "ERROR")
-            return None
-    
-    def patch(self, endpoint: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Make PATCH request to API."""
-        url = f"{self.base_url}{endpoint}"
-        try:
-            response = self.session.patch(url, json=data, timeout=API_TIMEOUT)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            self._log(f"PATCH {endpoint} failed: {e}", "ERROR")
-            return None
-    
-    def print_summary(self):
-        """Print summary of created objects."""
-        print("\n" + "=" * 60)
-        print("SEEDING SUMMARY")
-        print("=" * 60)
-        for key, count in self.created_counts.items():
-            print(f"  {key.replace('_', ' ').title()}: {count}")
-        print("=" * 60)
+            payload = json.loads(raw) if raw else None
+        except ValueError:
+            # Not JSON (e.g. an HTML error page from Nginx or Django).
+            payload = raw.decode(errors="replace")[:300]
+        if code not in expected:
+            raise ApiError(f"{method} {path} -> {code}: {payload}")
+        return code, payload
+
+    def login(self, email: str, password: str):
+        self.request("POST", "/api/token/",
+                     {"email": email, "password": password})
 
 
-# ============================================================================
-# DATA CREATION FUNCTIONS
-# ============================================================================
+# ---------------------------------------------------------------------------
+# Seeding steps
+# ---------------------------------------------------------------------------
 
-def create_unit_kinds(client: APIClient) -> Dict[str, str]:
-    """Create unit kind categories and return mapping of label -> id."""
-    client._log("Creating unit kinds...")
-    unit_kinds = {}
-    
-    kinds = [
-        ("weight", "Weight"),
-        ("volume", "Volume"),
-        ("piece", "Piece/Count"),
-    ]
-    
-    for label, descriptive_name in kinds:
-        data = {
-            "label": label,
-            "descriptive_name": descriptive_name,
-        }
-        result = client.post("/api/ingredients/unitkind_models/", data)
-        if result and "id" in result:
-            unit_kinds[label] = result["id"]
-            client.created_counts["unit_kinds"] += 1
-            client._log(f"  Created unit kind: {descriptive_name}")
-        else:
-            # Try to fetch existing unit kind
-            existing = client.get("/api/ingredients/unitkind_models/", {"label": label})
-            if existing and len(existing) > 0:
-                unit_kinds[label] = existing[0]["id"]
-                client._log(f"  Found existing unit kind: {descriptive_name}")
-            else:
-                client._log(f"  Failed to create or find unit kind: {label}", "WARN")
-    
-    return unit_kinds
+def log(message: str):
+    print(message, flush=True)
 
 
-def create_units(client: APIClient, unit_kinds: Dict[str, str]) -> List[Dict[str, Any]]:
-    """Create measurement units and return list of created/existing units."""
-    client._log("Creating units...")
-    units = []
-    
-    for name, symbol, kind_label in UNIT_DATA:
-        if kind_label not in unit_kinds:
-            client._log(f"  Skipping unit {name}: kind {kind_label} not found", "WARN")
+def fetch_reference_ids(client: ApiClient):
+    """Map difficulty labels and unit symbols to their database ids.
+
+    These rows are created by the management commands (automatically in
+    Docker), not by this script.
+    """
+    _, difficulties = client.request("GET", "/api/recipes/difficulty_models/")
+    _, units = client.request("GET", "/api/ingredients/unit_models/")
+    difficulty_ids = {d["label"]: d["id"] for d in difficulties}
+    unit_ids = {u["symbol"]: u["id"] for u in units}
+    if not difficulty_ids or not unit_ids:
+        raise ApiError(
+            "No difficulties or units found. Run the reference-data "
+            "management commands first (see INSTALLATION.md)."
+        )
+    return difficulty_ids, unit_ids
+
+
+def ensure_user(base_url: str, n: int, profile: dict) -> ApiClient:
+    """Sign the user up (if needed), log in and fill in the profile.
+
+    Returns a client logged in as that user.
+    """
+    email = EMAIL_TEMPLATE.format(n=n)
+    client = ApiClient(base_url)
+    # Same request as the front-end sign-up form. A 400 here means the
+    # email is already taken, i.e. the user was seeded by a previous run.
+    code, _ = client.request(
+        "POST", "/api/accounts/user_models/",
+        {"email": email, "password": SEED_PASSWORD},
+        expected=(201, 400),
+    )
+    client.login(email, SEED_PASSWORD)
+    if code == 201:
+        _, me = client.request("GET", "/api/me/")
+        client.request("PATCH",
+                       f"/api/accounts/profile_models/{me['profile_id']}/",
+                       profile)
+        log(f"  created user {email} ({profile['display_name']})")
+    else:
+        log(f"  user {email} already exists, reusing it")
+    return client
+
+
+def create_recipe(client: ApiClient, recipe: dict, difficulty_ids: dict,
+                  unit_ids: dict):
+    """Create, fill in and publish one recipe, like the front-end editor.
+
+    1. POST creates a blank draft owned by the logged-in user.
+    2. PATCH fills in the fields, ingredients and steps.
+    3. Status goes Draft -> Ready -> Published (the API only publishes
+       Ready recipes that have a title, an anime, ingredients and steps).
+    """
+    _, draft = client.request("POST", "/api/recipes/recipe_models/", {})
+    recipe_url = f"/api/recipes/recipe_models/{draft['id']}/"
+    client.request("PATCH", recipe_url, {
+        "title": recipe["title"],
+        "anime_custom": recipe["anime_custom"],
+        "description": recipe["description"],
+        "difficulty": difficulty_ids[recipe["difficulty"]],
+        "portions": recipe["portions"],
+        "estimated_time_minutes": recipe["estimated_time_minutes"],
+        "ingredients": [
+            {"ingredient_name": name, "quantity": quantity,
+             "unit": unit_ids[symbol]}
+            for name, quantity, symbol in recipe["ingredients"]
+        ],
+        "steps": [
+            {"number": number, "description": description,
+             "duration": duration}
+            for number, (description, duration)
+            in enumerate(recipe["steps"], start=1)
+        ],
+    })
+    client.request("PATCH", recipe_url + "status/", {"value": "Ready"})
+    client.request("PATCH", recipe_url + "status/", {"value": "Published"})
+    log(f"    published '{recipe['title']}'")
+
+
+def create_draft(client: ApiClient):
+    _, draft = client.request("POST", "/api/recipes/recipe_models/", {})
+    client.request("PATCH", f"/api/recipes/recipe_models/{draft['id']}/",
+                   {"title": DRAFT_TITLE})
+    log(f"    created draft '{DRAFT_TITLE}'")
+
+
+def seed_recipes(client: ApiClient, author: int, difficulty_ids: dict,
+                 unit_ids: dict):
+    """Create the user's recipes and draft, skipping existing titles."""
+    _, mine = client.request("GET", "/api/me/recipes/")
+    existing = {r["title"] for group in ("draft", "ready", "published")
+                for r in mine[group]}
+    for recipe in RECIPES:
+        if recipe["author"] != author:
             continue
-        
-        data = {
-            "name": name,
-            "symbol": symbol,
-            "kind": unit_kinds[kind_label],
-        }
-        result = client.post("/api/ingredients/unit_models/", data)
-        if result and "id" in result:
-            units.append(result)
-            client.created_counts["units"] += 1
-            client._log(f"  Created unit: {name} ({symbol})")
-        else:
-            # Try to fetch existing unit
-            existing = client.get("/api/ingredients/unit_models/", {"name": name})
-            if existing and len(existing) > 0:
-                units.append(existing[0])
-                client._log(f"  Found existing unit: {name}")
-            else:
-                client._log(f"  Failed to create or find unit: {name}", "WARN")
-    
-    return units
+        if recipe["title"] in existing:
+            log(f"    '{recipe['title']}' already exists, skipping")
+            continue
+        create_recipe(client, recipe, difficulty_ids, unit_ids)
+    if DRAFT_TITLE in existing:
+        log(f"    draft '{DRAFT_TITLE}' already exists, skipping")
+    else:
+        create_draft(client)
 
 
-def create_ingredients(client: APIClient) -> List[Dict[str, Any]]:
-    """Create ingredients and return list of created/existing ingredients."""
-    client._log("Creating ingredients...")
-    ingredients = []
-    
-    for name in INGREDIENT_LIST:
-        data = {"name": name}
-        result = client.post("/api/ingredients/ingredient_models/", data)
-        if result and "id" in result:
-            ingredients.append(result)
-            client.created_counts["ingredients"] += 1
-        else:
-            # Try to fetch existing ingredient
-            existing = client.get("/api/ingredients/ingredient_models/", {"name": name})
-            if existing and len(existing) > 0:
-                ingredients.append(existing[0])
-            else:
-                client._log(f"  Failed to create or find ingredient: {name}", "WARN")
-    
-    client._log(f"  Total ingredients available: {len(ingredients)}")
-    return ingredients
-
-
-def create_difficulties(client: APIClient) -> List[Dict[str, Any]]:
-    """Create difficulty levels and return list of created difficulties."""
-    client._log("Creating difficulty levels...")
-    difficulties = []
-    
-    for label, value in DIFFICULTY_DATA:
-        data = {
-            "label": label,
-            "value": value,
-        }
-        result = client.post("/api/recipes/difficulty_models/", data)
-        if result and "id" in result:
-            difficulties.append(result)
-            client.created_counts["difficulties"] += 1
-            client._log(f"  Created difficulty: {label} (value: {value})")
-        else:
-            # Try to fetch existing difficulty
-            existing = client.get("/api/recipes/difficulty_models/", {"label": label})
-            if existing and len(existing) > 0:
-                difficulties.append(existing[0])
-                client._log(f"  Found existing difficulty: {label}")
-            else:
-                client._log(f"  Failed to create or find difficulty: {label}", "WARN")
-    
-    return difficulties
-
-
-def get_recipe_statuses(client: APIClient) -> Dict[str, str]:
-    """Get existing recipe statuses and return mapping of value -> id."""
-    client._log("Fetching recipe statuses...")
-    result = client.get("/api/recipes/recipestatus_models/")
-    
-    if not result:
-        client._log("  Failed to fetch recipe statuses", "ERROR")
-        return {}
-    
-    statuses = {}
-    for status in result:
-        statuses[status["value"]] = status["id"]
-        client._log(f"  Found status: {status['value']}")
-    
-    return statuses
-
-
-def create_user_with_profile(client: APIClient, index: int) -> Optional[Dict[str, Any]]:
-    """Create a user and update their profile with personalized data."""
-    # Generate user data
-    first_name = fake.first_name()
-    last_name = fake.last_name()
-    email = f"{first_name.lower()}.{last_name.lower()}{index}@animize.example"
-    password = "TestPassword123!"
-    
-    # Create user
-    user_data = {
-        "email": email,
-        "password": password,
-        "first_name": first_name,
-        "last_name": last_name,
-    }
-    
-    user = client.post("/api/accounts/user_models/", user_data)
-    if not user or "id" not in user:
-        client._log(f"  Failed to create user: {email}", "ERROR")
-        return None
-    
-    client.created_counts["users"] += 1
-    client._log(f"  Created user: {first_name} {last_name} ({email})")
-    
-    # Fetch user's profile (auto-created by signal)
-    profiles = client.get("/api/accounts/profile_models/", {"user": user["id"]})
-    if not profiles or len(profiles) == 0:
-        client._log(f"  Profile not found for user {email}", "ERROR")
-        return None
-    
-    profile = profiles[0]
-    
-    # Update profile with personalized data
-    birth_year = random.randint(1985, 2005)
-    birth_month = random.randint(1, 12)
-    birth_day = random.randint(1, 28)
-    birth_date = date(birth_year, birth_month, birth_day).isoformat()
-    
-    profile_data = {
-        "display_name": f"{first_name} {last_name[0]}.",
-        "birth_date": birth_date,
-        "bio": fake.text(max_nb_chars=200),
-        "favorite_anime_custom": random.choice(ANIME_TITLES),
-        "favorite_meal": random.choice([recipe[0] for recipe in RECIPE_IDEAS[:20]]),
-        "location": fake.city(),
-        "dietary_preferences": random.choice([
-            "No restrictions",
-            "Vegetarian",
-            "Pescatarian",
-            "Gluten-free",
-            "Dairy-free",
-        ]),
-    }
-    
-    updated_profile = client.patch(f"/api/accounts/profile_models/{profile['id']}/", profile_data)
-    if updated_profile:
-        client.created_counts["profiles"] += 1
-        client._log(f"  Updated profile for {first_name} {last_name}")
-    
-    return {
-        "user": user,
-        "profile": updated_profile or profile,
-        "email": email,
-        "password": password,
-    }
-
-
-def generate_recipe_steps(recipe_title: str, num_steps: int) -> List[Dict[str, Any]]:
-    """Generate mock recipe steps."""
-    steps = []
-    actions = ["chop", "dice", "mince", "slice", "grate", "mix", "stir", "whisk", "fold"]
-    containers = ["pan", "pot", "bowl", "wok", "skillet"]
-    heat_levels = ["low", "medium", "high", "medium-high"]
-    
-    for i in range(1, num_steps + 1):
-        if i == 1:
-            description = f"Prepare all ingredients and gather necessary equipment for making {recipe_title}."
-        elif i == num_steps:
-            description = "Serve hot and enjoy your delicious creation!"
-        else:
-            action = random.choice(actions).capitalize()
-            container = random.choice(containers)
-            description = f"{action} the ingredients in a {container} over {random.choice(heat_levels)} heat for {random.randint(3, 15)} minutes."
-        
-        duration_minutes = random.randint(2, 20) if i < num_steps else 0
-        
-        steps.append({
-            "number": i,
-            "description": description,
-            "duration": f"00:{duration_minutes:02d}:00" if duration_minutes > 0 else None,
+def seed_saves(client: ApiClient, titles: list, published: dict):
+    """Save copies of other users' published recipes, skipping existing
+    ones."""
+    _, mine = client.request("GET", "/api/me/recipes/")
+    already_saved = {r["title"] for r in mine["saved"]}
+    for title in titles:
+        if title in already_saved:
+            log(f"    '{title}' already saved, skipping")
+            continue
+        recipe = published[title]
+        # Same payload as the front-end "Save" button. The server sets the
+        # saver, original recipe/author and the "Saved" status itself.
+        client.request("POST", "/api/recipes/savedrecipe_models/", {
+            "original_recipe": recipe["id"],
+            "title": recipe["title"],
+            "anime_custom": recipe["anime_custom"],
+            "description": recipe["description"],
+            "difficulty": recipe["difficulty"]["id"],
+            "portions": recipe["portions"],
+            "estimated_time_minutes": recipe["estimated_time_minutes"],
         })
-    
-    return steps
+        log(f"    saved '{title}'")
 
-
-def create_recipe_with_details(
-    client: APIClient,
-    author_profile_id: str,
-    difficulties: List[Dict[str, Any]],
-    statuses: Dict[str, str],
-    ingredients: List[Dict[str, Any]],
-    units: List[Dict[str, Any]],
-    recipe_index: int,
-) -> Optional[Dict[str, Any]]:
-    """Create a complete recipe with steps and ingredients."""
-    # Select a recipe idea
-    recipe_data = RECIPE_IDEAS[recipe_index % len(RECIPE_IDEAS)]
-    title, anime, description = recipe_data
-    
-    # Add personalization to title
-    variations = ["Homemade", "Classic", "Special", "Deluxe", "Ultimate"]
-    title = f"{random.choice(variations)} {title}"
-    
-    # Create recipe
-    recipe_payload = {
-        "title": title,
-        "anime_custom": anime,
-        "description": description,
-        "portions": random.randint(2, 6),
-        "estimated_time_minutes": random.randint(15, 90),
-        "author": author_profile_id,
-        "difficulty": random.choice(difficulties)["id"] if difficulties else None,
-        "status": statuses.get("Draft"),
-    }
-    
-    recipe = client.post("/api/recipes/recipe_models/", recipe_payload)
-    if not recipe or "id" not in recipe:
-        client._log(f"  Failed to create recipe: {title}", "ERROR")
-        return None
-    
-    client.created_counts["recipes"] += 1
-    client._log(f"  Created recipe: {title}")
-    
-    # Create steps
-    num_steps = random.randint(3, 6)
-    steps = generate_recipe_steps(title, num_steps)
-    
-    for step_data in steps:
-        step_payload = {
-            "recipe": recipe["id"],
-            **step_data,
-        }
-        step = client.post(f"/api/recipes/{recipe['id']}/steps/", step_payload)
-        if step:
-            client.created_counts["steps"] += 1
-    
-    client._log(f"    Added {num_steps} steps")
-    
-    # Create recipe ingredients
-    num_ingredients = random.randint(5, 10)
-    selected_ingredients = random.sample(ingredients, min(num_ingredients, len(ingredients)))
-    
-    for ingredient in selected_ingredients:
-        # Select appropriate unit
-        unit = random.choice(units)
-        quantity = round(random.uniform(0.5, 5.0), 2)
-        
-        ingredient_payload = {
-            "recipe": recipe["id"],
-            "ingredient": ingredient["id"],
-            "quantity": quantity,
-            "unit": unit["id"],
-        }
-        
-        result = client.post("/api/ingredients/recipeingredient_models/", ingredient_payload)
-        if result:
-            client.created_counts["recipe_ingredients"] += 1
-    
-    client._log(f"    Added {num_ingredients} ingredients")
-    
-    return recipe
-
-
-def save_recipe(
-    client: APIClient,
-    original_recipe: Dict[str, Any],
-    saver_profile_id: str,
-    original_author_profile_id: str,
-    statuses: Dict[str, str],
-) -> Optional[Dict[str, Any]]:
-    """Create a saved recipe (snapshot) from an original recipe."""
-    # Get full recipe details
-    recipe_details = client.get(f"/api/recipes/recipe_models/{original_recipe['id']}/")
-    if not recipe_details:
-        client._log(f"  Failed to fetch recipe details for {original_recipe['title']}", "ERROR")
-        return None
-    
-    # Extract IDs from nested objects (API returns expanded objects in detail view)
-    difficulty_id = None
-    if recipe_details.get("difficulty"):
-        if isinstance(recipe_details["difficulty"], dict):
-            difficulty_id = recipe_details["difficulty"]["id"]
-        else:
-            difficulty_id = recipe_details["difficulty"]
-    
-    status_id = None
-    if recipe_details.get("status"):
-        if isinstance(recipe_details["status"], dict):
-            status_id = recipe_details["status"]["id"]
-        else:
-            status_id = recipe_details["status"]
-    
-    # Create saved recipe
-    saved_recipe_payload = {
-        "title": recipe_details["title"],
-        "anime_custom": recipe_details["anime_custom"],
-        "description": recipe_details["description"],
-        "portions": recipe_details["portions"],
-        "estimated_time_minutes": recipe_details["estimated_time_minutes"],
-        "difficulty": difficulty_id,
-        "status": statuses.get("Saved") or statuses.get("Draft"),
-        "saver": saver_profile_id,
-        "original_recipe": original_recipe["id"],
-        "original_author": original_author_profile_id,
-    }
-    
-    saved_recipe = client.post("/api/recipes/savedrecipe_models/", saved_recipe_payload)
-    if not saved_recipe or "id" not in saved_recipe:
-        client._log(f"  Failed to save recipe: {recipe_details['title']}", "ERROR")
-        return None
-    
-    client.created_counts["saved_recipes"] += 1
-    client._log(f"  Saved recipe: {recipe_details['title']}")
-    
-    # Copy steps (using the steps from the GET response)
-    if "steps" in recipe_details:
-        for step in recipe_details["steps"]:
-            step_payload = {
-                "recipe": saved_recipe["id"],
-                "number": step["number"],
-                "description": step["description"],
-                "duration": step.get("duration"),
-            }
-            # SavedStep uses the savedstep_models endpoint (not nested routing)
-            client.post("/api/recipes/savedstep_models/", step_payload)
-    
-    # Copy ingredients
-    if "ingredients" in recipe_details:
-        for recipe_ingredient in recipe_details["ingredients"]:
-            ingredient_payload = {
-                "recipe": saved_recipe["id"],
-                "ingredient": recipe_ingredient["ingredient"]["id"],
-                "quantity": recipe_ingredient["quantity"],
-                "unit": recipe_ingredient["unit"]["id"],
-            }
-            client.post("/api/ingredients/savedrecipeingredient_models/", ingredient_payload)
-    
-    return saved_recipe
-
-
-# ============================================================================
-# MAIN EXECUTION
-# ============================================================================
 
 def main():
-    """Main execution flow for seeding script."""
-    parser = argparse.ArgumentParser(description="Seed database via REST API")
+    parser = argparse.ArgumentParser(
+        description="Fill a running animize_eat instance with test data "
+                    "through its REST API.")
     parser.add_argument(
-        "--base-url",
-        default=DEFAULT_BASE_URL,
-        help=f"Base URL for API (default: {DEFAULT_BASE_URL})"
-    )
-    parser.add_argument(
-        "--clean",
-        action="store_true",
-        help="Note: Manual database reset required. This flag is for documentation."
-    )
+        "--base-url", default="http://localhost",
+        help="URL of the running app: http://localhost for Docker "
+             "(default), http://localhost:8000 for the Django dev server.")
     args = parser.parse_args()
-    
-    if args.clean:
-        print("Note: To reset database, run: ./scripts/destroy_initialize_postgres.sh")
-        print("Then run migrations before seeding.")
-        return
-    
-    client = APIClient(args.base_url)
-    
-    print("=" * 60)
-    print("STARTING DATABASE SEEDING")
-    print("=" * 60)
-    print(f"API Base URL: {args.base_url}")
-    print()
-    
-    # Step 1: Create foundational data
-    client._log("Step 1: Setting up foundational data")
-    unit_kinds = create_unit_kinds(client)
-    if not unit_kinds:
-        client._log("Failed to create unit kinds. Aborting.", "ERROR")
-        sys.exit(1)
-    
-    units = create_units(client, unit_kinds)
-    if not units:
-        client._log("Failed to create units. Aborting.", "ERROR")
-        sys.exit(1)
-    
-    ingredients = create_ingredients(client)
-    if not ingredients:
-        client._log("Failed to create ingredients. Aborting.", "ERROR")
-        sys.exit(1)
-    
-    difficulties = create_difficulties(client)
-    statuses = get_recipe_statuses(client)
-    
-    if not statuses:
-        client._log("No recipe statuses found. Aborting.", "ERROR")
-        sys.exit(1)
-    
-    print()
-    
-    # Step 2: Create users with profiles
-    client._log("Step 2: Creating users and profiles")
-    users_data = []
-    for i in range(1, 6):
-        user_data = create_user_with_profile(client, i)
-        if user_data:
-            users_data.append(user_data)
-    
-    if len(users_data) != 5:
-        client._log(f"Expected 5 users, created {len(users_data)}. Continuing...", "WARN")
-    
-    print()
-    
-    # Step 3: Each user creates 5 recipes
-    client._log("Step 3: Creating recipes with steps and ingredients")
-    all_recipes = []
-    recipe_counter = 0
-    
-    for user_data in users_data:
-        profile_id = user_data["profile"]["id"]
-        user_name = user_data["profile"]["display_name"]
-        client._log(f"Creating recipes for {user_name}...")
-        
-        user_recipes = []
-        for i in range(5):
-            recipe = create_recipe_with_details(
-                client,
-                profile_id,
-                difficulties,
-                statuses,
-                ingredients,
-                units,
-                recipe_counter,
-            )
-            if recipe:
-                recipe["author_profile_id"] = profile_id
-                user_recipes.append(recipe)
-            recipe_counter += 1
-        
-        all_recipes.extend(user_recipes)
-        user_data["authored_recipes"] = user_recipes
-    
-    print()
-    
-    # Step 4: Each user saves 5 recipes from other users
-    client._log("Step 4: Creating saved recipes")
-    for user_data in users_data:
-        profile_id = user_data["profile"]["id"]
-        user_name = user_data["profile"]["display_name"]
-        client._log(f"Saving recipes for {user_name}...")
-        
-        # Get recipes authored by other users
-        other_recipes = [r for r in all_recipes if r.get("author_profile_id") != profile_id]
-        
-        if len(other_recipes) < 5:
-            client._log(f"  Not enough recipes from other users (found {len(other_recipes)})", "WARN")
-            recipes_to_save = other_recipes
-        else:
-            recipes_to_save = random.sample(other_recipes, 5)
-        
-        for recipe in recipes_to_save:
-            save_recipe(
-                client,
-                recipe,
-                profile_id,
-                recipe["author_profile_id"],
-                statuses,
-            )
-    
-    print()
-    
-    # Print summary
-    client.print_summary()
-    print("\nSeeding completed successfully!")
-    print(f"You can now test the API at: {args.base_url}/api/")
+
+    log(f"Seeding {args.base_url} ...")
+    anonymous = ApiClient(args.base_url)
+    try:
+        difficulty_ids, unit_ids = fetch_reference_ids(anonymous)
+
+        log("Users and recipes:")
+        clients = []
+        for index, profile in enumerate(USERS):
+            client = ensure_user(args.base_url, index + 1, profile)
+            seed_recipes(client, index, difficulty_ids, unit_ids)
+            clients.append(client)
+
+        # The public recipe list only contains published recipes. Use it
+        # to find the ids (and current fields) of the recipes to save.
+        _, public = anonymous.request("GET", "/api/recipes/recipe_models/")
+        published = {r["title"]: r for r in public}
+
+        log("Saved copies:")
+        for index, client in enumerate(clients):
+            # Access tokens only live 5 minutes: log in again so a slow run
+            # does not fail half-way.
+            client.login(EMAIL_TEMPLATE.format(n=index + 1), SEED_PASSWORD)
+            log(f"  {USERS[index]['display_name']}:")
+            seed_saves(client, SAVES[index], published)
+    except urllib.error.URLError as err:
+        sys.exit(f"Cannot reach {args.base_url} ({err.reason}). "
+                 "Is the app running? Check --base-url.")
+    except ApiError as err:
+        sys.exit(f"API error: {err}")
+
+    log("Done. Log in with any seed user, e.g. "
+        f"{EMAIL_TEMPLATE.format(n=1)} / {SEED_PASSWORD}")
 
 
 if __name__ == "__main__":

@@ -61,8 +61,7 @@ urlpatterns = [
     path('api/accounts/', include('accounts.urls')),
     path('api/ingredients/', include('ingredients.urls')),
     path('api/recipes/', include('recipes.urls')),
-    # JWT authentication endpoints (tokens set via cookies):
-    # TODO: migrate to httpOnly Cookies tokens
+    # JWT authentication endpoints (tokens set via httpOnly cookies):
     path('api/token/', include([
         path("", CookieTokenObtainPairView.as_view(),
              name='token_obtain_pair'),

@@ -6,6 +6,7 @@ interface StatusActionsProps {
 	onStatusChange: (newValue: string) => void
 	onEdit: () => void
 	saveState: 'idle' | 'saving' | 'saved' | 'error'
+	saveError: string | null
 	onSaveCopy: () => void
 }
 
@@ -17,6 +18,7 @@ export default function StatusActions({
 	onStatusChange,
 	onEdit,
 	saveState,
+	saveError,
 	onSaveCopy,
 }: StatusActionsProps) {
 	return (
@@ -82,6 +84,10 @@ export default function StatusActions({
 
 			{statusError && (
 				<p className="mt-2 text-sm text-primary whitespace-pre-line">{statusError}</p>
+			)}
+
+			{saveError && (
+				<p className="mt-2 text-sm text-primary whitespace-pre-line">{saveError}</p>
 			)}
 		</>
 	)

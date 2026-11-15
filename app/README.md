@@ -1,2 +1,134 @@
-# animize_eat
+# animize_eat — Developer Guide
 
+Technical documentation for developers who want to understand, run, or contribute to the project.
+
+## Quick Start
+
+1. Clone the repository
+2. Follow the [Installation Guide](INSTALLATION.md)
+3. Open `http://localhost` (Docker) or `http://localhost:5173` (local development) in your browser
+
+## Project Structure
+
+```text
+app/
+├── back-end/          # Django 6 + DRF REST API
+├── front-end/         # React 19 + Vite SPA
+├── nginx/             # Reverse proxy configuration
+├── docs/              # Diagrams and reference notes
+├── landing-page/      # Static project landing page (GitHub Pages)
+├── compose.prod.yml   # Docker Compose production config
+└── INSTALLATION.md    # Setup instructions
+```
+
+## Architecture
+
+Nginx is the single entry point. It serves the React SPA, proxies API requests to scalable Django/Gunicorn replicas (round-robin), and serves static/media files directly from shared Docker volumes.
+
+See the [Production Architecture diagram](docs/diagrams.md#production-architecture) and [Development Architecture diagram](docs/diagrams.md#development-architecture).
+
+### Frontend
+
+- **Router:** React Router DOM with `createBrowserRouter`
+- **Auth state:** React Context (`AuthProvider`) — no external state library
+- **API layer:** Centralized fetch wrapper (`src/lib/api.ts`) with automatic 401 refresh/retry
+- **Components:** Feature-based folders under `src/components/`
+- **Path alias:** `@` maps to `src/`
+- **Styling:** Tailwind CSS 4
+
+### Backend
+
+- **Django apps:** `core` (UUID base model), `accounts` (auth/users), `recipes` (recipes/steps/photos), `ingredients` (ingredients/units), `animes` (stub)
+- **Custom user model:** `CustomUser` with UUID PK and email as `USERNAME_FIELD`, plus a one-to-one `Profile`
+- **Auth:** `CookieJWTAuthentication` — access token (5 min), refresh token (1 day), stored in cookies
+- **Snapshot pattern:** Abstract base models (`RecipeBase`, `StepBase`, `RecipeIngredientBase`) let editable recipes and their saved copies share the same fields while living in separate tables
+- **Validation:** `RecipeIngredientBase.clean()` rejects a unit whose kind is not in the ingredient's `allowed_unit_kinds` (an ingredient with no allowed kinds accepts any unit). It runs in the Django admin, but the API does not call it yet
+
+## Data Model
+
+The database uses UUID primary keys throughout (via `core.UUIDModel`). Recipes have a status workflow (Draft → Ready → Published). Only a Ready recipe can be published, and only if it has a title, an anime, at least one ingredient and at least one step. A published recipe must be moved back to Ready before it can be edited. Saving another user's published recipe stores a copy of its main fields (title, anime, description, difficulty, portions, estimated time) in a separate table. Steps and ingredients are not copied yet, and photos are still read from the original recipe. Saved copies are private to the user who saved them and cannot be edited, only created, read and deleted.
+
+See the [ER diagram](docs/diagrams.md#entity-relationship-diagram) and [Class diagram](docs/diagrams.md#class-diagram).
+
+## API Overview
+
+All endpoints are under `/api/`. The DRF browsable API is available at `/api/` when `DEBUG=True`.
+
+| Prefix                                        | Purpose                          |
+| --------------------------------------------- | -------------------------------- |
+| `POST /api/token/`                            | Login (obtain JWT)               |
+| `POST /api/token/refresh/`                    | Refresh access token             |
+| `POST /api/token/logout/`                     | Clear auth cookies               |
+| `GET /api/me/`                                | Current user info                |
+| `GET /api/me/recipes/`                        | Current user's recipes by status |
+| `/api/accounts/user_models/`                  | User CRUD                        |
+| `/api/accounts/profile_models/`               | User profiles                    |
+| `/api/recipes/recipe_models/`                 | Recipe CRUD, status changes      |
+| `PATCH /api/recipes/recipe_models/{id}/status/` | Change status (Draft/Ready/Published) |
+| `/api/recipes/{id}/steps/`                    | Recipe steps                     |
+| `/api/recipes/{id}/photos/`                   | Recipe photos                    |
+| `POST /api/recipes/savedrecipe_models/`       | Save a copy of a published recipe |
+| `/api/recipes/savedrecipe_models/`            | List saved recipes               |
+| `/api/ingredients/ingredient_models/`         | Ingredients catalog              |
+| `/api/ingredients/unit_models/`               | Measurement units                |
+| `/api/ingredients/unitkind_models/`           | Unit categories (weight/volume/count) |
+
+## User Flow & Auth Flow
+
+See the [User Flow diagram](docs/diagrams.md#user-flow) and [Authentication Flow diagram](docs/diagrams.md#authentication-flow).
+
+## Development Commands
+
+### Frontend (`front-end/`)
+
+```bash
+npm run dev        # Start Vite dev server (localhost:5173)
+npm run build      # TypeScript check + production build
+npm run lint       # ESLint
+npm run format     # Prettier (ts, tsx, css, json)
+```
+
+### Backend (`back-end/`)
+
+```bash
+uv run manage.py runserver          # Start Django dev server
+uv run manage.py migrate            # Apply migrations
+uv run manage.py makemigrations     # Create migrations
+uv run manage.py createsuperuser    # Create admin user
+uv add <package>                    # Add dependency
+uv sync                             # Sync virtualenv from lockfile
+```
+
+Reference data commands (the difficulties, statuses, unit kinds and units the app needs; the Docker entrypoint and `scripts/destroy_initialize_postgres.sh` already run them, and they skip existing rows):
+
+```bash
+uv run manage.py create_difficulties
+uv run manage.py create_recipe_statuses
+uv run manage.py create_unit_kinds
+uv run manage.py create_units
+```
+
+Test data (optional: test users and recipes, created through the API of a running app; see [Test data](INSTALLATION.md#test-data-optional)):
+
+```bash
+python3 scripts/seed_data.py --base-url http://localhost:8000
+```
+
+## Environment Variables
+
+- **Backend:** Uses `DJANGO_ENV` (default `dev`) to load `.env.<DJANGO_ENV>` via `python-dotenv`. See `.env.dev.example` and `.env.prod.example` for required variables.
+- **Frontend:** Uses `.env.development` (loaded by `npm run dev`) with `VITE_` prefix. See `.env.dev.example` and `.env.prod.example`. The Docker production build gets `VITE_API_BASE_URL` from a build argument in `compose.prod.yml`.
+- **Docker production:** All env vars injected via `compose.prod.yml` from `.env.prod`. Django does not load a `.env` file in production.
+
+Full setup details in the [Installation Guide](INSTALLATION.md).
+
+## Roadmap / Known Limitations
+
+- API tests exist (`manage.py test`, see [INSTALLATION.md](INSTALLATION.md#automated-tests)) but no CI pipeline runs them yet (only the landing page is deployed automatically, by a GitHub Actions workflow)
+- Media served locally by Nginx (no S3/CDN)
+- `animes` app is a stub (planned feature)
+- Saved copies do not include steps and ingredients yet (planned)
+
+## License
+
+MIT — see [LICENSE](LICENSE)

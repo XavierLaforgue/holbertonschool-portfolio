@@ -107,6 +107,7 @@ export default function StepList({ steps, onChange }: StepListProps) {
 										rows={2}
 										onChange={(e) => updateRow(idx, { description: e.target.value })}
 										placeholder="Step description..."
+										aria-label="Step description"
 										className="w-full rounded-md border border-border bg-transparent px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
 									/>
 									<div className="flex items-center gap-1 text-xs text-muted">

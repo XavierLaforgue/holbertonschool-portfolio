@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
-import { apiFetch } from '../lib/api'
+import { apiFetch, ApiError } from '../lib/api'
 import { apiFetchRecipe, apiUpdateRecipe } from '../lib/api-recipes'
 import { apiUploadPhoto, apiDeletePhoto } from '../lib/api-photos'
 import type { RecipeDetail, RecipePhoto, Difficulty, IngredientWrite, StepWrite } from '../types'
@@ -82,7 +82,7 @@ export default function RecipeEditPage() {
 			setTitle(data.title)
 			setAnimeCustom(data.anime_custom)
 			setDescription(data.description ?? '')
-			setDifficultyId(data.difficulty.id)
+			setDifficultyId(data.difficulty?.id ?? difficultyList[0]?.id ?? '')
 			setPortions(data.portions)
 			setEstimatedTime(data.estimated_time_minutes)
 			setIngredients(data.ingredients.map((recipe_ingredient) => ({
@@ -137,16 +137,39 @@ export default function RecipeEditPage() {
 		setSaving(true)
 		setSaveError(null)
 		try {
+			const effectiveDifficulty = difficultyId || difficulties[0]?.id
+			const defaultUnitId = units[0]?.id
 			await apiUpdateRecipe(recipe.id, {
 				title, anime_custom: animeCustom, description,
-				difficulty: difficultyId,
+				difficulty: effectiveDifficulty,
 				portions, estimated_time_minutes: estimatedTime,
-				ingredients: ingredients.filter((i) => i.ingredient_name.trim()),
+				ingredients: ingredients
+					.filter((i) => i.ingredient_name.trim())
+					.map((i) => ({ ...i, unit: i.unit || defaultUnitId })),
 				steps: steps.filter((s) => s.description.trim()),
 			})
 			navigate(`/recipes/${recipe.id}`)
 		} catch (err) {
-			setSaveError(err instanceof Error ? err.message : 'Failed to save')
+			if (err instanceof ApiError && err.body) {
+				try {
+					const parsed = JSON.parse(err.body)
+					const flatten = (val: unknown): string => {
+						if (typeof val === 'string') return val
+						if (Array.isArray(val)) return val.map(flatten).join(', ')
+						if (val && typeof val === 'object')
+							return Object.entries(val).map(([k, v]) => `${k}: ${flatten(v)}`).join('; ')
+						return String(val)
+					}
+					const messages = Object.entries(parsed)
+						.map(([k, v]) => `${k}: ${flatten(v)}`)
+						.join('; ')
+					setSaveError(messages)
+				} catch {
+					setSaveError(err.body)
+				}
+			} else {
+				setSaveError(err instanceof Error ? err.message : 'Failed to save')
+			}
 		} finally {
 			setSaving(false)
 		}

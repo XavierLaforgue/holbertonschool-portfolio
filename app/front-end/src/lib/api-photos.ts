@@ -1,5 +1,5 @@
 import type { RecipePhoto } from '../types'
-import { API_BASE_URL, ApiError, apiFetch } from './api'
+import { apiFetch } from './api'
 
 /**
  * Upload a photo for a recipe.
@@ -14,18 +14,12 @@ export async function apiUploadPhoto(
 	form.append('image', file)
 	form.append('position', String(position))
 
-	const url = `${API_BASE_URL}/api/recipes/${recipeId}/photos/`
-	const res = await fetch(url, {
+	return apiFetch<RecipePhoto>(`/api/recipes/${recipeId}/photos/`, {
 		method: 'POST',
-		credentials: 'include',
 		body: form,
-		// Do NOT set Content-Type — browser sets it with the multipart boundary
+		// Do NOT set Content-Type — apiFetch skips it for FormData,
+		// letting the browser set multipart/form-data with boundary
 	})
-	if (!res.ok) {
-		const body = await res.text().catch(() => '')
-		throw new ApiError(res.status, res.statusText, url, body)
-	}
-	return res.json()
 }
 
 export async function apiDeletePhoto(

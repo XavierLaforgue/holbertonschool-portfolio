@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<!-- The line above tells the browser "this is a modern HTML5 document". -->
+<!-- <html> is the root element that wraps the whole page.
+     lang="en" tells browsers and screen readers that the page is in English. -->
+<html lang="en">
+<!-- <head> holds information ABOUT the page. None of it is displayed inside the page itself. -->
+<head>
+  <!-- Text encoding. UTF-8 is required for characters like an em dash, é or emojis. -->
+  <meta charset="UTF-8">
+  <!-- On phones, use the real screen width instead of pretending to be a desktop.
+       Required for the responsive rules (@media at the end of style.css) to work. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Text shown in the browser tab and as the title in search results. -->
+  <title>animize_eat: an Anime-Inspired Recipe Sharing Platform</title>
+  <!-- The short summary shown under the title in search results. -->
+  <meta name="description" content="Cook the dishes you've always dreamed about, from Naruto's legendary ichiraku ramen to Totoro's bento. Share your creations with the community.">
+
+  <!-- Open Graph -->
+  <!-- Open Graph tags: when someone shares the link (Discord, LinkedIn, Slack...), they give
+       the preview card its title, text, image and type.
+       Note: most platforms need og:image to be a full URL (https://.../assets/logo.png);
+       with a relative path the preview image may not appear. -->
+  <meta property="og:title" content="animize_eat — Anime-Inspired Recipe Sharing Platform">
+  <meta property="og:description" content="Cook the dishes you've always dreamed about, from Naruto's legendary ichiraku ramen to Totoro's bento.">
+  <meta property="og:image" content="assets/logo.png">
+  <meta property="og:type" content="website">
+
+  <!-- Favicon -->
+  <!-- The small icon shown in the browser tab. -->
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
+
+  <!-- Fonts: the Inter font files are in assets/fonts/ and declared at the top of
+       style.css. They are not loaded from Google Fonts, which would receive the IP
+       address of every visitor (RGPD). -->
+
+  <!-- Loads OUR stylesheet (style.css, in the same folder). -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<!-- <body> is the visible part of the page: every section below lives inside it. -->
+<body>
+
+  <!-- Navbar -->
+  <!-- <nav> = a navigation area (meaningful for screen readers).
+       class is used by the CSS; id is a unique name that script.js uses to find this element. -->
+  <nav class="navbar" id="navbar">
+    <!-- Inner box that centres the content and puts the brand and the links side by side. -->
+    <div class="nav-container">
+      <!-- The brand: a link to the top of the page (href="#").
+           <img>: the icon. alt is the text read by screen readers (or shown if the image fails).
+           <span>: the project name next to it (the "wordmark"). -->
+      <a href="#" class="nav-brand">
+        <img src="assets/icon.svg" alt="animize_eat icon" class="nav-icon">
+        <span class="nav-wordmark">animize_eat</span>
+      </a>
+
+      <!-- Hamburger button, only shown on small screens (see .nav-toggle in style.css).
+           <button>: a real button, usable with the keyboard (unlike a clickable <div>).
+           aria-label: the button has no text, so this label tells screen-reader users what it does.
+           The three empty <span>s are turned into the three lines of the icon by the CSS;
+           script.js opens and closes the menu when it is clicked. -->
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- <ul> = unordered list, <li> = list item: a navigation menu is semantically a list of links.
+           href="#features" jumps to the element that has id="features" (same for the others).
+           id="nav-links" lets script.js find this list. -->
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#tech-stack">Tech Stack</a></li>
+        <li><a href="#about">About</a></li>
+        <!-- target="_blank": open in a new tab.
+             rel="noopener": security, the new tab can't control this page through window.opener.
+             class="btn btn-primary btn-sm": three utility classes from style.css = small red button. -->
+        <li>
+          <a href="https://github.com/XavierLaforgue/holbertonschool-portfolio" target="_blank" rel="noopener" class="btn btn-primary btn-sm">
+            View on GitHub
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <!-- The "hero" is the big first block visitors see.
+       <section> = a thematic block of the page. .hero-content stacks and centres everything inside.
+       The class fade-in (used on many elements below) is the scroll animation:
+       style.css says what it looks like and script.js triggers it. -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <!-- The big logo.
+           width/height attributes: the browser reserves the space BEFORE the image loads,
+           so the page doesn't jump (the CSS then sets the real displayed size).
+           fetchpriority="high": download this image first, it's the most visible one. -->
+      <img src="assets/logo.png" alt="animize_eat logo" class="hero-logo fade-in" width="320" height="320" fetchpriority="high">
+
+      <!-- <h1> = the page's main heading (there should be only one).
+           The <span> makes part of it use the red-to-plum gradient text (.gradient-text). -->
+      <h1 class="hero-title fade-in">
+        Recipes Straight Out of
+        <span class="gradient-text">Your Favorite Anime</span>
+      </h1>
+
+      <!-- The tagline, partly in the vertical gradient (.gradient-text-reverse). -->
+      <p class="hero-subtitle fade-in">
+        <span class="gradient-text-reverse">anime straight </span>into your life
+      </p>
+
+      <!-- The pitch. In HTML, a line break inside a paragraph is displayed as a simple space. -->
+      <p class="hero-description fade-in">
+        Cook the dishes you've always dreamed about, from Naruto's legendary ichiraku ramen to Totoro's bento.
+        Share your creations with the community and let your passion for anime and food come alive.
+      </p>
+
+      <!-- The call-to-action button (normal size this time: no btn-sm). -->
+      <a href="https://github.com/XavierLaforgue/holbertonschool-portfolio" target="_blank" rel="noopener" class="btn btn-primary fade-in">
+        View on GitHub
+      </a>
+    </div>
+
+    <!-- Decorative blobs -->
+    <!-- Two empty <div>s that the CSS turns into soft, blurred coloured circles in the corners:
+         pure decoration. -->
+    <div class="blob blob-top"></div>
+    <div class="blob blob-bottom"></div>
+  </section>
+
+  <!-- Features -->
+  <!-- id="features": the target of the navbar link href="#features".
+       class="container": centred, width-limited content (utility from style.css).
+       <h2>: a second-level heading (the sections sit under the page's single <h1>). -->
+  <section class="section" id="features">
+    <div class="container">
+      <h2 class="section-title fade-in">Features</h2>
+      <p class="section-subtitle fade-in">Everything you need to bring anime cuisine to life</p>
+
+      <!-- The grid that holds the six cards. -->
+      <div class="features-grid">
+        <!-- One card = icon + title (<h3>) + text (<p>). The six cards follow the same pattern.
+             &#9997; is an HTML entity: a character written by its number (9997 = writing hand).
+             Writing emojis as numbers avoids encoding problems. -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#9997;</div>
+          <h3>Recipe Workflow</h3>
+          <p>Create recipes with a structured workflow — Draft, Ready, Published — so you can refine before sharing.</p>
+        </div>
+
+        <!-- &#128247; = camera -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#128247;</div>
+          <h3>Photo Gallery</h3>
+          <p>Showcase your creations with a main image and up to four gallery photos per recipe.</p>
+        </div>
+
+        <!-- &#128278; = bookmark -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#128278;</div>
+          <h3>Save a Copy</h3>
+          <p>Save a copy of other users' published recipes to your personal collection.</p>
+        </div>
+
+        <!-- &#127860; = fork and knife -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#127860;</div>
+          <h3>Public Feed</h3>
+          <p>Browse every recipe published by the community, newest first.</p>
+        </div>
+
+        <!-- &#128100; = person silhouette -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#128100;</div>
+          <h3>Personal Dashboard</h3>
+          <p>Secure authentication with JWT. Find your draft, ready, published and saved recipes in one personal dashboard.</p>
+        </div>
+
+        <!-- &#128241; = mobile phone -->
+        <div class="feature-card fade-in">
+          <div class="feature-icon">&#128241;</div>
+          <h3>Responsive Design</h3>
+          <p>A seamless experience across desktop, tablet, and mobile — cook from any device.</p>
+        </div>
+      <!-- Close the grid, the container and the section. -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <!-- Same structure as Features, plus section-alt (white background) to separate it visually
+       from the cream sections around it. id="tech-stack" is the navbar link's target. -->
+  <section class="section section-alt" id="tech-stack">
+    <div class="container">
+      <h2 class="section-title fade-in">Tech Stack</h2>
+      <p class="section-subtitle fade-in">Built with modern, production-ready technologies</p>
+
+      <!-- Nine badges with the same pattern:
+           <strong> = the technology name (bold), <span> = its role. -->
+      <div class="tech-grid">
+        <div class="tech-badge fade-in">
+          <strong>React 19</strong>
+          <span>Frontend</span>
+        </div>
+        <div class="tech-badge fade-in">
+          <strong>TypeScript</strong>
+          <span>Type Safety</span>
+        </div>
+        <div class="tech-badge fade-in">
+          <strong>Tailwind CSS 4</strong>
+          <span>Styling</span>
+        </div>
+        <div class="tech-badge fade-in">
+          <strong>Vite 7</strong>
+          <span>Build Tool</span>
+        </div>
+        <div class="tech-badge fade-in">
+          <strong>Django 6</strong>
+          <span>Backend</span>
+        </div>
+        <div class="tech-badge fade-in">
+          <strong>DRF</strong>
+          <span>REST API</span>
+        </div>
+        <div class="tech-badge fade-in">
+          <strong>PostgreSQL</strong>
+          <span>Database</span>
+        </div>
+        <div class="tech-badge fade-in">
+          <strong>Docker</strong>
+          <span>Containers</span>
+        </div>
+        <div class="tech-badge fade-in">
+          <strong>Nginx</strong>
+          <span>Reverse Proxy</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <!-- Same section structure. No section-alt, so it has the cream background,
+       which contrasts with the white Tech Stack section above it. -->
+  <section class="section" id="about">
+    <div class="container">
+      <h2 class="section-title fade-in">About</h2>
+
+      <!-- Two paragraphs. <strong> marks important words (bold). -->
+      <div class="about-content fade-in">
+        <p>
+          <strong>animize_eat</strong> is a full-stack recipe-sharing platform built as the final portfolio project
+          for <strong>Holberton School</strong>. It combines a love for anime and cooking into a community-driven
+          web application where users can create, publish, and discover anime-inspired recipes.
+        </p>
+        <p>
+          The architecture features a React single-page application served through Nginx, which also acts as a
+          reverse proxy and load balancer for multiple Django API replicas — all orchestrated with Docker Compose.
+        </p>
+        <!-- The author credit and an OUTLINED button (btn-outline), so it stands out
+             less than the red "View on GitHub" buttons. -->
+        <div class="about-author">
+          <p>Built by <strong>Xavier Laforgue</strong></p>
+          <a href="https://github.com/XavierLaforgue" target="_blank" rel="noopener" class="btn btn-outline">
+            GitHub Profile
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <!-- <footer> = the page's closing area (meaningful for screen readers). -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <!-- Icon + name, like the navbar. -->
+        <div class="footer-brand">
+          <img src="assets/icon.svg" alt="animize_eat" class="footer-icon">
+          <span>animize_eat</span>
+        </div>
+        <!-- A tagline, then three links separated by &middot; (the entity for the centred dot).
+             The license file is app/LICENSE: the repository has no LICENSE at its root. -->
+        <p>Built with passion for anime and food.</p>
+        <p class="footer-links">
+          <a href="https://github.com/XavierLaforgue/holbertonschool-portfolio" target="_blank" rel="noopener">GitHub</a>
+          <span>&middot;</span>
+          <a href="https://github.com/XavierLaforgue/holbertonschool-portfolio/blob/main/app/LICENSE" target="_blank" rel="noopener">MIT License</a>
+          <span>&middot;</span>
+          <a href="legal.html">Legal notice and privacy</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Loads and runs script.js. It's placed at the END of <body>, so when the script runs,
+       all the elements above already exist and the script can find them. -->
+  <script src="script.js"></script>
+</body>
+</html>

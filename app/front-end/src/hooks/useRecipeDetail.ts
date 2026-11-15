@@ -55,6 +55,7 @@ export function useRecipeSaveCopy(recipe: RecipeDetail | null) {
 	const navigate = useNavigate()
 	const location = useLocation()
 	const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+	const [saveError, setSaveError] = useState<string | null>(null)
 
 	const handleSaveCopy = useCallback(async () => {
 		if (!recipe) return
@@ -63,6 +64,7 @@ export function useRecipeSaveCopy(recipe: RecipeDetail | null) {
 			return
 		}
 		setSaveState('saving')
+		setSaveError(null)
 		try {
 			await apiSaveRecipe({
 				title: recipe.title,
@@ -71,17 +73,20 @@ export function useRecipeSaveCopy(recipe: RecipeDetail | null) {
 				difficulty: recipe.difficulty?.id,
 				portions: recipe.portions,
 				estimated_time_minutes: recipe.estimated_time_minutes,
-				status: recipe.status.id,
 				original_recipe: recipe.id,
-				original_author: recipe.author.id,
 			})
 			setSaveState('saved')
-		} catch {
+		} catch (err) {
 			setSaveState('error')
+			if (err instanceof ApiError) {
+				setSaveError(err.body || err.message)
+			} else {
+				setSaveError('Something went wrong. Please try again.')
+			}
 		}
 	}, [recipe, user, navigate, location.pathname])
 
-	return { saveState, handleSaveCopy }
+	return { saveState, saveError, handleSaveCopy }
 }
 
 /* ---- Author status actions (draft ↔ published) ------------------ */

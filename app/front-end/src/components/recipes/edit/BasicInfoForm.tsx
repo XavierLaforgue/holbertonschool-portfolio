@@ -28,9 +28,13 @@ export default function BasicInfoForm({
 		<section className="space-y-4">
 			<h2 className="text-lg font-semibold">Basic info</h2>
 
+			{/* Each label's htmlFor matches its field's id: screen readers
+			    read the label when the field gets the focus, and clicking
+			    the label focuses the field. */}
 			<div>
-				<label className="mb-1 block text-sm font-medium text-muted">Title</label>
+				<label className="mb-1 block text-sm font-medium text-muted" htmlFor="recipe-title">Title</label>
 				<input
+					id="recipe-title"
 					type="text"
 					value={title}
 					onChange={(e) => onChange('title', e.target.value)}
@@ -40,8 +44,9 @@ export default function BasicInfoForm({
 			</div>
 
 			<div>
-				<label className="mb-1 block text-sm font-medium text-muted">Anime source</label>
+				<label className="mb-1 block text-sm font-medium text-muted" htmlFor="recipe-anime">Anime source</label>
 				<input
+					id="recipe-anime"
 					type="text"
 					value={animeCustom}
 					onChange={(e) => onChange('animeCustom', e.target.value)}
@@ -51,8 +56,9 @@ export default function BasicInfoForm({
 			</div>
 
 			<div>
-				<label className="mb-1 block text-sm font-medium text-muted">Description</label>
+				<label className="mb-1 block text-sm font-medium text-muted" htmlFor="recipe-description">Description</label>
 				<textarea
+					id="recipe-description"
 					rows={5}
 					value={description}
 					onChange={(e) => onChange('description', e.target.value)}
@@ -63,8 +69,9 @@ export default function BasicInfoForm({
 
 			<div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
 				<div>
-					<label className="mb-1 block text-sm font-medium text-muted">Difficulty</label>
+					<label className="mb-1 block text-sm font-medium text-muted" htmlFor="recipe-difficulty">Difficulty</label>
 					<select
+						id="recipe-difficulty"
 						value={difficultyId}
 						onChange={(e) => onChange('difficultyId', e.target.value)}
 						className={inputClass}
@@ -80,8 +87,9 @@ export default function BasicInfoForm({
 				</div>
 
 				<div>
-					<label className="mb-1 block text-sm font-medium text-muted">Portions</label>
+					<label className="mb-1 block text-sm font-medium text-muted" htmlFor="recipe-portions">Portions</label>
 					<input
+						id="recipe-portions"
 						type="number"
 						min={1}
 						value={portions}
@@ -91,8 +99,9 @@ export default function BasicInfoForm({
 				</div>
 
 				<div>
-					<label className="mb-1 block text-sm font-medium text-muted">Time (min)</label>
+					<label className="mb-1 block text-sm font-medium text-muted" htmlFor="recipe-time">Time (min)</label>
 					<input
+						id="recipe-time"
 						type="number"
 						min={0}
 						value={estimatedTime}

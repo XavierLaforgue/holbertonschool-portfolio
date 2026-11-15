@@ -1,5 +1,6 @@
 from .models import (Difficulty, Recipe, RecipePhoto, SavedRecipe,
                      RecipeStatus, Step, SavedStep)
+from django.db import transaction
 from rest_framework import serializers
 from accounts.serializers import ProfileSummarySerializer
 from ingredients.models import RecipeIngredient, Ingredient, Unit, UnitKind
@@ -128,7 +129,7 @@ class BaseRecipeSerializer:
 class RecipeIngredientWriteSerializer(serializers.Serializer):
     """Flat ingredient entry accepted inside a recipe write payload."""
     ingredient_name = serializers.CharField(max_length=50)
-    quantity = serializers.FloatField()
+    quantity = serializers.FloatField(min_value=0)  # no negative quantity
     unit = serializers.PrimaryKeyRelatedField(queryset=Unit.objects.all())
 
 
@@ -156,6 +157,31 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ("author", "status", "published_at")
 
+    def validate_ingredients(self, items):
+        """Refuse a unit whose kind is not allowed for the ingredient,
+        e.g. litres of flour.
+
+        Same rule as RecipeIngredientBase.clean() (ingredients/models.py),
+        which Django only runs in its own forms (the admin site).
+        """
+        for item in items:
+            ingredient = Ingredient.objects.filter(
+                name=item["ingredient_name"]).first()
+            if ingredient is None:
+                continue  # new ingredient: no kinds configured yet
+            allowed_kinds = ingredient.allowed_unit_kinds.all()
+            # No kinds configured means "every kind is allowed".
+            if (allowed_kinds.exists()
+                    and item["unit"].kind not in allowed_kinds):
+                raise serializers.ValidationError(
+                    f"'{item['unit']}' cannot measure '{ingredient.name}'."
+                )
+        return items
+
+    # One transaction: the recipe, its ingredients and its steps are all
+    # saved, or nothing is (an error in the middle would otherwise leave
+    # the recipe with its old ingredients deleted).
+    @transaction.atomic
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop("ingredients", None)
         steps_data = validated_data.pop("steps", None)
@@ -254,6 +280,8 @@ class BaseSavedRecipeSerializer:
     class Meta:
         model = SavedRecipe
         fields = "__all__"
+        read_only_fields = ("saver", "original_recipe", "original_author",
+                            "saved_at", "status")
 
 
 class SavedRecipeSummarySerializer(BaseSavedRecipeSerializer,

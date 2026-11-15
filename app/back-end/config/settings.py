@@ -237,6 +237,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+# Directory where `collectstatic` gathers all static files for production.
+# Nginx serves this directory directly instead of Django.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (user-uploaded content)
 # https://docs.djangoproject.com/en/6.0/topics/files/
