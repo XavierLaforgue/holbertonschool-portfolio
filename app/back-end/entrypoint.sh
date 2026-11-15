@@ -18,10 +18,6 @@ set -e  # Exit immediately if any command fails
 echo "Applying database migrations..."
 uv run manage.py migrate --noinput
 
-# Populate the database with system-required data (difficulties,
-# statuses and units).
-# These commands are idempotent (they skip existing rows), so they are
-# safe to run on every container start, not just the first time.
 # Create the Django superuser if ADMIN_EMAIL and ADMIN_PW are set.
 # DJANGO_SUPERUSER_PASSWORD is the env var Django's createsuperuser
 # reads in --noinput mode. We map it from ADMIN_PW for consistency
@@ -39,6 +35,10 @@ fi
 # --username "$ADMIN_USER" \  # custom user doesn't accept username so
 # it can not be provided
 
+# Populate the database with system-required data (difficulties,
+# statuses, unit kinds and units).
+# These commands are idempotent (they skip existing rows), so they are
+# safe to run on every container start, not just the first time.
 echo "Populating reference data..."
 uv run manage.py create_difficulties
 uv run manage.py create_recipe_statuses
