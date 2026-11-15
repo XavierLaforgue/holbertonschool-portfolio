@@ -50,10 +50,10 @@ ACCESS_COOKIE = "access_token"
 REFRESH_COOKIE = "refresh_token"
 
 COOKIE_DEFAULTS: dict = {
-    # httponly=True,
-    # TODO: once the httpOnly will be working properly, the frontend will no
-    # longer need a client-side fallback for cookie deletion.
-    "httponly": False,
+    # HttpOnly: the browser sends the cookies but JavaScript cannot read
+    # them, so an XSS flaw could not steal the tokens. The front-end never
+    # reads them: it only sends requests with `credentials: 'include'`.
+    "httponly": True,
     "secure": settings.AUTH_COOKIE_SECURE,
     "samesite": settings.AUTH_COOKIE_SAMESITE,
     "path": "/",

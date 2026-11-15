@@ -172,10 +172,7 @@ export interface AuthContextType {
 	// Verify auth by calling /me. Refreshes token on 401 (via apiFetch).
 	// Updates context user and returns it, or null if not authenticated.
 	verifyAuth: () => Promise<User | null>
-	// requests backend to remove cookies and cleares them if backend
-	// call fails
-	// TODO: update logout to not try to touch the cookies when they
-	// will be httpOnly
+	// asks the backend to delete the (httpOnly) cookies
 	logout: () => Promise<void>
 }
 

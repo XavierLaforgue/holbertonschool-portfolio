@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import type { User } from '../types'
 import { AuthContext } from '../contexts/AuthContext'
-import { clearTokensFallback } from '../lib/api'
 import { apiLogin, apiSignup, apiFetchMe, apiLogout } from '../lib/api-auth'
 
 /**
@@ -78,12 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	const logout = useCallback(async () => {
 		try {
-			await apiLogout()  // backend clears cookies: pattern pre-migration 
-							   // to httponly cookies
+			await apiLogout()  // the back-end deletes the cookies
 		} catch {
-			// In case of failure, clear cookies from the client.
-			// TODO: When using httpOnly cookies, remove this fallback entirely.
-			clearTokensFallback()
+			// The cookies are HttpOnly: JavaScript cannot delete them. If
+			// the request failed, they stay until they expire.
 		}
 		setUser(null)
 	}, [])
