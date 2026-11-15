@@ -32,6 +32,11 @@ env_value() {
 DB_NAME=$(env_value DB_NAME)
 DB_USER=$(env_value DB_USER)
 DB_PW=$(env_value DB_PW)
+# Optional: without them, the admin user is created interactively.
+# (`|| true` because grep fails, and so would the script, when the
+# variable is missing.)
+ADMIN_EMAIL=$(env_value ADMIN_EMAIL || true)
+ADMIN_PW=$(env_value ADMIN_PW || true)
 
 # Run a command as the `postgres` superuser. It is the default admin role
 # of PostgreSQL and has no password: it uses "peer" authentication, i.e.
@@ -75,16 +80,21 @@ as_postgres createdb --owner="$DB_USER" "$DB_NAME"
 echo "Applying migrations..."
 uv run manage.py migrate
 
-# Use details of the superuser from the environment file:
-ADMIN_USER=$(env_value ADMIN_USER)
-ADMIN_EMAIL=$(env_value ADMIN_EMAIL)
-# Create a superuser (admin user) for the django server
-echo "Creating superuser '$ADMIN_USER' with email '${ADMIN_EMAIL}'..."
-echo "Password for the new superuser will be requested:" 
-# uv run manage.py createsuperuser --username=$ADMIN_USER
-# --email=$ADMIN_EMAIL
-uv run manage.py createsuperuser --email=$ADMIN_EMAIL
+# Reference data the app needs to work (idempotent commands).
+echo "Adding reference data..."
 uv run manage.py create_difficulties
 uv run manage.py create_recipe_statuses
 uv run manage.py create_unit_kinds
 uv run manage.py create_units
+
+# Create a superuser (admin user) for the Django admin, the same way the
+# Docker entrypoint does: non-interactively from ADMIN_EMAIL/ADMIN_PW
+# when both are set, otherwise by asking for them.
+if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PW" ]; then
+    echo "Creating superuser '${ADMIN_EMAIL}'..."
+    DJANGO_SUPERUSER_PASSWORD="$ADMIN_PW" \
+        uv run manage.py createsuperuser --noinput --email "$ADMIN_EMAIL"
+else
+    echo "Creating superuser (you will be asked for its details)..."
+    uv run manage.py createsuperuser
+fi
