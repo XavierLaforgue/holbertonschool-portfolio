@@ -8,6 +8,8 @@ As one of the students, I decided to develop an recipe-sharing platform where us
 
 Xavier Laforgue — [GitHub](https://github.com/XavierLaforgue)
 
+**Landing page:** [xavierlaforgue.github.io/holbertonschool-portfolio](https://xavierlaforgue.github.io/holbertonschool-portfolio/)
+
 ## Project Stages
 
 | Stage | Title                                  | Report                                             |

@@ -291,6 +291,15 @@ img {
   color: var(--foreground);
 }
 
+/* The "View on GitHub" button is also a link inside .nav-links, and ".nav-links a"
+   (a class + an element) is more specific than ".btn-primary" (a class alone), so it
+   won: brown text on red. These rules give the button back its white text, as in the
+   React app (contrast 4.5:1, the WCAG AA minimum for normal text). */
+.nav-links .btn-primary,
+.nav-links .btn-primary:hover {
+  color: var(--primary-fg);
+}
+
 /* Hamburger */
 .nav-toggle {
   /* hidden by default (desktop); the Responsive part below shows it on small screens */
