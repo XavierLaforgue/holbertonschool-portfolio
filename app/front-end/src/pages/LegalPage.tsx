@@ -2,7 +2,7 @@
  * Legal notice and privacy policy (RGPD).
  *
  * The legal notice says who publishes and who hosts the site (French law
- * "LCEN", article 6). The privacy policy tells users what personal data
+ * "LCEN", article 1-1). The privacy policy tells users what personal data
  * the application keeps, why, for how long, and how to exercise their
  * rights (RGPD, articles 13 to 21).
  */
@@ -34,8 +34,8 @@ export default function LegalPage() {
 				<li>
 					<strong>Hosting:</strong> the application is not online yet:
 					it runs on the publisher's computer for demonstrations. The
-					name, address and phone number of the host will be given here
-					when it goes online.
+					name and address of the host will be given here when it goes
+					online.
 				</li>
 			</ul>
 
