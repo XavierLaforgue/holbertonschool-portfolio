@@ -204,9 +204,13 @@ class BaseRecipeViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             errors = []
-            if not recipe.title.strip():
+            # A new recipe gets these default texts (models.py): they are
+            # not empty, but they don't count as a real title or anime.
+            if (not recipe.title.strip()
+                    or recipe.title == "Untitled recipe"):
                 errors.append("Recipe must have a title.")
-            if not recipe.anime_custom.strip():
+            if (not recipe.anime_custom.strip()
+                    or recipe.anime_custom == "Undeclared anime"):
                 errors.append("Recipe must have an anime source.")
             if not recipe.ingredients.exists():  # type: ignore
                 errors.append("Recipe must have at least one ingredient.")
