@@ -11,7 +11,8 @@ There are two ways to run the application:
 
 Both start with an **empty database**: only the reference data the app
 needs (difficulties, statuses, unit kinds, units) and an admin user are
-created.
+created. To try the app with some content, add test data with the
+[seed script](#test-data-optional).
 
 The instructions were written for and tested on `Ubuntu 22.04` (on WSL2);
 they are expected to work on any Unix-based system. Unless stated
@@ -289,3 +290,22 @@ Commit the new migration files with the model changes: the Docker
 
 Run `bash scripts/destroy_initialize_postgres.sh` again from `back-end/`
 (⚠️ deletes all local data).
+
+---
+
+## Test data (optional)
+
+`back-end/scripts/seed_data.py` creates 4 test users with recipes, drafts
+and saved recipes, through the API, so the app has some content to try.
+It only needs `python3` and a running app (A or B), and can be run several
+times:
+
+```bash
+cd back-end
+python3 scripts/seed_data.py                                   # Docker
+python3 scripts/seed_data.py --base-url http://localhost:8000  # local development
+```
+
+Then log in with e.g. `seed.user1@animize.example` / `Itadakimasu-2026!`.
+See [`scripts/README.md`](back-end/scripts/README.md) for details. To
+remove the test data, reset the database.
