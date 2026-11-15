@@ -128,7 +128,7 @@ class BaseRecipeSerializer:
 class RecipeIngredientWriteSerializer(serializers.Serializer):
     """Flat ingredient entry accepted inside a recipe write payload."""
     ingredient_name = serializers.CharField(max_length=50)
-    quantity = serializers.FloatField()
+    quantity = serializers.FloatField(min_value=0)  # no negative quantity
     unit = serializers.PrimaryKeyRelatedField(queryset=Unit.objects.all())
 
 
