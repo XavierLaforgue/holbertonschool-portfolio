@@ -37,6 +37,22 @@ class IsAuthenticatedOrReadOnly(permissions.BasePermission):
         return request.user and request.user.is_authenticated
 
 
+def get_recipe_of_author(request, recipe_id):
+    """Return the recipe if the logged-in user is its author.
+
+    The nested step and photo endpoints change a recipe without going
+    through RecipeModelViewSet, so they call this instead of
+    `_require_author`: 404 if the recipe doesn't exist, 403 if the user
+    is not its author.
+    """
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    if recipe.author.user != request.user:
+        raise PermissionDenied(
+            "You do not have permission to modify this recipe."
+        )
+    return recipe
+
+
 class BaseRecipeViewSet(viewsets.ModelViewSet):
     """
     Shared behavior for recipe viewsets.
@@ -564,7 +580,7 @@ class RecipePhotoListCreateAPIView(generics.ListCreateAPIView):
         ).order_by("position")
 
     def perform_create(self, serializer):
-        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
+        recipe = get_recipe_of_author(self.request, self.kwargs["recipe_id"])
         current_count = RecipePhoto.objects.filter(recipe=recipe).count()
         if current_count >= MAX_PHOTOS_PER_RECIPE:
             from rest_framework.exceptions import ValidationError
@@ -579,6 +595,24 @@ class RecipePhotoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """Nested endpoint for a specific recipe photo resource."""
     serializer_class = RecipePhotoModelSerializer
     parser_classes = [MultiPartParser, FormParser]
+    lookup_url_kwarg = "photo_id"
+
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):  # type: ignore[override]
+        recipe_id = self.kwargs["recipe_id"]
+        return RecipePhoto.objects.filter(recipe_id=recipe_id)
+
+    def perform_update(self, serializer):
+        recipe = get_recipe_of_author(self.request, self.kwargs["recipe_id"])
+        serializer.save(recipe=recipe)
+
+    def perform_destroy(self, instance):
+        get_recipe_of_author(self.request, self.kwargs["recipe_id"])
+        instance.delete()
 
 
 class MyRecipesGroupedAPIView(APIView):
@@ -640,16 +674,3 @@ class MyRecipesGroupedAPIView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
-    lookup_url_kwarg = "photo_id"
-
-    # def get_permissions(self):
-    #     if self.request.method in permissions.SAFE_METHODS:
-    #         return [permissions.AllowAny()]
-    #     return [permissions.IsAuthenticated()]
-    def get_queryset(self):  # type: ignore[override]
-        recipe_id = self.kwargs["recipe_id"]
-        return RecipePhoto.objects.filter(recipe_id=recipe_id)
-
-    def perform_update(self, serializer):
-        recipe = get_object_or_404(Recipe, pk=self.kwargs["recipe_id"])
-        serializer.save(recipe=recipe)
