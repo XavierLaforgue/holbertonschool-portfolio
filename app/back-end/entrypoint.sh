@@ -32,8 +32,6 @@ if [ -n "$ADMIN_EMAIL" ] && [ -n "$ADMIN_PW" ]; then
             --email "$ADMIN_EMAIL" \
         || true
 fi
-# --username "$ADMIN_USER" \  # custom user doesn't accept username so
-# it can not be provided
 
 # Populate the database with system-required data (difficulties,
 # statuses, unit kinds and units).
