@@ -53,6 +53,19 @@ def get_recipe_of_author(request, recipe_id):
     return recipe
 
 
+def get_visible_recipe(request, recipe_id):
+    """Return the recipe if the user may read it: published, or their own.
+
+    Same rule as the recipe detail: a draft does not exist (404) for
+    anyone but its author.
+    """
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+    if (recipe.status.value != "Published"
+            and recipe.author.user != request.user):
+        raise Http404
+    return recipe
+
+
 class BaseRecipeViewSet(viewsets.ModelViewSet):
     """
     Shared behavior for recipe viewsets.
@@ -451,8 +464,8 @@ class RecipeStepListCreateSwapAPIView(generics.ListCreateAPIView):
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):  # type: ignore[override]
-        recipe_id = self.kwargs["recipe_id"]
-        return Step.objects.filter(recipe_id=recipe_id).order_by("number")
+        recipe = get_visible_recipe(self.request, self.kwargs["recipe_id"])
+        return Step.objects.filter(recipe=recipe).order_by("number")
 
     def perform_create(self, serializer):
         recipe = get_recipe_of_author(self.request, self.kwargs["recipe_id"])
@@ -523,8 +536,8 @@ class RecipeStepDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):  # type: ignore[override]
-        recipe_id = self.kwargs["recipe_id"]
-        return Step.objects.filter(recipe_id=recipe_id)
+        recipe = get_visible_recipe(self.request, self.kwargs["recipe_id"])
+        return Step.objects.filter(recipe=recipe)
 
     def perform_update(self, serializer):
         recipe = get_recipe_of_author(self.request, self.kwargs["recipe_id"])
@@ -578,10 +591,8 @@ class RecipePhotoListCreateAPIView(generics.ListCreateAPIView):
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):  # type: ignore[override]
-        recipe_id = self.kwargs["recipe_id"]
-        return RecipePhoto.objects.filter(
-            recipe_id=recipe_id
-        ).order_by("position")
+        recipe = get_visible_recipe(self.request, self.kwargs["recipe_id"])
+        return RecipePhoto.objects.filter(recipe=recipe).order_by("position")
 
     def perform_create(self, serializer):
         recipe = get_recipe_of_author(self.request, self.kwargs["recipe_id"])
@@ -607,8 +618,8 @@ class RecipePhotoDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):  # type: ignore[override]
-        recipe_id = self.kwargs["recipe_id"]
-        return RecipePhoto.objects.filter(recipe_id=recipe_id)
+        recipe = get_visible_recipe(self.request, self.kwargs["recipe_id"])
+        return RecipePhoto.objects.filter(recipe=recipe)
 
     def perform_update(self, serializer):
         recipe = get_recipe_of_author(self.request, self.kwargs["recipe_id"])
